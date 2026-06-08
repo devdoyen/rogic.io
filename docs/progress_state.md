@@ -46,17 +46,20 @@
 - **REST API 컨트롤러 구현**: `com.devdoyen.nemologic.controller.UserController`에 실시간 글로벌 랭킹 조회 API (`GET /api/users/ranking`) 및 난이도별(Easy 50XP, Normal 100XP, Hard 200XP) XP 지급을 지원하는 클리어 API (`POST /api/users/{id}/clear`) 구현 완료.
 - **단위 테스트 통과**: `gradle test` 실행 결과, 레벨업 한계치 조건 검증 단위 테스트 4개 및 API 통합 MockMvc 테스트 3개를 포함한 백엔드 모든 테스트 케이스(11개)가 100% 통과(Pass)함 확인 완료.
 
+### 프론트엔드 실시간 리더보드 UI 및 클리어 XP 연동 - TDD Green 단계 완료
+- **API 클라이언트 구현**: `frontend/src/api/userApi.ts`에 글로벌 리더보드 조회 API 및 퍼즐 클리어 시 경험치(XP) 지급을 요청하는 Axios 호출 함수 구현 완료.
+- **실시간 리더보드 UI 구현**: `frontend/src/App.vue`에 반응형 Grid/Flex 구조의 레이아웃을 도입하고, 우측 사이드바 형태로 실시간 랭킹 순위, 레벨, 누적 XP를 노출하는 리더보드 UI 설계 및 통합 완료.
+- **실시간 연동 로직 적용**: 게임 클리어 상태 전환 시점에 유저의 난이도별 XP 보상을 청구하고, 업데이트된 순위 정보를 백엔드로부터 실시간으로 다시 받아와 즉각 반영하도록 연동 완료.
+- **테스트 통과 검증**: Axios API 목킹 테스트 및 컴포넌트 마운트 시 랭킹 데이터 호출/사이드바 렌더링 검증 통합 테스트([App.test.ts](file:///c:/Users/82107/dev/project/nemologic/frontend/src/App.test.ts))를 포함한 총 31개의 프론트엔드 테스트 전원 통과 확인 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **프론트엔드 실시간 랭킹 UI 및 XP 연동**
-   - 퍼즐 클리어 시 백엔드 `/api/users/{id}/clear`를 호출하여 실시간으로 유저의 XP를 갱신하고 레벨업 상태를 프론트에 반영.
-   - 글로벌 랭킹 보드 UI 구축 및 실시간 순위 조회 기능 추가.
-2. **백엔드 영속성 계층 (Database Integration) 추가**
-   - 현재 정적으로 하드코딩된 스테이지 및 유저 정보를 Spring Data JPA와 H2/PostgreSQL 데이터베이스로 전환 및 마이그레이션.
-3. **배포 환경 자동화 설정**
+1. **백엔드 영속성 계층 (Database Integration) 추가**
+   - 현재 정적으로 하드코딩된 스테이지 및 유저 정보를 Spring Data JPA와 H2/PostgreSQL 데이터베이스 테이블 설계 및 영속화 레이어로 고도화.
+2. **배포 환경 자동화 설정**
    - Terraform 및 Ansible을 이용해 AWS ECS/Fargate 또는 EC2 환경으로의 배포 파이프라인(IaC) 구성 진행.
 
 ---

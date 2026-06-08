@@ -5,42 +5,59 @@
       <p class="app-subtitle">TDD Core Engine & HTML5 Canvas Rendering Demo</p>
     </header>
 
-    <main class="app-main">
-      <!-- Stage Selector Section -->
-      <div class="stage-selector-card">
-        <label for="stage-select" class="selector-label">Select Stage:</label>
-        <select 
-          id="stage-select" 
-          v-model="selectedStageId" 
-          @change="onStageChange"
-          class="selector-select"
-        >
-          <option v-for="stage in stages" :key="stage.id" :value="stage.id">
-            {{ stage.name }} ({{ stage.width }}x{{ stage.height }})
-          </option>
-        </select>
-      </div>
+    <div class="app-layout">
+      <main class="app-main">
+        <!-- Stage Selector Section -->
+        <div class="stage-selector-card">
+          <label for="stage-select" class="selector-label">Select Stage:</label>
+          <select 
+            id="stage-select" 
+            v-model="selectedStageId" 
+            @change="onStageChange"
+            class="selector-select"
+          >
+            <option v-for="stage in stages" :key="stage.id" :value="stage.id">
+              {{ stage.name }} ({{ stage.width }}x{{ stage.height }})
+            </option>
+          </select>
+        </div>
 
-      <div class="game-instructions">
-        <h3>How to Play</h3>
-        <ul>
-          <li><span class="key-indicator left-click">Left Click</span> Fill Cell</li>
-          <li><span class="key-indicator right-click">Right Click</span> Mark X</li>
-        </ul>
-      </div>
+        <div class="game-instructions">
+          <h3>How to Play</h3>
+          <ul>
+            <li><span class="key-indicator left-click">Left Click</span> Fill Cell</li>
+            <li><span class="key-indicator right-click">Right Click</span> Mark X</li>
+          </ul>
+        </div>
 
-      <!-- Canvas Area: only render if board is initialized -->
-      <div v-if="board" class="canvas-wrapper">
-        <NonogramCanvas :board="board" @cell-click="handleCellClick" />
-      </div>
-      <div v-else class="loading-state">
-        <p>Loading board data...</p>
-      </div>
+        <!-- Canvas Area: only render if board is initialized -->
+        <div v-if="board" class="canvas-wrapper">
+          <NonogramCanvas :board="board" @cell-click="handleCellClick" />
+        </div>
+        <div v-else class="loading-state">
+          <p>Loading board data...</p>
+        </div>
 
-      <div v-if="solved" class="solved-banner">
-        <h2>🎉 Solved! Congratulations!</h2>
-      </div>
-    </main>
+        <div v-if="solved" class="solved-banner">
+          <h2>🎉 Solved! Congratulations!</h2>
+        </div>
+      </main>
+
+      <!-- Sidebar Area (Leaderboard) -->
+      <aside class="app-sidebar">
+        <div class="leaderboard-card">
+          <h3 class="leaderboard-title">🏆 Global Leaderboard</h3>
+          <ul class="leaderboard-list">
+            <li v-for="(user, index) in rankings" :key="user.id" class="leaderboard-item">
+              <span class="rank">{{ index + 1 }}</span>
+              <span class="username">{{ user.username }}</span>
+              <span class="level">Lv.{{ user.level }}</span>
+              <span class="xp">{{ user.xp }} XP</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </div>
   </div>
 </template>
 
@@ -50,11 +67,14 @@ import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
 import { fetchStages, fetchStageById } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
+import { fetchRanking, clearStage } from './api/userApi';
+import type { User } from './api/userApi';
 
 const stages = ref<StageSummary[]>([]);
 const selectedStageId = ref<number | null>(null);
 const board = ref<PuzzleBoard | null>(null);
 const solved = ref(false);
+const rankings = ref<User[]>([]);
 
 async function loadStagesList() {
   try {
@@ -79,20 +99,48 @@ async function loadStageDetails(id: number) {
   }
 }
 
+async function loadRankingsList() {
+  try {
+    const list = await fetchRanking();
+    rankings.value = list;
+  } catch (error) {
+    console.error('Failed to load rankings:', error);
+  }
+}
+
 async function onStageChange() {
   if (selectedStageId.value !== null) {
     await loadStageDetails(selectedStageId.value);
   }
 }
 
-function handleCellClick() {
+async function handleCellClick() {
   if (board.value) {
+    const wasSolved = solved.value;
     solved.value = board.value.isSolved();
+
+    if (solved.value && !wasSolved) {
+      try {
+        let difficulty = 'NORMAL';
+        if (board.value.colCount <= 5 && board.value.rowCount <= 5) {
+          difficulty = 'EASY';
+        } else if (board.value.colCount >= 10 || board.value.rowCount >= 10) {
+          difficulty = 'HARD';
+        }
+        await clearStage(1, difficulty);
+        await loadRankingsList();
+      } catch (error) {
+        console.error('Failed to submit stage clear:', error);
+      }
+    }
   }
 }
 
 onMounted(async () => {
-  await loadStagesList();
+  await Promise.all([
+    loadStagesList(),
+    loadRankingsList()
+  ]);
 });
 </script>
 
@@ -116,7 +164,7 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 2rem;
-  max-width: 600px;
+  max-width: 1000px;
   width: 100%;
 }
 
@@ -248,6 +296,106 @@ body {
   text-align: center;
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
   animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.app-layout {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.app-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .app-sidebar {
+    width: 100%;
+  }
+}
+
+.leaderboard-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-title {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #38bdf8;
+  font-size: 1.25rem;
+  font-weight: 700;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 0.75rem;
+}
+
+.leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.leaderboard-item .rank {
+  color: #64748b;
+  width: 20px;
+  text-align: center;
+}
+
+.leaderboard-item:nth-child(1) .rank {
+  color: #fbbf24; /* Gold */
+}
+
+.leaderboard-item:nth-child(2) .rank {
+  color: #94a3b8; /* Silver */
+}
+
+.leaderboard-item:nth-child(3) .rank {
+  color: #b45309; /* Bronze */
+}
+
+.leaderboard-item .username {
+  flex-grow: 1;
+  color: #f8fafc;
+}
+
+.leaderboard-item .level {
+  color: #38bdf8;
+  font-size: 0.85rem;
+  background-color: rgba(56, 189, 248, 0.1);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.leaderboard-item .xp {
+  color: #818cf8;
+  font-size: 0.85rem;
 }
 
 @keyframes pop-in {
