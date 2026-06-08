@@ -62,7 +62,7 @@
         <div class="history-card" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 1.5rem; width: 100%; box-sizing: border-box;">
           <h3 style="margin-top: 0; color: #38bdf8;">My Puzzle Clear History</h3>
           <div v-if="histories.length > 0" class="history-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div v-for="item in histories" :key="item.id" class="history-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 8px;">
+            <div v-for="item in histories" :key="item.id" class="history-item" @click="openHistoryModal(item)" style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 8px; cursor: pointer;">
               <span class="stage-name" style="font-weight: 600;">{{ item.stageName }}</span>
               <span class="elapsed-time" style="color: #64748b;">{{ item.elapsedTime }}s</span>
               <span class="xp-earned" style="color: #10b981;">+{{ item.xpEarned }} XP</span>
@@ -91,6 +91,20 @@
         </div>
       </aside>
     </div>
+
+    <!-- Modal for History Review -->
+    <div v-if="isModalOpen && modalBoard" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 1000;">
+      <div class="modal-content" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55); animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <h3 class="modal-title" style="margin-top: 0; color: #38bdf8; font-weight: 700;">Review Clear History</h3>
+        <p class="modal-stage-info" style="color: #94a3b8; margin-bottom: 1.5rem;">Stage: {{ selectedHistory?.stageName }}</p>
+        <div class="modal-canvas-wrapper" style="display: inline-block; padding: 10px; background-color: #ffffff; border-radius: 8px;">
+          <NonogramCanvas :board="modalBoard" :readOnly="true" />
+        </div>
+        <div style="margin-top: 1.5rem;">
+          <button class="modal-close-btn" @click="closeModal" style="padding: 0.5rem 1.5rem; background-color: #f43f5e; border: none; border-radius: 8px; color: #ffffff; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -115,6 +129,10 @@ const currentUser = ref<UserSession | null>(null);
 const currentTab = ref<'play' | 'mypage'>('play');
 const histories = ref<any[]>([]);
 const startTime = ref<number>(Date.now());
+
+const isModalOpen = ref(false);
+const selectedHistory = ref<any>(null);
+const modalBoard = ref<PuzzleBoard | null>(null);
 
 
 async function loadStagesList() {
@@ -196,6 +214,14 @@ async function onTabChange(tab: 'play' | 'mypage') {
   if (tab === 'mypage') {
     await loadUserHistory();
   }
+}
+
+async function openHistoryModal(item: any) {
+  selectedHistory.value = item;
+}
+
+function closeModal() {
+  // Skeleton
 }
 
 async function initializeUserSession() {

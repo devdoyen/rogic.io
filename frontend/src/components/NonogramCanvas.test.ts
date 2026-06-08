@@ -234,4 +234,46 @@ describe('NonogramCanvas TDD Red Phase', () => {
       window.dispatchEvent(new MouseEvent('mouseup'));
     });
   });
+
+  describe('Read-Only mode interactions on canvas', () => {
+    it('should not alter board state on mouse down or drag if readOnly is true', async () => {
+      const board = new PuzzleBoard([
+        [0, 0],
+        [0, 0]
+      ]);
+      const wrapper = mount(NonogramCanvas, {
+        props: { board, readOnly: true }
+      });
+      const canvas = wrapper.find('[data-testid="nonogram-canvas"]');
+
+      canvas.element.getBoundingClientRect = () => ({
+        width: 160,
+        height: 140,
+        top: 0,
+        left: 0,
+        right: 160,
+        bottom: 140,
+        x: 0,
+        y: 0,
+        toJSON: () => {}
+      });
+
+      // Mouse down on (0, 0)
+      await canvas.trigger('mousedown', {
+        button: 0,
+        clientX: 115,
+        clientY: 95
+      });
+      expect(board.currentGrid[0][0]).toBe(0); // Should remain 0 (unaltered)
+
+      // Mouse move to (0, 1)
+      window.dispatchEvent(new MouseEvent('mousemove', {
+        clientX: 145,
+        clientY: 95
+      }));
+      expect(board.currentGrid[0][1]).toBe(0); // Should remain 0 (unaltered)
+
+      window.dispatchEvent(new MouseEvent('mouseup'));
+    });
+  });
 });

@@ -110,6 +110,16 @@
 - **TDD Green Phase 달성**: `npx vitest run` 실행 결과, 신규 추가 및 확장된 3개 테스트를 포함한 프론트엔드 전체 테스트(41개)가 100% 정상 통과(Pass) 완료.
 - **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리하여 수정 완료.
 
+### 마이페이지 클리어 퍼즐 복기용 Read-Only 캔버스 모달 구현 (Step 14) - TDD Red Phase 완료
+- **Canvas Read-Only 스켈레톤 및 단위 테스트**:
+  - `NonogramCanvas.vue`에 `readOnly?: boolean` prop 선언 추가.
+  - `NonogramCanvas.test.ts`에 `readOnly`가 `true`일 때 마우스 이벤트 입력이 들어와도 퍼즐 데이터가 전혀 변경되지 않는지 확인하는 단위 테스트 추가.
+- **마이페이지 복기 모달 스켈레톤 및 통합 테스트**:
+  - `App.vue`에 모달 제어 상태(`isModalOpen`, `selectedHistory`, `modalBoard`) 및 닫기 핸들러 스켈레톤을 정의하고, 모달 마크업(읽기 전용 `NonogramCanvas` 결합) 추가.
+  - `App.test.ts`에 히스토리 카드 클릭 시 모달이 정상 렌더링되며 가상 보드(`modalBoard`)가 정답과 일치하는 상태인지 검증하고, 닫기 클릭 시 사라지는 통합 테스트 케이스 추가.
+- **TDD Red Phase 진입 및 검증**: `npx vitest run` 실행 결과, 신규 추가된 두 개 테스트 케이스가 의도대로 실패(정합성 불일치 및 모달 미표시)하는 Red Phase를 최종 확인 완료.
+- **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리하여 수정 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

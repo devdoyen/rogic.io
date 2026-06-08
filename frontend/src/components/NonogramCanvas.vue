@@ -17,6 +17,7 @@ import type { CanvasConfig } from '../engine/coordinateMapper';
 
 const props = defineProps<{
   board: PuzzleBoard;
+  readOnly?: boolean;
 }>();
 
 const emit = defineEmits<{
