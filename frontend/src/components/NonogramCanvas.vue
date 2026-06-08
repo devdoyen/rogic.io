@@ -19,6 +19,10 @@ const props = defineProps<{
   board: PuzzleBoard;
 }>();
 
+const emit = defineEmits<{
+  (e: 'cell-click'): void;
+}>();
+
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
 const CELL_SIZE = 30;
@@ -157,6 +161,7 @@ function handleMouseDown(event: MouseEvent) {
   }
 
   drawBoard();
+  emit('cell-click');
 }
 
 onMounted(() => {

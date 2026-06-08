@@ -41,13 +41,13 @@ export class PuzzleBoard {
   }
 
   public toggleFill(row: number, col: number): void {
-    if (this.isOutOfBounds(row, col)) return;
+    if (row < 0 || row >= this.rowCount || col < 0 || col >= this.colCount) return;
     const current = this.currentGrid[row][col];
     this.currentGrid[row][col] = current === 1 ? 0 : 1;
   }
 
   public toggleMark(row: number, col: number): void {
-    if (this.isOutOfBounds(row, col)) return;
+    if (row < 0 || row >= this.rowCount || col < 0 || col >= this.colCount) return;
     const current = this.currentGrid[row][col];
     this.currentGrid[row][col] = current === 2 ? 0 : 2;
   }
@@ -63,9 +63,5 @@ export class PuzzleBoard {
       }
     }
     return true;
-  }
-
-  private isOutOfBounds(row: number, col: number): boolean {
-    return row < 0 || row >= this.rowCount || col < 0 || col >= this.colCount;
   }
 }
