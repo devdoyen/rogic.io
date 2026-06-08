@@ -41,6 +41,6 @@ public class UserController {
 
     @PostMapping("/register")
     public User registerUser() {
-        throw new UnsupportedOperationException("Not implemented yet");
+        return userService.registerAnonymousUser();
     }
 }

@@ -39,7 +39,12 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public User registerAnonymousUser() {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public synchronized User registerAnonymousUser() {
+        long nextId = users.keySet().stream().max(Long::compareTo).orElse(0L) + 1;
+        String uuid = UUID.randomUUID().toString();
+        String username = "Anonymous-" + uuid.substring(0, 8);
+        User newUser = new User(nextId, username, 0, 1, uuid);
+        users.put(nextId, newUser);
+        return newUser;
     }
 }

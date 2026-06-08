@@ -62,21 +62,19 @@
 - **통합 검증 및 TDD 완료**: `npm run test` 실행 결과, 신규 추가된 로직과 테스트를 포함하여 프론트엔드 전체 37개 테스트 케이스 100% 통과(Pass) 완료.
 - **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리 수정하여 안전한 Mocking 하네스 기반 TDD 완료.
 
-### 백엔드 익명 유저 등록 API 구현 및 데이터 연동 (Step 9) - TDD Red Phase 완료
-- **도메인 모델 구조 확장**: `User.java`에 `uuid` 필드 및 생성자/Getter/Setter 설계 완료.
-- **API 및 비즈니스 레이어 설계**: `UserService.java` 및 `UserController.java`에 `registerAnonymousUser()` 엔드포인트 스켈레톤 설계 및 이식 완료.
-- **ID 자동 증량 및 기본 스펙 검증 테스트**: `UserServiceTest.java`에 `testRegisterAnonymousUserAutoIncrement()` 단위 테스트 작성 완료.
-- **통합 API 결과 검증 테스트**: `UserControllerTest.java`에 `registerAnonymousUserShouldReturnNewUserWithId4()` MockMvc 통합 테스트 작성 완료.
-- **TDD Red Phase 진입 검증**: `gradle test` 실행 결과, 의도대로 2개의 신규 테스트 케이스가 `UnsupportedOperationException` 실패(Red Phase)로 끝남을 확인 완료.
-- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일만 수정 완료.
+### 백엔드 익명 유저 등록 API 구현 및 데이터 연동 (Step 9) - TDD Green Phase 완료
+- **도메인 모델 구조 확장**: `User.java`에 익명 유저 UUID 바인딩을 위한 `uuid` 필드 및 생성자, Getter/Setter 연동 완료.
+- **인메모리 세션 등록 구현**: `UserService.java` 내 `registerAnonymousUser()`를 구현하여, 기존 더미 유저(ID: 1L~3L)와 충돌하지 않고 4L부터 순차적으로 증량되는 ID 생성 로직(Auto Increment)과 무작위 이름(`Anonymous-{UUID}`) 및 고유 UUID 발급 기능 설계 완료. `UserServiceTest` 검증 테스트 통과.
+- **API 컨트롤러 구현**: `UserController.java`에 `POST /api/users/register` 요청을 수신해 비즈니스 레이어의 신규 등록 유저를 온전히 반환하는 REST API 설계 완료. `UserControllerTest` MockMvc 통합 테스트 통과.
+- **TDD Green Phase 달성**: `gradle test` 명령 실행 결과, 신규 추가된 API 호출 및 ID 자동 증량 테스트 케이스를 포함한 백엔드 전체 테스트(14개)가 100% 성공(Pass)함을 검증 완료.
+- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 전혀 영향 없이 `backend/` 소스 파일만 수정 완료.
 
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **백엔드 익명 유저 등록 API 및 데이터베이스 영속성 계층 (Database Integration) 추가**
-   - 백엔드에 `POST /api/users/register` 실제 API(UUID 및 랜덤 이름 생성기 결합) 구현.
+1. **백엔드 영속성 계층 (Database Integration) 추가**
    - 현재 정적으로 하드코딩된 스테이지 및 유저 정보를 Spring Data JPA와 H2/PostgreSQL 데이터베이스 테이블 설계 및 영속화 레이어로 고도화.
 2. **배포 환경 자동화 설정**
    - Terraform 및 Ansible을 이용해 AWS ECS/Fargate 또는 EC2 환경으로의 배포 파이프라인(IaC) 구성 진행.
