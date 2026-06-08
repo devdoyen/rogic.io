@@ -85,4 +85,14 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.xp", is(0)))
                 .andExpect(jsonPath("$.level", is(1)));
     }
+
+    @Test
+    public void getUserHistoryShouldReturnListOfClearedPuzzles() throws Exception {
+        // Red Phase: This request should fail because the API endpoint is not yet implemented (returns 404).
+        mockMvc.perform(get("/api/users/1/history"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(0))));
+    }
 }
+

@@ -88,6 +88,13 @@
   - `gradle test` 실행 결과, 신규 작성한 2개 테스트를 포함한 총 17개의 백엔드 전체 테스트가 100% 정상 통과(Pass)하여 Green Phase를 성공적으로 완수함.
 - **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일 및 진행 문서만 격리하여 수정 완료.
 
+### 백엔드 클리어 히스토리 도메인 설계 및 API 구축 (Step 12) - TDD Red Phase 완료
+- **도메인 및 DTO 설계**: 유저의 퍼즐 클리어 기록 영속화를 위한 `History.java` 엔티티 스켈레톤 및 지연 로딩 예외와 순환 참조를 방지하기 위한 `HistoryResponse.java` DTO 스켈레톤 정의 완료.
+- **리포지토리 레이어**: `HistoryRepository.java` 인터페이스를 선언하고, JPA DB 저장/조회 검증을 위한 `HistoryRepositoryTest.java` 단위 테스트에 의도적 실패(`fail()`) 설정 완료.
+- **컨트롤러 테스트 연동**: `UserControllerTest.java` 내에 특정 유저의 클리어 히스토리 목록 조회 API(`GET /api/users/{id}/history`)를 검증하는 MockMvc 테스트 케이스 추가 완료.
+- **TDD Red Phase 진입 및 검증**: `gradle test` 실행 결과, 신규 신설한 두 개의 테스트(`getUserHistoryShouldReturnListOfClearedPuzzles`, `testSaveAndFindByUserId`)가 의도대로 실패(404 Not Found 및 AssertionFailedError)하는 Red Phase를 최종 확인 완료.
+- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일 및 진행 문서만 격리하여 수정 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
