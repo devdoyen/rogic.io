@@ -218,10 +218,25 @@ async function onTabChange(tab: 'play' | 'mypage') {
 
 async function openHistoryModal(item: any) {
   selectedHistory.value = item;
+  try {
+    const details = await fetchStageById(item.stageId);
+    const board = new PuzzleBoard(details.solutionGrid);
+    for (let r = 0; r < board.rowCount; r++) {
+      for (let c = 0; c < board.colCount; c++) {
+        board.setCell(r, c, details.solutionGrid[r][c]);
+      }
+    }
+    modalBoard.value = board;
+    isModalOpen.value = true;
+  } catch (error) {
+    console.error('Failed to load stage details for review:', error);
+  }
 }
 
 function closeModal() {
-  // Skeleton
+  isModalOpen.value = false;
+  modalBoard.value = null;
+  selectedHistory.value = null;
 }
 
 async function initializeUserSession() {

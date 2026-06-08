@@ -146,6 +146,7 @@ let lastRow = -1;
 let lastCol = -1;
 
 function handleMouseDown(event: MouseEvent) {
+  if (props.readOnly) return;
   const canvas = canvasRef.value;
   if (!canvas) return;
 
