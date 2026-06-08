@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import axios from 'axios';
-import { fetchStages, fetchStageById } from './stageApi';
+import { fetchStages, fetchStageById, fetchAiStages } from './stageApi';
 
 vi.mock('axios');
 
@@ -35,5 +35,18 @@ describe('stageApi TDD Red Phase', () => {
     const result = await fetchStageById(1);
     expect(axios.get).toHaveBeenCalledWith('http://localhost:8080/api/stages/1');
     expect(result).toEqual(mockDetails);
+  });
+
+  it('fetchAiStages should call get and return stage summaries filtered by AI prefix or substring', async () => {
+    const mockData = [
+      { id: 1, name: 'Heart Shape', width: 5, height: 5 },
+      { id: 2, name: 'AI Daily Puzzle', width: 5, height: 5 }
+    ];
+    
+    vi.mocked(axios.get).mockResolvedValue({ data: mockData });
+
+    const result = await fetchAiStages();
+    expect(axios.get).toHaveBeenCalledWith('http://localhost:8080/api/stages');
+    expect(result).toEqual([{ id: 2, name: 'AI Daily Puzzle', width: 5, height: 5 }]);
   });
 });

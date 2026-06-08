@@ -36,6 +36,21 @@
           </select>
         </div>
 
+        <!-- AI Daily Puzzle Section -->
+        <div class="stage-selector-card ai-stage-selector-card" style="margin-top: 1rem;">
+          <label for="ai-stage-select" class="selector-label">AI Daily Puzzle:</label>
+          <select 
+            id="ai-stage-select" 
+            v-model="selectedAiStageId" 
+            @change="onAiStageChange"
+            class="selector-select ai-stage-select"
+          >
+            <option v-for="stage in aiStages" :key="stage.id" :value="stage.id">
+              {{ stage.name }} ({{ stage.width }}x{{ stage.height }})
+            </option>
+          </select>
+        </div>
+
         <div class="game-instructions">
           <h3>How to Play</h3>
           <ul>
@@ -112,7 +127,7 @@
 import { ref, onMounted } from 'vue';
 import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
-import { fetchStages, fetchStageById } from './api/stageApi';
+import { fetchStages, fetchStageById, fetchAiStages } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
 import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory } from './api/userApi';
 import type { User } from './api/userApi';
@@ -129,6 +144,10 @@ const currentUser = ref<UserSession | null>(null);
 const currentTab = ref<'play' | 'mypage'>('play');
 const histories = ref<any[]>([]);
 const startTime = ref<number>(Date.now());
+
+const aiStages = ref<StageSummary[]>([]);
+const selectedAiStageId = ref<number | null>(null);
+const isAiStageActive = ref(false);
 
 const isModalOpen = ref(false);
 const selectedHistory = ref<any>(null);
@@ -172,6 +191,14 @@ async function onStageChange() {
   if (selectedStageId.value !== null) {
     await loadStageDetails(selectedStageId.value);
   }
+}
+
+async function loadAiStagesList() {
+  // Skeleton
+}
+
+async function onAiStageChange() {
+  // Skeleton
 }
 
 async function handleCellClick() {
@@ -264,6 +291,7 @@ onMounted(async () => {
   await initializeUserSession();
   await Promise.all([
     loadStagesList(),
+    loadAiStagesList(),
     loadRankingsList()
   ]);
 });

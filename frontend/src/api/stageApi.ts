@@ -22,3 +22,7 @@ export async function fetchStageById(id: number): Promise<StageDetails> {
   const response = await axios.get<StageDetails>(`${API_BASE_URL}/${id}`);
   return response.data;
 }
+
+export async function fetchAiStages(): Promise<StageSummary[]> {
+  throw new Error('Not implemented');
+}

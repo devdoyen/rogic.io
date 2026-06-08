@@ -121,6 +121,16 @@
 - **TDD Green Phase 달성**: `npx vitest run` 실행 결과, 신규 추가된 2개의 단위/통합 테스트를 포함하여 프론트엔드 **전체 테스트(43개)가 100% 정상 통과(Pass)**함을 검증 완료.
 - **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리하여 수정 완료.
 
+### 프론트엔드 오늘의 AI 데일리 퍼즐 섹션 연동 (Step 15) - TDD Red Phase 완료
+- **AI 데일리 퍼즐 API 및 단위 테스트**:
+  - `stageApi.ts`에 `fetchAiStages()` 스켈레톤 함수 정의.
+  - `stageApi.test.ts`에 `fetchAiStages` 호출 시 `/api/stages` API 호출 결과 중 이름에 "AI"가 들어간 데일리 퍼즐들만 필터링하여 리턴하는지 검증하는 단위 테스트 추가.
+- **AI 퍼즐 전용 UI 및 통합 테스트**:
+  - `App.vue`에 AI 퍼즐 관련 필드(`aiStages`, `selectedAiStageId`, `isAiStageActive`) 및 메인 화면 배너 셀렉트 마크업 추가.
+  - `App.test.ts`에 마운트 시 `fetchAiStages` 호출 여부, 배너 옵션 바인딩, AI 퍼즐 선택 및 클리어 시 `clearStage` API에 `difficulty=HARD`와 `stageId`를 담아 전송하는지 통합 시나리오 테스트 추가.
+- **TDD Red Phase 진입 및 검증**: `npx vitest run` 실행 결과, 신규 추가된 두 개 테스트 케이스가 의도대로 실패(API 미구현 및 API 미호출 실패)하는 Red Phase를 최종 확인 완료.
+- **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리하여 수정 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

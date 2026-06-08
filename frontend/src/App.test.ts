@@ -208,6 +208,45 @@ describe('App.vue Leaderboard Integration TDD', () => {
     expect(wrapper.find('.modal-overlay').exists()).toBe(false);
     expect(vm.isModalOpen).toBe(false);
   });
+
+  it('should render AI daily puzzles list, select AI puzzle, and submit clearStage with difficulty HARD', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 7, name: 'AI Daily Puzzle', width: 1, height: 1, solutionGrid: [[1]] };
+    const mockAiStages = [{ id: 7, name: 'AI Daily Puzzle', width: 1, height: 1 }];
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    const fetchAiStagesSpy = vi.spyOn(stageApi, 'fetchAiStages').mockResolvedValue(mockAiStages);
+    const fetchStageSpy = vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+    const clearStageSpy = vi.spyOn(userApi, 'clearStage').mockResolvedValue({ id: 1, username: 'Player1', xp: 250, level: 2 });
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(fetchAiStagesSpy).toHaveBeenCalled();
+
+    // Check if AI Daily Puzzle section renders the list
+    const aiOptions = wrapper.findAll('.ai-stage-select option');
+    expect(aiOptions.length).toBeGreaterThan(0);
+    expect(aiOptions[0].text()).toContain('AI Daily Puzzle');
+
+    // Click/Select AI Stage
+    const aiSelect = wrapper.find('.ai-stage-select');
+    expect(aiSelect.exists()).toBe(true);
+    await aiSelect.setValue(7);
+    await aiSelect.trigger('change');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(fetchStageSpy).toHaveBeenCalledWith(7);
+
+    // Solve the board
+    (wrapper.vm as any).board.toggleFill(0, 0);
+    await (wrapper.vm as any).handleCellClick();
+
+    // Should call clearStage with HARD difficulty for AI stage
+    expect(clearStageSpy).toHaveBeenCalledWith(1, 'HARD', 7, expect.any(Number));
+  });
 });
 
 
