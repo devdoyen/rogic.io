@@ -2,6 +2,8 @@ package com.devdoyen.nemologic.service;
 
 import com.devdoyen.nemologic.model.User;
 import com.devdoyen.nemologic.repository.UserRepository;
+import com.devdoyen.nemologic.repository.HistoryRepository;
+import com.devdoyen.nemologic.repository.StageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,12 +16,17 @@ public class UserServiceTest {
 
     private UserService userService;
     private UserRepository userRepository;
+    private HistoryRepository historyRepository;
+    private StageRepository stageRepository;
 
     @BeforeEach
     public void setUp() {
         userRepository = mock(UserRepository.class);
-        userService = new UserService(userRepository);
+        historyRepository = mock(HistoryRepository.class);
+        stageRepository = mock(StageRepository.class);
+        userService = new UserService(userRepository, historyRepository, stageRepository);
     }
+
 
     @Test
     public void testUserServiceAddXp() {

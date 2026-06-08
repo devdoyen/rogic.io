@@ -9,18 +9,21 @@ public class HistoryResponse {
     private String stageName;
     private LocalDateTime clearedAt;
     private int xpEarned;
+    private int elapsedTime;
 
     public HistoryResponse() {
     }
 
-    public HistoryResponse(Long id, Long userId, Long stageId, String stageName, LocalDateTime clearedAt, int xpEarned) {
+    public HistoryResponse(Long id, Long userId, Long stageId, String stageName, LocalDateTime clearedAt, int xpEarned, int elapsedTime) {
         this.id = id;
         this.userId = userId;
         this.stageId = stageId;
         this.stageName = stageName;
         this.clearedAt = clearedAt;
         this.xpEarned = xpEarned;
+        this.elapsedTime = elapsedTime;
     }
+
 
     public Long getId() {
         return id;
@@ -69,4 +72,13 @@ public class HistoryResponse {
     public void setXpEarned(int xpEarned) {
         this.xpEarned = xpEarned;
     }
+
+    public int getElapsedTime() {
+        return elapsedTime;
+    }
+
+    public void setElapsedTime(int elapsedTime) {
+        this.elapsedTime = elapsedTime;
+    }
 }
+

@@ -24,21 +24,20 @@ public class HistoryRepositoryTest {
 
     @Test
     public void testSaveAndFindByUserId() {
-        // Red Phase: Intentionally fail the test to establish the TDD failure phase
-        fail("Intentionally failed for TDD Red Phase");
-        
         User user = new User(null, "TestUser", 100, 1);
         Stage stage = new Stage(null, "TestStage", 5, 5, new int[][]{{0}});
         
         user = entityManager.persist(user);
         stage = entityManager.persist(stage);
         
-        History history = new History(user, stage, LocalDateTime.now(), 50);
+        History history = new History(user, stage, LocalDateTime.now(), 50, 120);
         entityManager.persist(history);
         entityManager.flush();
         
         List<History> found = historyRepository.findByUserId(user.getId());
         assertEquals(1, found.size());
         assertEquals(user.getId(), found.get(0).getUser().getId());
+        assertEquals(120, found.get(0).getElapsedTime());
     }
+
 }

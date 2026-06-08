@@ -88,11 +88,16 @@
   - `gradle test` 실행 결과, 신규 작성한 2개 테스트를 포함한 총 17개의 백엔드 전체 테스트가 100% 정상 통과(Pass)하여 Green Phase를 성공적으로 완수함.
 - **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일 및 진행 문서만 격리하여 수정 완료.
 
-### 백엔드 클리어 히스토리 도메인 설계 및 API 구축 (Step 12) - TDD Red Phase 완료
-- **도메인 및 DTO 설계**: 유저의 퍼즐 클리어 기록 영속화를 위한 `History.java` 엔티티 스켈레톤 및 지연 로딩 예외와 순환 참조를 방지하기 위한 `HistoryResponse.java` DTO 스켈레톤 정의 완료.
-- **리포지토리 레이어**: `HistoryRepository.java` 인터페이스를 선언하고, JPA DB 저장/조회 검증을 위한 `HistoryRepositoryTest.java` 단위 테스트에 의도적 실패(`fail()`) 설정 완료.
-- **컨트롤러 테스트 연동**: `UserControllerTest.java` 내에 특정 유저의 클리어 히스토리 목록 조회 API(`GET /api/users/{id}/history`)를 검증하는 MockMvc 테스트 케이스 추가 완료.
-- **TDD Red Phase 진입 및 검증**: `gradle test` 실행 결과, 신규 신설한 두 개의 테스트(`getUserHistoryShouldReturnListOfClearedPuzzles`, `testSaveAndFindByUserId`)가 의도대로 실패(404 Not Found 및 AssertionFailedError)하는 Red Phase를 최종 확인 완료.
+### 백엔드 클리어 히스토리 도메인 설계 및 API 구축 (Step 12) - TDD Green Phase 완료
+- **도메인 및 DTO 설계**: 유저의 퍼즐 클리어 기록 영속화를 위한 `History.java` 엔티티와 지연 로딩 예외/순환 참조 방지용 `HistoryResponse.java` DTO에 `elapsedTime` 필드를 추가하여 경과 시간 기록이 가능하도록 설계 및 구현 완료.
+- **리포지토리 레이어**: `HistoryRepository.java` 인터페이스를 선언하고, `HistoryRepositoryTest.java` 단위 테스트에서 저장 데이터와 유저 ID 기반 조회 결과(경과 시간 포함)가 정확히 일치함을 확인하는 프로덕션 레벨 검증 코드 완성.
+- **비즈니스 로직 확장**:
+  - `UserService.java`에 `clearStageWithHistory` 비즈니스 로직을 구축하여, 클리어 시 단순히 경험치를 지급하는 것을 넘어 해당하는 `Stage` 정보와 `elapsedTime`을 기반으로 `History`를 동적으로 생성 및 저장 완료.
+  - `UserService.reset()` 메소드에 `historyRepository.deleteAll()` 및 H2 histories 시퀀스 리셋 로직을 추가하여 테스트 데이터 격리를 완벽하게 보장.
+- **컨트롤러 및 API 연동**:
+  - `UserController.java`의 `POST /api/users/{id}/clear` endpoint 파라미터를 확장하여 `stageId` 및 `elapsedTime`을 수집하고, `GET /api/users/{id}/history` endpoint를 신설해 유저의 히스토리 DTO 리스트를 온전히 응답하도록 연동 완료.
+  - `UserControllerTest.java`에서 클리어 API 호출 이후 조회 API를 호출해 반환된 DTO 목록의 정합성(1개 기록, 스테이지 정보 매칭, 150초 경과시간 등)을 검증하는 MockMvc 통합 검증 테스트 통과 완료.
+- **TDD Green Phase 달성**: `gradle test` 실행 결과, 신규 추가된 2개의 단위/통합 테스트를 포함하여 백엔드 **전체 테스트(19개)가 100% 정상 통과(BUILD SUCCESSFUL)**함을 검증 완료.
 - **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일 및 진행 문서만 격리하여 수정 완료.
 
 ---

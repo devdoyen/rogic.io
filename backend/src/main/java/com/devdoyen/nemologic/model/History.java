@@ -25,15 +25,20 @@ public class History {
     @Column(name = "xp_earned", nullable = false)
     private int xpEarned;
 
+    @Column(name = "elapsed_time", nullable = false)
+    private int elapsedTime;
+
     public History() {
     }
 
-    public History(User user, Stage stage, LocalDateTime clearedAt, int xpEarned) {
+    public History(User user, Stage stage, LocalDateTime clearedAt, int xpEarned, int elapsedTime) {
         this.user = user;
         this.stage = stage;
         this.clearedAt = clearedAt;
         this.xpEarned = xpEarned;
+        this.elapsedTime = elapsedTime;
     }
+
 
     public Long getId() {
         return id;
@@ -74,4 +79,13 @@ public class History {
     public void setXpEarned(int xpEarned) {
         this.xpEarned = xpEarned;
     }
+
+    public int getElapsedTime() {
+        return elapsedTime;
+    }
+
+    public void setElapsedTime(int elapsedTime) {
+        this.elapsedTime = elapsedTime;
+    }
 }
+

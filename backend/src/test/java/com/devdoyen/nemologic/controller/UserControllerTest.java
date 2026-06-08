@@ -88,11 +88,25 @@ public class UserControllerTest {
 
     @Test
     public void getUserHistoryShouldReturnListOfClearedPuzzles() throws Exception {
-        // Red Phase: This request should fail because the API endpoint is not yet implemented (returns 404).
+        // Clear stage 1 with 150 seconds elapsed
+        mockMvc.perform(post("/api/users/1/clear")
+                .param("difficulty", "EASY")
+                .param("stageId", "1")
+                .param("elapsedTime", "150"))
+                .andExpect(status().isOk());
+
+        // Retrieve and verify history
         mockMvc.perform(get("/api/users/1/history"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(0))));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].userId", is(1)))
+                .andExpect(jsonPath("$[0].stageId", is(1)))
+                .andExpect(jsonPath("$[0].xpEarned", is(50)))
+                .andExpect(jsonPath("$[0].elapsedTime", is(150)))
+                .andExpect(jsonPath("$[0].stageName", notNullValue()))
+                .andExpect(jsonPath("$[0].clearedAt", notNullValue()));
     }
 }
+
 
