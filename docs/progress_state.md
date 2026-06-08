@@ -69,13 +69,14 @@
 - **TDD Green Phase 달성**: `gradle test` 명령 실행 결과, 신규 추가된 API 호출 및 ID 자동 증량 테스트 케이스를 포함한 백엔드 전체 테스트(14개)가 100% 성공(Pass)함을 검증 완료.
 - **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 전혀 영향 없이 `backend/` 소스 파일만 수정 완료.
 
-### Spring Data JPA 및 내장형 H2 DB 영속성 레이어 구축 (Step 10) - TDD Red Phase 완료
-- **의존성 추가**: `backend/build.gradle`에 H2 데이터베이스 및 Spring Data JPA 관련 라이브러리 추가 완료.
-- **도메인 엔티티 전환**: `User.java` 및 `Stage.java`를 `@Entity` 구조로 리팩토링하고, 2차원 배열 격자 데이터를 저장/역직렬화하기 위한 `GridConverter.java` 구현 완료.
-- **리포지토리 명세 설계**: `UserRepository.java` 및 `StageRepository.java` 인터페이스 설계 완료.
-- **리포지토리 단위 테스트 작성**: JUnit 5 `@DataJpaTest` 기반으로 `UserRepositoryTest.java` 및 `StageRepositoryTest.java` 단위 테스트 추가 완료.
-- **TDD Red Phase 진입 검증**: `gradle test` 실행 결과, JPA 인프라 및 DB 저장 프로세스는 정상 작동하나 의도된 단언 에러(AssertionFailedError)로 2개 신규 테스트가 정상 실패함을 확인 완료.
-- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일만 수정 완료.
+### Spring Data JPA 및 내장형 H2 DB 영속성 레이어 구축 (Step 10) - TDD Green Phase 완료
+- **의존성 주입**: `backend/build.gradle`에 H2 및 Spring Data JPA 라이브러리 연동 완료.
+- **도메인 엔티티 전환**: `User.java` 및 `Stage.java`를 `@Entity`로 전환하고, 2차원 배열 데이터의 CLOB TEXT 저장용 `GridConverter.java` 구현 완료.
+- **시딩 설정 및 로직 연동**: `DataSeeder.java` 컴포넌트를 설계하여 시작 시점에 기본 유저(Player1, Player2, Player3) 및 스테이지(Heart Shape, Checkerboard) 자동 DB Seeding 기능 구축 완료.
+- **비즈니스 레이어 리팩토링**: `UserService.java` 및 `StageService.java` 내 불안정한 인메모리 HashMap/ArrayList 저장 공간을 완전히 걷어내고, `UserRepository` 및 `StageRepository`를 주입받아 데이터베이스 레벨에서 CRUD 트랜잭션이 일어나도록 전환 완료.
+- **Auto Increment 시퀀스 초기화**: `UserService.reset()` 시 H2 `users` 테이블 데이터 삭제와 동시에 `ALTER TABLE users ALTER COLUMN id RESTART WITH 1` Native Query 및 EntityManager 연동 처리를 추가하여, 테스트 간 데이터 격리 및 ID 정합성 충돌 문제 완벽 해결.
+- **TDD Green Phase 달성**: `gradle test` 명령 실행 결과, 신규 작성한 리포지토리 단위 테스트(2개)와 수정된 가볍고 효율적인 모킹/컨트롤러 테스트를 포함한 총 15개 백엔드 전체 테스트 케이스가 100% 정상 통과(Pass) 완료.
+- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 전혀 영향 없이 `backend/` 소스 파일 및 진행 문서만 수정 완료.
 
 ---
 

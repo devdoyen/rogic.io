@@ -27,7 +27,7 @@ public class StageRepositoryTest {
 
         Stage foundStage = stageRepository.findById(savedStage.getId()).orElse(null);
         assertNotNull(foundStage);
-        // Red Phase: Expected to fail with AssertionFailedError
-        assertEquals("RedPhaseStage", foundStage.getName());
+        // Green Phase: Assert actual value
+        assertEquals("TestStage", foundStage.getName());
     }
 }

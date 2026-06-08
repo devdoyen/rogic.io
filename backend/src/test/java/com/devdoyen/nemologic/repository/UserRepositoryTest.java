@@ -22,7 +22,7 @@ public class UserRepositoryTest {
 
         User foundUser = userRepository.findByUuid("test-uuid-1234").orElse(null);
         assertNotNull(foundUser);
-        // Red Phase: Expected to fail with AssertionFailedError
-        assertEquals("RedPhaseUUID", foundUser.getUuid());
+        // Green Phase: Assert actual value
+        assertEquals("test-uuid-1234", foundUser.getUuid());
     }
 }

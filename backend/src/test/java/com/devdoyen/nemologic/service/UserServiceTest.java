@@ -1,25 +1,35 @@
 package com.devdoyen.nemologic.service;
 
 import com.devdoyen.nemologic.model.User;
+import com.devdoyen.nemologic.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class UserServiceTest {
 
     private UserService userService;
+    private UserRepository userRepository;
 
     @BeforeEach
     public void setUp() {
-        userService = new UserService();
+        userRepository = mock(UserRepository.class);
+        userService = new UserService(userRepository);
     }
 
     @Test
     public void testUserServiceAddXp() {
-        User user = userService.addXpToUser(1L, 120);
-        assertEquals(3, user.getLevel());
-        assertEquals(320, user.getXp()); // Alice initial 200 + 120 = 320
+        User user = new User(1L, "Player1", 200, 2);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        User updatedUser = userService.addXpToUser(1L, 120);
+        assertEquals(3, updatedUser.getLevel());
+        assertEquals(320, updatedUser.getXp());
     }
 
     @Test
@@ -40,7 +50,6 @@ public class UserServiceTest {
     @Test
     public void testAddXpSingleLevelUp() {
         User user = new User(1L, "Alice", 0, 1);
-        // Level 1 -> needs 100 XP to reach Level 2
         user.addXp(120);
         assertEquals(2, user.getLevel());
         assertEquals(120, user.getXp());
@@ -49,10 +58,6 @@ public class UserServiceTest {
     @Test
     public void testAddXpMultipleLevelUps() {
         User user = new User(1L, "Alice", 0, 1);
-        // Level 1 -> needs 100 XP (reaches Level 2)
-        // Level 2 -> needs 200 XP (reaches Level 3)
-        // Total 300 XP needed to reach Level 3.
-        // We add 350 XP. Should be Level 3 with 350 XP.
         user.addXp(350);
         assertEquals(3, user.getLevel());
         assertEquals(350, user.getXp());
@@ -60,6 +65,12 @@ public class UserServiceTest {
 
     @Test
     public void testRegisterAnonymousUserAutoIncrement() {
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User u = invocation.getArgument(0);
+            u.setId(4L);
+            return u;
+        });
+
         User user = userService.registerAnonymousUser();
         assertNotNull(user);
         assertEquals(4L, user.getId());
