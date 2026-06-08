@@ -6,6 +6,21 @@
     </header>
 
     <main class="app-main">
+      <!-- Stage Selector Section -->
+      <div class="stage-selector-card">
+        <label for="stage-select" class="selector-label">Select Stage:</label>
+        <select 
+          id="stage-select" 
+          v-model="selectedStageId" 
+          @change="onStageChange"
+          class="selector-select"
+        >
+          <option v-for="stage in stages" :key="stage.id" :value="stage.id">
+            {{ stage.name }} ({{ stage.width }}x{{ stage.height }})
+          </option>
+        </select>
+      </div>
+
       <div class="game-instructions">
         <h3>How to Play</h3>
         <ul>
@@ -14,8 +29,12 @@
         </ul>
       </div>
 
-      <div class="canvas-wrapper">
+      <!-- Canvas Area: only render if board is initialized -->
+      <div v-if="board" class="canvas-wrapper">
         <NonogramCanvas :board="board" @cell-click="handleCellClick" />
+      </div>
+      <div v-else class="loading-state">
+        <p>Loading board data...</p>
       </div>
 
       <div v-if="solved" class="solved-banner">
@@ -26,25 +45,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
+import { fetchStages, fetchStageById } from './api/stageApi';
+import type { StageSummary } from './api/stageApi';
 
-// 5x5 heart-like shape pattern
-const solution = [
-  [0, 1, 0, 1, 0],
-  [1, 1, 1, 1, 1],
-  [1, 1, 1, 1, 1],
-  [0, 1, 1, 1, 0],
-  [0, 0, 1, 0, 0]
-];
-
-const board = ref(new PuzzleBoard(solution));
+const stages = ref<StageSummary[]>([]);
+const selectedStageId = ref<number | null>(null);
+const board = ref<PuzzleBoard | null>(null);
 const solved = ref(false);
 
-function handleCellClick() {
-  solved.value = board.value.isSolved();
+async function loadStagesList() {
+  try {
+    const list = await fetchStages();
+    stages.value = list;
+    if (list.length > 0) {
+      selectedStageId.value = list[0].id;
+      await loadStageDetails(list[0].id);
+    }
+  } catch (error) {
+    console.error('Failed to load stages:', error);
+  }
 }
+
+async function loadStageDetails(id: number) {
+  try {
+    const details = await fetchStageById(id);
+    board.value = new PuzzleBoard(details.solutionGrid);
+    solved.value = false;
+  } catch (error) {
+    console.error(`Failed to load stage details for ID ${id}:`, error);
+  }
+}
+
+async function onStageChange() {
+  if (selectedStageId.value !== null) {
+    await loadStageDetails(selectedStageId.value);
+  }
+}
+
+function handleCellClick() {
+  if (board.value) {
+    solved.value = board.value.isSolved();
+  }
+}
+
+onMounted(async () => {
+  await loadStagesList();
+});
 </script>
 
 <style>
@@ -100,6 +149,41 @@ body {
   width: 100%;
 }
 
+.stage-selector-card {
+  background-color: #1e293b; /* Slate 800 */
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.selector-label {
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.selector-select {
+  flex-grow: 1;
+  background-color: #0f172a;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.selector-select:focus {
+  border-color: #38bdf8;
+}
+
 .game-instructions {
   background-color: #1e293b; /* Slate 800 */
   border: 1px solid #334155;
@@ -148,6 +232,12 @@ body {
   padding: 1.5rem;
   border-radius: 16px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.loading-state {
+  color: #94a3b8;
+  font-size: 1.1rem;
+  padding: 2rem;
 }
 
 .solved-banner {

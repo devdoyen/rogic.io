@@ -27,27 +27,22 @@
 - **테스트 통과 검증**: `gradle test` 실행 결과, 작성된 3개의 MockMvc API 테스트 케이스가 100% 통과(Pass)함 확인 완료.
 - **CORS 설정 보완**: `StageController.java`에 `@CrossOrigin(origins = "http://localhost:5173")` 애노테이션을 반영하여 교차 출처 리소스 공유 문제를 방지하고 백엔드 빌드를 검증 완료.
 
-### Axios를 통한 데이터 통신 및 통합 연동 (Stage API 연동) - TDD Red 단계 완료
-- **패키지 설치**: 프론트엔드(`frontend/`) 디렉토리에 `axios` 연동 라이브러리 설치 완료.
-- **클라이언트 스텁 구성**: `frontend/src/api/stageApi.ts`에 `StageSummary`, `StageDetails` 인터페이스 선언 및 API 호출 스텁 코드 작성 완료.
-- **단위 테스트 작성**: `frontend/src/api/stageApi.test.ts`에 `axios` 모듈 목킹(`vi.mock('axios')`)을 포함한 전체 목록 조회 및 개별 조회 API 테스트 케이스 2개 작성 완료.
-- **테스트 실행**: `npm run test` 실행 결과, 작성된 2개의 API 통신 테스트 케이스가 기대값 차이 및 스텁 예외로 인해 예상대로 실패(Fail, Red Phase)함을 확인 완료.
+### Axios를 통한 데이터 통신 및 통합 연동 (Stage API 연동) - TDD Green 단계 완료
+- **API 클라이언트 구현**: `frontend/src/api/stageApi.ts`에 `axios`를 사용해 백엔드 서버(`http://localhost:8080`)로부터 전체 스테이지 목록 및 개별 스테이지 데이터를 받아오는 호출 로직 구현 완료.
+- **동적 상태 전환 연동**: `frontend/src/App.vue`에 선택 카드 UI(`select` 박스)를 적용하고 최초 마운트 시 API 목록 호출 및 선택값 변경에 따라 `PuzzleBoard` 상태 객체를 실시간으로 리빌딩하여 캔버스 그리드가 동적 초기화되도록 로직 결합 완료.
+- **단위 테스트 통과**: `npm run test` 실행 결과, Axios 통신 목킹 테스트 2개를 포함한 프론트엔드 유닛 테스트 19개 전체를 100% 통과(Pass)함 확인 완료.
 
 ---
 
-## 2. 다음 단계: 백엔드 API 및 프론트엔드 개발 (Next Goals)
+## 2. 다음 단계: 네모로직 기능 고도화 (Next Goals)
 
 ### 핵심 작업 목록
 
-1. **Axios를 통한 데이터 통신 및 통합 연동 (Stage API 연동) - TDD Green 단계 완료**
-   - `stageApi.ts`에 `axios.get`을 사용하는 실제 비즈니스 로직을 구현하여 단위 테스트를 통과시킵니다.
-   - `App.vue`에 스테이지 선택 UI(셀렉트 박스 또는 버튼)를 추가하고, 사용자가 선택한 스테이지 정보를 백엔드에서 받아와 `PuzzleBoard`를 재생성(Re-initialize)하는 동적 로직을 구현합니다.
-
-2. **배열 조작 모듈 (Array Manipulation) 개발**
+1. **배열 조작 모듈 (Array Manipulation) 개발**
    - **TDD 진행**: 격자판 드래그 조작(연속 채우기/지우기) 및 다중 셀 상태 토글 로직 검증용 단위 테스트를 먼저 작성합니다.
    - 드래그 동작 시 마우스 버튼 종류(좌클릭/우클릭)에 따른 상태 전이 로직 및 이벤트 리스너 리팩토링.
 
-3. **검증 모듈 (Validator) 개발**
+2. **검증 모듈 (Validator) 개발**
    - **TDD 진행**: 사용자가 풀고 있는 격자판의 실시간 상태가 정답 힌트 정보와 완전히 일치하는지 비교하는 테스트를 먼저 작성합니다.
 
 ---
