@@ -1,4 +1,5 @@
 import { calculateHints } from './hintCalculator';
+import { validateGrid } from './validator';
 
 export class PuzzleBoard {
   public readonly rowCount: number;
@@ -52,16 +53,13 @@ export class PuzzleBoard {
     this.currentGrid[row][col] = current === 2 ? 0 : 2;
   }
 
+  public setCell(row: number, col: number, value: number): void {
+    if (row < 0 || row >= this.rowCount || col < 0 || col >= this.colCount) return;
+    if (value !== 0 && value !== 1 && value !== 2) return;
+    this.currentGrid[row][col] = value;
+  }
+
   public isSolved(): boolean {
-    for (let r = 0; r < this.rowCount; r++) {
-      for (let c = 0; c < this.colCount; c++) {
-        const isSolutionFilled = this.solutionGrid[r][c] === 1;
-        const isPlayerFilled = this.currentGrid[r][c] === 1;
-        if (isSolutionFilled !== isPlayerFilled) {
-          return false;
-        }
-      }
-    }
-    return true;
+    return validateGrid(this.currentGrid, this.rowHints, this.colHints);
   }
 }

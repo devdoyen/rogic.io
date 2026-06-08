@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { PuzzleBoard } from '../engine/puzzleBoard';
 import { getGridCoordinates } from '../engine/coordinateMapper';
 import type { CanvasConfig } from '../engine/coordinateMapper';
@@ -139,6 +139,11 @@ function drawBoard() {
   }
 }
 
+let isDragging = false;
+let dragValue = 0; // 0: empty, 1: filled, 2: marked
+let lastRow = -1;
+let lastCol = -1;
+
 function handleMouseDown(event: MouseEvent) {
   const canvas = canvasRef.value;
   if (!canvas) return;
@@ -151,21 +156,68 @@ function handleMouseDown(event: MouseEvent) {
   if (!coords) return;
 
   const { row, col } = coords;
+  const currentValue = props.board.currentGrid[row][col];
 
   if (event.button === 0) {
-    // Left click -> Toggle fill
-    props.board.toggleFill(row, col);
+    // Left Click
+    dragValue = currentValue === 1 ? 0 : 1;
   } else if (event.button === 2) {
-    // Right click -> Toggle mark
-    props.board.toggleMark(row, col);
+    // Right Click
+    dragValue = currentValue === 2 ? 0 : 2;
+  } else {
+    return;
   }
+
+  isDragging = true;
+  props.board.setCell(row, col, dragValue);
+  lastRow = row;
+  lastCol = col;
 
   drawBoard();
   emit('cell-click');
+
+  window.addEventListener('mousemove', handleWindowMouseMove);
+  window.addEventListener('mouseup', handleWindowMouseUp);
+}
+
+function handleWindowMouseMove(event: MouseEvent) {
+  if (!isDragging) return;
+
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const clickY = event.clientY - rect.top;
+
+  const coords = getGridCoordinates(clickX, clickY, config);
+  if (!coords) return;
+
+  const { row, col } = coords;
+  if (row !== lastRow || col !== lastCol) {
+    props.board.setCell(row, col, dragValue);
+    lastRow = row;
+    lastCol = col;
+    drawBoard();
+    emit('cell-click');
+  }
+}
+
+function handleWindowMouseUp() {
+  if (isDragging) {
+    isDragging = false;
+    window.removeEventListener('mousemove', handleWindowMouseMove);
+    window.removeEventListener('mouseup', handleWindowMouseUp);
+  }
 }
 
 onMounted(() => {
   drawBoard();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleWindowMouseMove);
+  window.removeEventListener('mouseup', handleWindowMouseUp);
 });
 
 // Redraw if board changes
