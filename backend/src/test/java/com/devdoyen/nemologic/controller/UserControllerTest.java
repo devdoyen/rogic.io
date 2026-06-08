@@ -37,11 +37,11 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$", hasSize(3)))
-                .andExpect(jsonPath("$[0].username", is("Charlie")))
+                .andExpect(jsonPath("$[0].username", is("Player3")))
                 .andExpect(jsonPath("$[0].xp", is(1000)))
-                .andExpect(jsonPath("$[1].username", is("Bob")))
+                .andExpect(jsonPath("$[1].username", is("Player2")))
                 .andExpect(jsonPath("$[1].xp", is(500)))
-                .andExpect(jsonPath("$[2].username", is("Alice")))
+                .andExpect(jsonPath("$[2].username", is("Player1")))
                 .andExpect(jsonPath("$[2].xp", is(200)));
     }
 

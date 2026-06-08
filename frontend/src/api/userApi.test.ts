@@ -1,15 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import axios from 'axios';
-import { fetchRanking, clearStage } from './userApi';
+import { fetchRanking, clearStage, registerAnonymousUser } from './userApi';
 
 vi.mock('axios');
 
 describe('userApi TDD Red Phase', () => {
   it('fetchRanking should call GET /ranking and return user ranking list', async () => {
     const mockRankings = [
-      { id: 3, username: 'Charlie', xp: 1000, level: 5 },
-      { id: 2, username: 'Bob', xp: 500, level: 3 },
-      { id: 1, username: 'Alice', xp: 200, level: 2 }
+      { id: 3, username: 'Player3', xp: 1000, level: 5 },
+      { id: 2, username: 'Player2', xp: 500, level: 3 },
+      { id: 1, username: 'Player1', xp: 200, level: 2 }
     ];
 
     vi.mocked(axios.get).mockResolvedValue({ data: mockRankings });
@@ -20,7 +20,7 @@ describe('userApi TDD Red Phase', () => {
   });
 
   it('clearStage should call POST /{id}/clear with difficulty query param', async () => {
-    const mockUpdatedUser = { id: 1, username: 'Alice', xp: 250, level: 2 };
+    const mockUpdatedUser = { id: 1, username: 'Player1', xp: 250, level: 2 };
     vi.mocked(axios.post).mockResolvedValue({ data: mockUpdatedUser });
 
     const result = await clearStage(1, 'EASY');
@@ -29,4 +29,14 @@ describe('userApi TDD Red Phase', () => {
     });
     expect(result).toEqual(mockUpdatedUser);
   });
+
+  it('registerAnonymousUser should call POST /register and return new anonymous user data', async () => {
+    const mockNewUser = { id: 4, username: 'Anonymous-abc', xp: 0, level: 1, uuid: 'some-uuid' };
+    vi.mocked(axios.post).mockResolvedValue({ data: mockNewUser });
+
+    const result = await registerAnonymousUser();
+    expect(axios.post).toHaveBeenCalledWith('http://localhost:8080/api/users/register');
+    expect(result).toEqual(mockNewUser);
+  });
 });
+

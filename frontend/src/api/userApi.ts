@@ -5,6 +5,7 @@ export interface User {
   username: string;
   xp: number;
   level: number;
+  uuid?: string;
 }
 
 const API_BASE_URL = 'http://localhost:8080/api/users';
@@ -20,3 +21,9 @@ export async function clearStage(userId: number, difficulty: string): Promise<Us
   });
   return response.data;
 }
+
+export async function registerAnonymousUser(): Promise<User> {
+  // Skeleton implementation: throws error to trigger TDD Red Phase failure
+  throw new Error('registerAnonymousUser is not implemented');
+}
+

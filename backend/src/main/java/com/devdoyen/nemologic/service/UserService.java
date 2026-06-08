@@ -19,9 +19,9 @@ public class UserService {
     public void reset() {
         users.clear();
         // Alice starts with 200 XP. Since Level 1 requires 100 XP, she is Level 2 (200 XP >= 100 XP).
-        users.put(1L, new User(1L, "Alice", 200, 2));
-        users.put(2L, new User(2L, "Bob", 500, 3));
-        users.put(3L, new User(3L, "Charlie", 1000, 5));
+        users.put(1L, new User(1L, "Player1", 200, 2));
+        users.put(2L, new User(2L, "Player2", 500, 3));
+        users.put(3L, new User(3L, "Player3", 1000, 5));
     }
 
     public User addXpToUser(Long userId, int xpAmount) {

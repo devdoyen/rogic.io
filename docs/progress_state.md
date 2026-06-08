@@ -51,15 +51,28 @@
 - **실시간 리더보드 UI 구현**: `frontend/src/App.vue`에 반응형 Grid/Flex 구조의 레이아웃을 도입하고, 우측 사이드바 형태로 실시간 랭킹 순위, 레벨, 누적 XP를 노출하는 리더보드 UI 설계 및 통합 완료.
 - **실시간 연동 로직 적용**: 게임 클리어 상태 전환 시점에 유저의 난이도별 XP 보상을 청구하고, 업데이트된 순위 정보를 백엔드로부터 실시간으로 다시 받아와 즉각 반영하도록 연동 완료.
 - **테스트 통과 검증**: Axios API 목킹 테스트 및 컴포넌트 마운트 시 랭킹 데이터 호출/사이드바 렌더링 검증 통합 테스트([App.test.ts](file:///c:/Users/82107/dev/project/nemologic/frontend/src/App.test.ts))를 포함한 총 31개의 프론트엔드 테스트 전원 통과 확인 완료.
+- **리더보드 데이터 및 연동 사양 동기화 완료**: 
+  - 백엔드 `UserService` 초기화 시 기본 더미 유저 데이터를 `Player1`, `Player2`, `Player3` 등으로 구성하여 정적으로 미리 주입하고, 프론트엔드 호출 규격 및 단위 테스트를 이에 맞춰 완벽하게 동기화.
+  - 내장 브라우저 환경을 활용하여 퍼즐 클리어 인터랙션 시 경험치(XP) 지급(`POST /api/users/1/clear`) 및 리더보드(`Player1`이 200 XP -> 250 XP로 상승)가 실시간으로 갱신되는 E2E 수동 검증 완료.
+
+### 로컬 스토리지 기반 익명 유저 식별 시스템 구축 (Step 8) - TDD Red Phase 완료
+- **로컬 스토리지 세션 관리 유틸리티 설계**: `frontend/src/api/auth.ts` 스켈레톤 및 `auth.test.ts` 단위 테스트 작성 완료.
+- **익명 유저 등록 API 설계**: `userApi.ts`에 `registerAnonymousUser()` 스켈레톤 및 `userApi.test.ts` 목킹 단위 테스트 추가 완료.
+- **컴포넌트 초기화 로직 설계**: `App.vue` 마운트 시 세션 유무 분기 처리 및 하드코딩된 ID 교체 구조 반영 완료.
+- **TDD Red Phase 진입 검증**: `npm run test` 실행 결과, 의도한 3개의 테스트 케이스(로컬 세션 저장/조회 실패, register API 미구현 에러, 세션 존재 시 API 호출 스킵 실패)가 실패함을 확인 및 기록 완료.
 
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **백엔드 영속성 계층 (Database Integration) 추가**
+1. **로컬 스토리지 익명 유저 식별 시스템 구축 - TDD Green Phase (Step 8 완료)**
+   - `auth.ts` 로컬 스토리지 연동 로직 완성
+   - `registerAnonymousUser()` API 구현 (Axios 연동)
+   - `App.vue` 초기화 에러 처리 및 테스트 통과(Green Phase) 확인
+2. **백엔드 영속성 계층 (Database Integration) 추가**
    - 현재 정적으로 하드코딩된 스테이지 및 유저 정보를 Spring Data JPA와 H2/PostgreSQL 데이터베이스 테이블 설계 및 영속화 레이어로 고도화.
-2. **배포 환경 자동화 설정**
+3. **배포 환경 자동화 설정**
    - Terraform 및 Ansible을 이용해 AWS ECS/Fargate 또는 EC2 환경으로의 배포 파이프라인(IaC) 구성 진행.
 
 ---

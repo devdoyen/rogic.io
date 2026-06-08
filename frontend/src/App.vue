@@ -67,14 +67,17 @@ import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
 import { fetchStages, fetchStageById } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
-import { fetchRanking, clearStage } from './api/userApi';
+import { fetchRanking, clearStage, registerAnonymousUser } from './api/userApi';
 import type { User } from './api/userApi';
+import { hasUserSession, getUserSession, setUserSession } from './api/auth';
+import type { UserSession } from './api/auth';
 
 const stages = ref<StageSummary[]>([]);
 const selectedStageId = ref<number | null>(null);
 const board = ref<PuzzleBoard | null>(null);
 const solved = ref(false);
 const rankings = ref<User[]>([]);
+const currentUser = ref<UserSession | null>(null);
 
 async function loadStagesList() {
   try {
@@ -127,7 +130,8 @@ async function handleCellClick() {
         } else if (board.value.colCount >= 10 || board.value.rowCount >= 10) {
           difficulty = 'HARD';
         }
-        await clearStage(1, difficulty);
+        const userId = currentUser.value ? currentUser.value.id : 1;
+        await clearStage(userId, difficulty);
         await loadRankingsList();
       } catch (error) {
         console.error('Failed to submit stage clear:', error);
@@ -136,7 +140,29 @@ async function handleCellClick() {
   }
 }
 
+async function initializeUserSession() {
+  if (hasUserSession()) {
+    currentUser.value = getUserSession();
+  } else {
+    try {
+      const registered = await registerAnonymousUser();
+      const session: UserSession = {
+        id: registered.id,
+        uuid: registered.uuid || 'temp-uuid',
+        username: registered.username,
+        xp: registered.xp,
+        level: registered.level
+      };
+      setUserSession(session);
+      currentUser.value = session;
+    } catch (error) {
+      console.error('Failed to register anonymous user:', error);
+    }
+  }
+}
+
 onMounted(async () => {
+  await initializeUserSession();
   await Promise.all([
     loadStagesList(),
     loadRankingsList()
