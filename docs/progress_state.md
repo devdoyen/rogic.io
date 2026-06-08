@@ -19,15 +19,12 @@
 - **단위 테스트 통과**: `npm run test` 실행 결과, 컴포넌트 마운트 및 픽셀 좌표 맵핑 로직을 검증하는 4개의 테스트를 포함한 총 17개의 모든 테스트 케이스를 100% 통과(Pass)함 확인 완료.
 - **수동 브라우저 검증 완료**: 5x5 하트 정답 격자판을 기반으로 로컬 개발 서버(`npm run dev`) 환경에서 실제 마우스 좌클릭(채움), 우클릭(X 마크) 입력 시 오프셋 오차 없이 정상 작동함 확인 및 게임 클리어 축하 배너 노출 검증 완료.
 
-### 스프링 부트 백엔드 API 서버 구축 (Stage API) - TDD Red 단계 완료
-- **프로젝트 초기화**: `backend/` 디렉토리에 **Java 17 + Spring Boot 3.3.0 + Gradle 8.13** 환경의 백엔드 빌드 구성(`build.gradle`, `settings.gradle`) 완료.
-- **스켈레톤 구조 작성**:
-  - `com.devdoyen.nemologic.NemologicApplication`: 메인 엔트리포인트 어플리케이션 선언.
-  - `com.devdoyen.nemologic.model.Stage`: 가로, 세로 크기 및 정답 격자판을 관리할 레코드(`Record`) 구조체 설계.
-  - `com.devdoyen.nemologic.service.StageService`: 스테이지 조회 기능을 담당하는 목업 스텁 클래스 구성.
-  - `com.devdoyen.nemologic.controller.StageController`: `/api/stages` 및 `/api/stages/{id}` 엔드포인트를 노출하는 REST 컨트롤러 선언.
-- **JUnit 5 MockMvc 테스트 작성**: `StageControllerTest.java`에 전체 목록 조회, 개별 상세 조회 및 예외 처리를 검증하는 스프링 부트 테스트 세트 작성 완료.
-- **테스트 실행**: `gradle test` 실행 결과, 목록 조회 및 상세 조회 2개 케이스가 스텁 데이터 미배치로 인해 예상대로 실패(Fail, Red Phase)함을 확인 완료.
+### 스프링 부트 백엔드 API 서버 구축 (Stage API) - TDD Green 단계 완료
+- **프로젝트 구성 및 API 설계**: `backend/` 디렉토리에 Java 17 + Spring Boot 3.3.0 + Gradle 기반의 REST API 뼈대 구축 완료.
+- **비즈니스 로직 및 더미 데이터 구현**:
+  - `com.devdoyen.nemologic.service.StageService`: 하트(5x5) 및 체커보드(5x5) 2개 스테이지에 대한 하드코딩된 정적 리스트 데이터 적재 및 ID 검색 로직 완료.
+  - `com.devdoyen.nemologic.controller.StageController`: `/api/stages` 전체 목록 조회 및 `/api/stages/{id}` 상세 정보 반환용 실제 연동 비즈니스 로직 매핑 완료.
+- **테스트 통과 검증**: `gradle test` 실행 결과, 작성된 3개의 MockMvc API 테스트 케이스가 100% 통과(Pass)함 확인 완료.
 
 ---
 
@@ -35,14 +32,11 @@
 
 ### 핵심 작업 목록
 
-1. **Java / Spring Boot 백엔드 API 서버 구현 (TDD Green 단계)**
-   - `StageService.java`에 하트(5x5) 및 체커보드(10x10) 정답 격자판 데이터를 정적으로 적재하고, 비즈니스 로직을 작성하여 JUnit 테스트 3개를 모두 통과시킵니다.
-
-2. **배열 조작 모듈 (Array Manipulation) 개발**
+1. **배열 조작 모듈 (Array Manipulation) 개발**
    - **TDD 진행**: 격자판 드래그 조작(연속 채우기/지우기) 및 다중 셀 상태 토글 로직 검증용 단위 테스트를 먼저 작성합니다.
    - 드래그 동작 시 마우스 버튼 종류(좌클릭/우클릭)에 따른 상태 전이 로직 및 이벤트 리스너 리팩토링.
 
-3. **검증 모듈 (Validator) 개발**
+2. **검증 모듈 (Validator) 개발**
    - **TDD 진행**: 사용자가 풀고 있는 격자판의 실시간 상태가 정답 힌트 정보와 완전히 일치하는지 비교하는 테스트를 먼저 작성합니다.
 
 ---
