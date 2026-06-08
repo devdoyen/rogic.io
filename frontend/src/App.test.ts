@@ -234,7 +234,9 @@ describe('App.vue Leaderboard Integration TDD', () => {
     // Click/Select AI Stage
     const aiSelect = wrapper.find('.ai-stage-select');
     expect(aiSelect.exists()).toBe(true);
-    await aiSelect.setValue(7);
+    const option = aiSelect.find('option[value="7"]');
+    expect(option.exists()).toBe(true);
+    (option.element as HTMLOptionElement).selected = true;
     await aiSelect.trigger('change');
     await new Promise((resolve) => setTimeout(resolve, 50));
 

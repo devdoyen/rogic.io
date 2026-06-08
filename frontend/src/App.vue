@@ -188,17 +188,28 @@ async function loadRankingsList() {
 }
 
 async function onStageChange() {
-  if (selectedStageId.value !== null) {
+  if (selectedStageId.value) {
+    isAiStageActive.value = false;
+    selectedAiStageId.value = null;
     await loadStageDetails(selectedStageId.value);
   }
 }
 
 async function loadAiStagesList() {
-  // Skeleton
+  try {
+    const list = await fetchAiStages();
+    aiStages.value = list;
+  } catch (error) {
+    console.error('Failed to load AI daily stages:', error);
+  }
 }
 
 async function onAiStageChange() {
-  // Skeleton
+  if (selectedAiStageId.value) {
+    isAiStageActive.value = true;
+    selectedStageId.value = null;
+    await loadStageDetails(selectedAiStageId.value);
+  }
 }
 
 async function handleCellClick() {
@@ -209,13 +220,15 @@ async function handleCellClick() {
     if (solved.value && !wasSolved) {
       try {
         let difficulty = 'NORMAL';
-        if (board.value.colCount <= 5 && board.value.rowCount <= 5) {
+        if (isAiStageActive.value) {
+          difficulty = 'HARD';
+        } else if (board.value.colCount <= 5 && board.value.rowCount <= 5) {
           difficulty = 'EASY';
         } else if (board.value.colCount >= 10 || board.value.rowCount >= 10) {
           difficulty = 'HARD';
         }
         const userId = currentUser.value ? currentUser.value.id : 1;
-        const stageId = selectedStageId.value !== null ? selectedStageId.value : undefined;
+        const stageId = selectedStageId.value !== null ? selectedStageId.value : (selectedAiStageId.value !== null ? selectedAiStageId.value : undefined);
         const elapsedTime = Math.floor((Date.now() - startTime.value) / 1000);
         await clearStage(userId, difficulty, stageId, elapsedTime);
         await loadRankingsList();

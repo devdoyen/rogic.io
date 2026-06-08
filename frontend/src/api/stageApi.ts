@@ -24,5 +24,6 @@ export async function fetchStageById(id: number): Promise<StageDetails> {
 }
 
 export async function fetchAiStages(): Promise<StageSummary[]> {
-  throw new Error('Not implemented');
+  const response = await axios.get<StageSummary[]>(API_BASE_URL);
+  return response.data.filter(s => s.name.includes('AI'));
 }
