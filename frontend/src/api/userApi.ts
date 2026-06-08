@@ -38,8 +38,10 @@ export async function clearStage(userId: number, difficulty: string, stageId?: n
 }
 
 export async function fetchUserHistory(userId: number): Promise<HistoryResponse[]> {
-  throw new Error("Not implemented yet");
+  const response = await axios.get<HistoryResponse[]>(`${API_BASE_URL}/${userId}/history`);
+  return response.data;
 }
+
 
 export async function registerAnonymousUser(): Promise<User> {
 

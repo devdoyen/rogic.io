@@ -9,12 +9,12 @@
       <button 
         class="tab-btn-play" 
         :class="{ active: currentTab === 'play' }" 
-        @click="currentTab = 'play'"
+        @click="onTabChange('play')"
       >Game Play</button>
       <button 
         class="tab-btn-mypage" 
         :class="{ active: currentTab === 'mypage' }" 
-        @click="currentTab = 'mypage'"
+        @click="onTabChange('mypage')"
       >My Page</button>
     </nav>
 
@@ -135,6 +135,7 @@ async function loadStageDetails(id: number) {
     const details = await fetchStageById(id);
     board.value = new PuzzleBoard(details.solutionGrid);
     solved.value = false;
+    startTime.value = Date.now();
   } catch (error) {
     console.error(`Failed to load stage details for ID ${id}:`, error);
   }
@@ -169,12 +170,31 @@ async function handleCellClick() {
           difficulty = 'HARD';
         }
         const userId = currentUser.value ? currentUser.value.id : 1;
-        await clearStage(userId, difficulty);
+        const stageId = selectedStageId.value !== null ? selectedStageId.value : undefined;
+        const elapsedTime = Math.floor((Date.now() - startTime.value) / 1000);
+        await clearStage(userId, difficulty, stageId, elapsedTime);
         await loadRankingsList();
       } catch (error) {
         console.error('Failed to submit stage clear:', error);
       }
     }
+  }
+}
+
+async function loadUserHistory() {
+  try {
+    const userId = currentUser.value ? currentUser.value.id : 1;
+    const historyList = await fetchUserHistory(userId);
+    histories.value = historyList;
+  } catch (error) {
+    console.error('Failed to load user history:', error);
+  }
+}
+
+async function onTabChange(tab: 'play' | 'mypage') {
+  currentTab.value = tab;
+  if (tab === 'mypage') {
+    await loadUserHistory();
   }
 }
 
