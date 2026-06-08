@@ -9,7 +9,15 @@ vi.mock('./api/userApi');
 
 describe('App.vue Leaderboard Integration TDD', () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    localStorage.clear();
+    vi.mocked(userApi.registerAnonymousUser).mockResolvedValue({
+      id: 1,
+      uuid: 'temp-uuid',
+      username: 'Player1',
+      xp: 200,
+      level: 2
+    });
   });
 
   it('should call fetchStages and fetchRanking on mount, and render rankings list', async () => {

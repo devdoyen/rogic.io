@@ -23,7 +23,7 @@ export async function clearStage(userId: number, difficulty: string): Promise<Us
 }
 
 export async function registerAnonymousUser(): Promise<User> {
-  // Skeleton implementation: throws error to trigger TDD Red Phase failure
-  throw new Error('registerAnonymousUser is not implemented');
+  const response = await axios.post<User>(`${API_BASE_URL}/register`);
+  return response.data;
 }
 

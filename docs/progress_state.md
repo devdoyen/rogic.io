@@ -55,24 +55,22 @@
   - 백엔드 `UserService` 초기화 시 기본 더미 유저 데이터를 `Player1`, `Player2`, `Player3` 등으로 구성하여 정적으로 미리 주입하고, 프론트엔드 호출 규격 및 단위 테스트를 이에 맞춰 완벽하게 동기화.
   - 내장 브라우저 환경을 활용하여 퍼즐 클리어 인터랙션 시 경험치(XP) 지급(`POST /api/users/1/clear`) 및 리더보드(`Player1`이 200 XP -> 250 XP로 상승)가 실시간으로 갱신되는 E2E 수동 검증 완료.
 
-### 로컬 스토리지 기반 익명 유저 식별 시스템 구축 (Step 8) - TDD Red Phase 완료
-- **로컬 스토리지 세션 관리 유틸리티 설계**: `frontend/src/api/auth.ts` 스켈레톤 및 `auth.test.ts` 단위 테스트 작성 완료.
-- **익명 유저 등록 API 설계**: `userApi.ts`에 `registerAnonymousUser()` 스켈레톤 및 `userApi.test.ts` 목킹 단위 테스트 추가 완료.
-- **컴포넌트 초기화 로직 설계**: `App.vue` 마운트 시 세션 유무 분기 처리 및 하드코딩된 ID 교체 구조 반영 완료.
-- **TDD Red Phase 진입 검증**: `npm run test` 실행 결과, 의도한 3개의 테스트 케이스(로컬 세션 저장/조회 실패, register API 미구현 에러, 세션 존재 시 API 호출 스킵 실패)가 실패함을 확인 및 기록 완료.
+### 로컬 스토리지 기반 익명 유저 식별 시스템 구축 (Step 8) - TDD Green Phase 완료
+- **로컬 스토리지 세션 관리 유틸리티 구현**: `frontend/src/api/auth.ts`에 로컬 스토리지 세션 CRUD 연동 완료. `auth.test.ts` 단위 테스트 100% 통과.
+- **익명 유저 등록 API 구현**: `userApi.ts`에 `registerAnonymousUser()` 실제 Axios POST 통신 로직 구현 완료. `userApi.test.ts` API 목킹 테스트 100% 통과.
+- **컴포넌트 초기화 로직 연동**: `App.vue` 마운트 시 세션 분기 초기화(신규 유저 자동 발급 및 저장) 및 퍼즐 클리어 시의 동적 세션 ID 연동 완료.
+- **통합 검증 및 TDD 완료**: `npm run test` 실행 결과, 신규 추가된 로직과 테스트를 포함하여 프론트엔드 전체 37개 테스트 케이스 100% 통과(Pass) 완료.
+- **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리 수정하여 안전한 Mocking 하네스 기반 TDD 완료.
 
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **로컬 스토리지 익명 유저 식별 시스템 구축 - TDD Green Phase (Step 8 완료)**
-   - `auth.ts` 로컬 스토리지 연동 로직 완성
-   - `registerAnonymousUser()` API 구현 (Axios 연동)
-   - `App.vue` 초기화 에러 처리 및 테스트 통과(Green Phase) 확인
-2. **백엔드 영속성 계층 (Database Integration) 추가**
+1. **백엔드 익명 유저 등록 API 및 데이터베이스 영속성 계층 (Database Integration) 추가**
+   - 백엔드에 `POST /api/users/register` 실제 API(UUID 및 랜덤 이름 생성기 결합) 구현.
    - 현재 정적으로 하드코딩된 스테이지 및 유저 정보를 Spring Data JPA와 H2/PostgreSQL 데이터베이스 테이블 설계 및 영속화 레이어로 고도화.
-3. **배포 환경 자동화 설정**
+2. **배포 환경 자동화 설정**
    - Terraform 및 Ansible을 이용해 AWS ECS/Fargate 또는 EC2 환경으로의 배포 파이프라인(IaC) 구성 진행.
 
 ---

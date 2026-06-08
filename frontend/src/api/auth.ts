@@ -9,19 +9,30 @@ export interface UserSession {
 export const SESSION_KEY = 'nemologic_user_session';
 
 export function getUserSession(): UserSession | null {
-  // Skeleton implementation: return null to trigger test failure in Red Phase
-  return null;
+  const data = localStorage.getItem(SESSION_KEY);
+  if (!data) {
+    return null;
+  }
+  try {
+    return JSON.parse(data) as UserSession;
+  } catch (error) {
+    console.error('Failed to parse user session:', error);
+    return null;
+  }
 }
 
-export function setUserSession(_session: UserSession): void {
-  // Skeleton implementation: do nothing to trigger test failure in Red Phase
+export function setUserSession(session: UserSession): void {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  } catch (error) {
+    console.error('Failed to set user session:', error);
+  }
 }
 
 export function clearUserSession(): void {
-  // Skeleton implementation: do nothing to trigger test failure in Red Phase
+  localStorage.removeItem(SESSION_KEY);
 }
 
 export function hasUserSession(): boolean {
-  // Skeleton implementation: return false to trigger test failure in Red Phase
-  return false;
+  return localStorage.getItem(SESSION_KEY) !== null;
 }
