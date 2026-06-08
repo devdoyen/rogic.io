@@ -41,14 +41,22 @@
 - **검증 알고리즘 구현**: `frontend/src/engine/validator.ts` 파일에 유저가 작성 중인 `currentGrid`의 계산된 힌트가 타겟 스테이지의 `rowHints`/`colHints`와 정확히 일치하는지 비교하는 기능 구현 완료. X 마크(2)는 연산에서 0(빈 칸)과 동일하게 제외되도록 처리.
 - **테스트 통과 검증**: 빈 격자판 매칭, 힌트 수치 일치/불일치, X 마크 무시 처리 등을 검증하는 5개의 새로운 단위 테스트를 설계 및 전원 통과 완료.
 
+### 유저 경험치(XP) 시스템 및 실시간 랭킹 API 구축 - TDD Green 단계 완료
+- **도메인 및 비즈니스 로직 구현**: `com.devdoyen.nemologic.model.User`에 누적형 경험치(XP) 및 누적 구간별 progressive 레벨 계산 공식 구현 완료. `com.devdoyen.nemologic.service.UserService`에 인메모리 유저 저장소와 경험치 추가 및 글로벌 랭킹 조회 비즈니스 로직 구현 완료.
+- **REST API 컨트롤러 구현**: `com.devdoyen.nemologic.controller.UserController`에 실시간 글로벌 랭킹 조회 API (`GET /api/users/ranking`) 및 난이도별(Easy 50XP, Normal 100XP, Hard 200XP) XP 지급을 지원하는 클리어 API (`POST /api/users/{id}/clear`) 구현 완료.
+- **단위 테스트 통과**: `gradle test` 실행 결과, 레벨업 한계치 조건 검증 단위 테스트 4개 및 API 통합 MockMvc 테스트 3개를 포함한 백엔드 모든 테스트 케이스(11개)가 100% 통과(Pass)함 확인 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **백엔드 영속성 계층 (Database Integration) 추가**
-   - 현재 정적으로 하드코딩된 스테이지 정보를 Spring Data JPA와 H2/PostgreSQL 데이터베이스로 전환 및 마이그레이션.
-2. **배포 환경 자동화 설정**
+1. **프론트엔드 실시간 랭킹 UI 및 XP 연동**
+   - 퍼즐 클리어 시 백엔드 `/api/users/{id}/clear`를 호출하여 실시간으로 유저의 XP를 갱신하고 레벨업 상태를 프론트에 반영.
+   - 글로벌 랭킹 보드 UI 구축 및 실시간 순위 조회 기능 추가.
+2. **백엔드 영속성 계층 (Database Integration) 추가**
+   - 현재 정적으로 하드코딩된 스테이지 및 유저 정보를 Spring Data JPA와 H2/PostgreSQL 데이터베이스로 전환 및 마이그레이션.
+3. **배포 환경 자동화 설정**
    - Terraform 및 Ansible을 이용해 AWS ECS/Fargate 또는 EC2 환경으로의 배포 파이프라인(IaC) 구성 진행.
 
 ---
