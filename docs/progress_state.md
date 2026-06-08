@@ -100,6 +100,14 @@
 - **TDD Green Phase 달성**: `gradle test` 실행 결과, 신규 추가된 2개의 단위/통합 테스트를 포함하여 백엔드 **전체 테스트(19개)가 100% 정상 통과(BUILD SUCCESSFUL)**함을 검증 완료.
 - **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일 및 진행 문서만 격리하여 수정 완료.
 
+### 프론트엔드 마이페이지 탭 신설 및 클리어 기록 연동 (Step 13) - TDD Red Phase 완료
+- **API 클라이언트 및 테스트 구현**: `userApi.ts`에 `fetchUserHistory(userId)` 스켈레톤 함수를 추가하고 `clearStage` 파라미터(`stageId`, `elapsedTime`) 서명을 변경하였으며, `userApi.test.ts`에 해당 명세를 검증하는 모킹 테스트를 작성하여 의도된 API 에러 실패를 유도 완료.
+- **UI 및 통합 검증 테스트**:
+  - `App.vue`에 탭 네비게이션 UI 버튼(Game Play / My Page) 및 조건부 전환용 `currentTab`, `histories`, `startTime` reactive ref 변수 스켈레톤 추가 완료.
+  - `App.test.ts`에 마이페이지 탭 전환/이력 목록(시간, XP, 스테이지명) 렌더링 검증 및 퍼즐 완료 시 소요 시간과 스테이지 ID를 백엔드로 안전하게 전달하는 시나리오 테스트 케이스 작성 완료.
+- **TDD Red Phase 진입 및 검증**: `npx vitest run` 실행 결과, 신규 신설한 세 개의 프론트엔드 테스트 케이스가 의도대로 실패(Not implemented yet 및 기대값 비매치 에러)하는 Red Phase를 최종 확인 완료.
+- **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리하여 수정 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

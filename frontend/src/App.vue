@@ -5,8 +5,22 @@
       <p class="app-subtitle">TDD Core Engine & HTML5 Canvas Rendering Demo</p>
     </header>
 
+    <nav class="app-nav" style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+      <button 
+        class="tab-btn-play" 
+        :class="{ active: currentTab === 'play' }" 
+        @click="currentTab = 'play'"
+      >Game Play</button>
+      <button 
+        class="tab-btn-mypage" 
+        :class="{ active: currentTab === 'mypage' }" 
+        @click="currentTab = 'mypage'"
+      >My Page</button>
+    </nav>
+
     <div class="app-layout">
-      <main class="app-main">
+      <main v-if="currentTab === 'play'" class="app-main">
+
         <!-- Stage Selector Section -->
         <div class="stage-selector-card">
           <label for="stage-select" class="selector-label">Select Stage:</label>
@@ -43,6 +57,25 @@
         </div>
       </main>
 
+      <!-- My Page View -->
+      <main v-else-if="currentTab === 'mypage'" class="app-main mypage-view">
+        <div class="history-card" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 1.5rem; width: 100%; box-sizing: border-box;">
+          <h3 style="margin-top: 0; color: #38bdf8;">My Puzzle Clear History</h3>
+          <div v-if="histories.length > 0" class="history-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div v-for="item in histories" :key="item.id" class="history-item" style="display: flex; justify-content: space-between; padding: 0.5rem 0.75rem; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 8px;">
+              <span class="stage-name" style="font-weight: 600;">{{ item.stageName }}</span>
+              <span class="elapsed-time" style="color: #64748b;">{{ item.elapsedTime }}s</span>
+              <span class="xp-earned" style="color: #10b981;">+{{ item.xpEarned }} XP</span>
+              <span class="cleared-at" style="color: #818cf8; font-size: 0.85rem;">{{ item.clearedAt }}</span>
+            </div>
+          </div>
+          <div v-else class="empty-history" style="text-align: center; color: #94a3b8; padding: 2rem;">
+            <p>No history records found.</p>
+          </div>
+        </div>
+      </main>
+
+
       <!-- Sidebar Area (Leaderboard) -->
       <aside class="app-sidebar">
         <div class="leaderboard-card">
@@ -67,10 +100,11 @@ import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
 import { fetchStages, fetchStageById } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
-import { fetchRanking, clearStage, registerAnonymousUser } from './api/userApi';
+import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory } from './api/userApi';
 import type { User } from './api/userApi';
 import { hasUserSession, getUserSession, setUserSession } from './api/auth';
 import type { UserSession } from './api/auth';
+
 
 const stages = ref<StageSummary[]>([]);
 const selectedStageId = ref<number | null>(null);
@@ -78,6 +112,10 @@ const board = ref<PuzzleBoard | null>(null);
 const solved = ref(false);
 const rankings = ref<User[]>([]);
 const currentUser = ref<UserSession | null>(null);
+const currentTab = ref<'play' | 'mypage'>('play');
+const histories = ref<any[]>([]);
+const startTime = ref<number>(Date.now());
+
 
 async function loadStagesList() {
   try {

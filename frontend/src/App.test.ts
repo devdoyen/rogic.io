@@ -104,4 +104,57 @@ describe('App.vue Leaderboard Integration TDD', () => {
 
     expect(registerSpy).not.toHaveBeenCalled();
   });
+
+  it('should switch to My Page tab and fetch/render user history', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[0, 1, 0], [1, 1, 1], [0, 1, 0]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+    const mockHistory = [
+      { id: 10, userId: 1, stageId: 1, stageName: 'Heart Shape', clearedAt: '2026-06-08T22:40:40', xpEarned: 50, elapsedTime: 120 }
+    ];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+    const historySpy = vi.spyOn(userApi, 'fetchUserHistory').mockResolvedValue(mockHistory);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Click My Page tab
+    const myPageTab = wrapper.find('.tab-btn-mypage');
+    expect(myPageTab.exists()).toBe(true);
+    await myPageTab.trigger('click');
+
+    expect(historySpy).toHaveBeenCalledWith(1);
+
+    // Check history item rendering
+    const historyItems = wrapper.findAll('.history-item');
+    expect(historyItems.length).toBe(1);
+    expect(historyItems[0].text()).toContain('Heart Shape');
+    expect(historyItems[0].text()).toContain('120s');
+    expect(historyItems[0].text()).toContain('+50 XP');
+  });
+
+  it('should call clearStage with stageId and elapsedTime when puzzle is solved', async () => {
+    const mockStages = [{ id: 7, name: 'Mini Stage', width: 1, height: 1 }];
+    const mockStageDetails = { id: 7, name: 'Mini Stage', width: 1, height: 1, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+    const clearStageSpy = vi.spyOn(userApi, 'clearStage').mockResolvedValue({ id: 1, username: 'Player1', xp: 250, level: 2 });
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Force solve the board
+    (wrapper.vm as any).board.toggleFill(0, 0); // Fills the 1x1 cell to match solution [[1]]
+    await (wrapper.vm as any).handleCellClick();
+
+    expect(clearStageSpy).toHaveBeenCalledWith(1, 'EASY', 7, expect.any(Number));
+  });
 });
+
+

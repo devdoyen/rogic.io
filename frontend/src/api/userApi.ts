@@ -8,6 +8,16 @@ export interface User {
   uuid?: string;
 }
 
+export interface HistoryResponse {
+  id: number;
+  userId: number;
+  stageId: number;
+  stageName: string;
+  clearedAt: string;
+  xpEarned: number;
+  elapsedTime: number;
+}
+
 const API_BASE_URL = 'http://localhost:8080/api/users';
 
 export async function fetchRanking(): Promise<User[]> {
@@ -15,14 +25,24 @@ export async function fetchRanking(): Promise<User[]> {
   return response.data;
 }
 
-export async function clearStage(userId: number, difficulty: string): Promise<User> {
-  const response = await axios.post<User>(`${API_BASE_URL}/${userId}/clear`, null, {
-    params: { difficulty }
-  });
+export async function clearStage(userId: number, difficulty: string, stageId?: number, elapsedTime?: number): Promise<User> {
+  const params: any = { difficulty };
+  if (stageId !== undefined) {
+    params.stageId = stageId;
+  }
+  if (elapsedTime !== undefined) {
+    params.elapsedTime = elapsedTime;
+  }
+  const response = await axios.post<User>(`${API_BASE_URL}/${userId}/clear`, null, { params });
   return response.data;
 }
 
+export async function fetchUserHistory(userId: number): Promise<HistoryResponse[]> {
+  throw new Error("Not implemented yet");
+}
+
 export async function registerAnonymousUser(): Promise<User> {
+
   const response = await axios.post<User>(`${API_BASE_URL}/register`);
   return response.data;
 }
