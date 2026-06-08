@@ -145,8 +145,18 @@ describe('HintCalculator Unit Tests', () => {
       ]);
     });
 
-    it('should throw an error or handle empty grid gracefully', () => {
-      expect(() => calculateHints([])).toThrow();
+    it('should handle empty, null, or undefined grid gracefully by returning empty hints', () => {
+      expect(calculateHints([])).toEqual({ rowHints: [], colHints: [] });
+      expect(calculateHints(null as any)).toEqual({ rowHints: [], colHints: [] });
+      expect(calculateHints(undefined as any)).toEqual({ rowHints: [], colHints: [] });
+    });
+
+    it('should throw an error for grids with inconsistent row lengths', () => {
+      const inconsistentGrid = [
+        [1, 1],
+        [1]
+      ];
+      expect(() => calculateHints(inconsistentGrid)).toThrow();
     });
   });
 });

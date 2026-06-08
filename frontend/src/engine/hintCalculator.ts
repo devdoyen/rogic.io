@@ -10,15 +10,14 @@ export interface NonogramHints {
    */
 export function calculateHints(grid: number[][]): NonogramHints {
   if (!grid || grid.length === 0) {
-    throw new Error('Grid cannot be empty');
+    return {
+      rowHints: [],
+      colHints: []
+    };
   }
 
   const rowCount = grid.length;
   const colCount = grid[0].length;
-
-  if (colCount === 0) {
-    throw new Error('Grid width cannot be zero');
-  }
 
   // Validate that all rows have the same length
   for (let r = 0; r < rowCount; r++) {
