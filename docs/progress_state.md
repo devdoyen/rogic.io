@@ -69,6 +69,14 @@
 - **TDD Green Phase 달성**: `gradle test` 명령 실행 결과, 신규 추가된 API 호출 및 ID 자동 증량 테스트 케이스를 포함한 백엔드 전체 테스트(14개)가 100% 성공(Pass)함을 검증 완료.
 - **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 전혀 영향 없이 `backend/` 소스 파일만 수정 완료.
 
+### Spring Data JPA 및 내장형 H2 DB 영속성 레이어 구축 (Step 10) - TDD Red Phase 완료
+- **의존성 추가**: `backend/build.gradle`에 H2 데이터베이스 및 Spring Data JPA 관련 라이브러리 추가 완료.
+- **도메인 엔티티 전환**: `User.java` 및 `Stage.java`를 `@Entity` 구조로 리팩토링하고, 2차원 배열 격자 데이터를 저장/역직렬화하기 위한 `GridConverter.java` 구현 완료.
+- **리포지토리 명세 설계**: `UserRepository.java` 및 `StageRepository.java` 인터페이스 설계 완료.
+- **리포지토리 단위 테스트 작성**: JUnit 5 `@DataJpaTest` 기반으로 `UserRepositoryTest.java` 및 `StageRepositoryTest.java` 단위 테스트 추가 완료.
+- **TDD Red Phase 진입 검증**: `gradle test` 실행 결과, JPA 인프라 및 DB 저장 프로세스는 정상 작동하나 의도된 단언 에러(AssertionFailedError)로 2개 신규 테스트가 정상 실패함을 확인 완료.
+- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일만 수정 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

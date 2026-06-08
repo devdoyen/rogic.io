@@ -1,9 +1,94 @@
 package com.devdoyen.nemologic.model;
 
-public record Stage(
-    Long id,
-    String name,
-    int width,
-    int height,
-    int[][] solutionGrid
-) {}
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "stages")
+public class Stage {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    private int width;
+    private int height;
+
+    @Convert(converter = GridConverter.class)
+    @Column(columnDefinition = "TEXT")
+    private int[][] solutionGrid;
+
+    public Stage() {
+    }
+
+    public Stage(Long id, String name, int width, int height, int[][] solutionGrid) {
+        this.id = id;
+        this.name = name;
+        this.width = width;
+        this.height = height;
+        this.solutionGrid = solutionGrid;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int[][] getSolutionGrid() {
+        return solutionGrid;
+    }
+
+    public void setSolutionGrid(int[][] solutionGrid) {
+        this.solutionGrid = solutionGrid;
+    }
+
+    // Backward compatibility with previous Record methods
+    public Long id() {
+        return id;
+    }
+
+    public String name() {
+        return name;
+    }
+
+    public int width() {
+        return width;
+    }
+
+    public int height() {
+        return height;
+    }
+
+    public int[][] solutionGrid() {
+        return solutionGrid;
+    }
+}

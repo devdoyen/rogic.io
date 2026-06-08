@@ -1,8 +1,17 @@
 package com.devdoyen.nemologic.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "users")
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String username;
+
     private int xp;
     private int level;
     private String uuid;
