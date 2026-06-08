@@ -5,6 +5,7 @@ public class User {
     private String username;
     private int xp;
     private int level;
+    private String uuid;
 
     public User() {
     }
@@ -14,6 +15,15 @@ public class User {
         this.username = username;
         this.xp = xp;
         this.level = level;
+        this.uuid = null;
+    }
+
+    public User(Long id, String username, int xp, int level, String uuid) {
+        this.id = id;
+        this.username = username;
+        this.xp = xp;
+        this.level = level;
+        this.uuid = uuid;
     }
 
     public Long getId() {
@@ -46,6 +56,14 @@ public class User {
 
     public void setLevel(int level) {
         this.level = level;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     public void addXp(int amount) {

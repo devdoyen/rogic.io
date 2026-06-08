@@ -38,4 +38,8 @@ public class UserService {
                 .sorted(Comparator.comparingInt(User::getXp).reversed())
                 .collect(Collectors.toList());
     }
+
+    public User registerAnonymousUser() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

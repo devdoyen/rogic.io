@@ -73,4 +73,16 @@ public class UserControllerTest {
                 // We will assert the exact XP and level after adding 200 XP
                 .andExpect(jsonPath("$.level", is(3)));
     }
+
+    @Test
+    public void registerAnonymousUserShouldReturnNewUserWithId4() throws Exception {
+        mockMvc.perform(post("/api/users/register"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(4)))
+                .andExpect(jsonPath("$.uuid", notNullValue()))
+                .andExpect(jsonPath("$.username", startsWith("Anonymous-")))
+                .andExpect(jsonPath("$.xp", is(0)))
+                .andExpect(jsonPath("$.level", is(1)));
+    }
 }

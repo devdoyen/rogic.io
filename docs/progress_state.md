@@ -62,6 +62,14 @@
 - **통합 검증 및 TDD 완료**: `npm run test` 실행 결과, 신규 추가된 로직과 테스트를 포함하여 프론트엔드 전체 37개 테스트 케이스 100% 통과(Pass) 완료.
 - **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리 수정하여 안전한 Mocking 하네스 기반 TDD 완료.
 
+### 백엔드 익명 유저 등록 API 구현 및 데이터 연동 (Step 9) - TDD Red Phase 완료
+- **도메인 모델 구조 확장**: `User.java`에 `uuid` 필드 및 생성자/Getter/Setter 설계 완료.
+- **API 및 비즈니스 레이어 설계**: `UserService.java` 및 `UserController.java`에 `registerAnonymousUser()` 엔드포인트 스켈레톤 설계 및 이식 완료.
+- **ID 자동 증량 및 기본 스펙 검증 테스트**: `UserServiceTest.java`에 `testRegisterAnonymousUserAutoIncrement()` 단위 테스트 작성 완료.
+- **통합 API 결과 검증 테스트**: `UserControllerTest.java`에 `registerAnonymousUserShouldReturnNewUserWithId4()` MockMvc 통합 테스트 작성 완료.
+- **TDD Red Phase 진입 검증**: `gradle test` 실행 결과, 의도대로 2개의 신규 테스트 케이스가 `UnsupportedOperationException` 실패(Red Phase)로 끝남을 확인 완료.
+- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일만 수정 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

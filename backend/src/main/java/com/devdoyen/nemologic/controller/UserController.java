@@ -38,4 +38,9 @@ public class UserController {
         }
         return userService.addXpToUser(id, xpReward);
     }
+
+    @PostMapping("/register")
+    public User registerUser() {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

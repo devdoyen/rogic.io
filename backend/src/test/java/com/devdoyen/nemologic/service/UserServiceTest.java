@@ -57,4 +57,16 @@ public class UserServiceTest {
         assertEquals(3, user.getLevel());
         assertEquals(350, user.getXp());
     }
+
+    @Test
+    public void testRegisterAnonymousUserAutoIncrement() {
+        User user = userService.registerAnonymousUser();
+        assertNotNull(user);
+        assertEquals(4L, user.getId());
+        assertNotNull(user.getUuid());
+        assertFalse(user.getUuid().isEmpty());
+        assertTrue(user.getUsername().startsWith("Anonymous-"));
+        assertEquals(0, user.getXp());
+        assertEquals(1, user.getLevel());
+    }
 }
