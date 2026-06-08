@@ -7,6 +7,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.springframework.test.context.ActiveProfiles;
+
+@ActiveProfiles("test")
 @DataJpaTest
 public class StageRepositoryTest {
 

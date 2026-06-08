@@ -13,6 +13,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.springframework.test.context.ActiveProfiles;
+
+@ActiveProfiles("test")
 @DataJpaTest
 public class HistoryRepositoryTest {
 

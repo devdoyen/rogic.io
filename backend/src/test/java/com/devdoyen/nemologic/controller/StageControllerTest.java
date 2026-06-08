@@ -12,6 +12,9 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.test.context.ActiveProfiles;
+
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 public class StageControllerTest {
