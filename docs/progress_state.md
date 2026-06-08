@@ -78,6 +78,13 @@
 - **TDD Green Phase 달성**: `gradle test` 명령 실행 결과, 신규 작성한 리포지토리 단위 테스트(2개)와 수정된 가볍고 효율적인 모킹/컨트롤러 테스트를 포함한 총 15개 백엔드 전체 테스트 케이스가 100% 정상 통과(Pass) 완료.
 - **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 전혀 영향 없이 `backend/` 소스 파일 및 진행 문서만 수정 완료.
 
+### AI 기반 데일리 무한 퍼즐 생성기 파이프라인 구축 (Step 11) - TDD Red Phase 완료
+- **AI 인터페이스 명세**: 가상 외부 통신을 담당할 `AiClient.java` 인터페이스 선언 완료.
+- **데일리 생성 및 스케줄러 뼈대**: `AiStageGenerator.java` 서비스 스켈레톤 및 매일 기동되는 `DailyPuzzleScheduler.java` 스케줄러 추가 완료.
+- **통합 파이프라인 테스트 구현**: JSON 파싱 후 DB 영속성 연동 및 스케줄러 트리거 동작을 검증하기 위한 JUnit 5 Mockito 기반 `AiStageGeneratorTest.java` 작성 완료.
+- **TDD Red Phase 및 인프라 에러 확인**: `gradle test` 명령 실행 결과, `AiStageGenerator`가 `UnsupportedOperationException`을 던지는 Red Phase와, 스프링 빈 컨텍스트 기동 시 `AiClient` 구현체 부재로 인한 빈 종속성 예외(`NoSuchBeanDefinitionException`)로 빌드가 실패함을 확인 및 검증 완료.
+- **단일 레포지토리 격리 규칙 준수**: `frontend/` 디렉토리에 영향 없이 `backend/` 소스 파일만 수정 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
