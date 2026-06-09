@@ -152,13 +152,35 @@
   - `backend` 서비스: `db` 헬스체크 대기 가드(`depends_on` + `service_healthy`) 설정 및 PostgreSQL 바인딩 환경변수 동적 주입 완료.
   - `frontend` 서비스: `80` -> 호스트 `5173` 포트 포워딩 및 백엔드 포워딩 포트 연동 완료.
 
+### 45도 다이아몬드 퍼즐 레이아웃 전환 (Step 19) - 완료
+- **수학적 좌표 매핑 고도화**:
+  - `coordinateMapper.ts` 내 45도 등각 회전(Diamond Projection) 역변환 알고리즘 반영 완료.
+- **마우스 및 드래그 TDD 보완**:
+  - `NonogramCanvas.test.ts`에 45도 마름모 격자 타겟 지점 및 드래그 동작 검증 단위 테스트(6개) 리팩토링 및 100% 통과 확보.
+- **Canvas 다각형 및 사선 힌트 렌더링**:
+  - `NonogramCanvas.vue`에 `ctx.moveTo/lineTo`를 사용한 마름모 격자 드로잉 및 하늘색-보라색 프리미엄 그라데이션 적용 완료.
+  - 가로/세로 힌트 텍스트 배치를 각각 NW(북서), NE(북동) 사선 방향으로 정렬 구현 완료.
+
+### AWS 실제 배포 환경 구성 (Terraform & Ansible) - 완료
+- **Terraform IaC 구성**: VPC, Subnet, Route Table, Security Group(22, 80, 8080, 5173 오픈) 및 Ubuntu 22.04 LTS 기반 EC2 인스턴스를 선언적으로 프로비저닝하도록 `infra/terraform/` 작성 완료. 또한 EC2에 대한 IAM Role(SSMManagedInstanceCore 권한 적용) 및 Instance Profile 설정을 추가하여 보안성 확보 완료.
+  - 최저 비용 설정을 위해 인스턴스 사양을 **`t3a.nano`**(0.5 GB RAM, AMD 칩셋, 월 약 3.38달러)으로 강등 완료.
+  - 고유한 난수 접미사가 붙는 백업 전용 **S3 버킷(`aws_s3_bucket`)**을 선언하고 EC2 인스턴스에 S3 버킷 읽기/쓰기(`s3:PutObject` 등) 권한이 바인딩되도록 IAM 정책 연동 완료.
+- **Ansible 자동 배포 구성**: 타겟 서버에 Docker/Docker Compose 설치, 소스코드 동기화 및 Docker Compose 빌드/기동을 자동화하는 `infra/ansible/` 구성 완료.
+  - 0.5 GB 물리 메모리(RAM) 환경에서의 OOM(Out of Memory) 예방을 위한 **1.5GB SSD Swap 가상 메모리 구성 자동화** 태스크 적용 완료.
+  - `awscli` 자동 설치 태스크와 Docker 내부 PostgreSQL 데이터를 덤프한 후 자동으로 식별한 백업용 S3 버킷으로 업로드하는 **데일리 새벽 3시 DB 백업 셸 스크립트 및 Cron Job 자동 등록** 추가 완료.
+- **프론트엔드 API 동적 환경변수 지원 및 Nginx 리버스 프록시 구축**: 
+  - `stageApi.ts` 및 `userApi.ts`에 `import.meta.env.VITE_API_BASE_URL` 환경변수를 연동하여 배포 주소에 맞춰 API 경로가 동적으로 맵핑되도록 수정 완료.
+  - 프로덕션 환경의 동일 도메인(Same-Origin) 호출 지원을 위해 `frontend/nginx.conf` 내에 `/api/` 리버스 프록시 설정을 추가하고, 프로덕션 빌드 시 상대 경로 `/api`를 사용하도록 구조 개편 완료.
+- **백엔드 CORS 와일드카드 허용**: 실 배포 IP 환경에서의 유동적인 자원 공유를 위해 `StageController`와 `UserController`에 적용된 `@CrossOrigin` 허용 Origin 대상을 기존 `http://localhost:5173`에서 와일드카드(`*`)로 전환 완료.
+- **테스트 케이스 보완 및 정상 통과**: Mocking 환경 변경 및 CORS 수정 사항에 맞춰 백엔드 `LocalProfileConfigurationTest`와 `StageControllerTest`를 동기화하여 전체 테스트(프론트엔드 42개, 백엔드 전체 테스트)가 100% 통과(Pass)함 확인 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **배포 환경 자동화 설정**
-   - Terraform 및 Ansible을 이용해 AWS ECS/Fargate 또는 EC2 환경으로의 배포 파이프라인(IaC) 구성 진행.
+1. **실제 AWS 환경 인프라 배포 수행 및 검증**
+   - Terraform 및 Ansible 명령어를 실행하여 AWS상에 리소스를 프로비저닝하고 실환경 테스트를 완수.
 
 ---
 
