@@ -11,7 +11,9 @@ export interface StageDetails extends StageSummary {
   solutionGrid: number[][];
 }
 
-const API_BASE_URL = 'http://localhost:8080/api/stages';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api/stages`
+  : (import.meta.env.PROD ? '/api/stages' : 'http://localhost:8080/api/stages');
 
 export async function fetchStages(): Promise<StageSummary[]> {
   const response = await axios.get<StageSummary[]>(API_BASE_URL);

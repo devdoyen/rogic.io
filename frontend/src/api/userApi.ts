@@ -18,7 +18,9 @@ export interface HistoryResponse {
   elapsedTime: number;
 }
 
-const API_BASE_URL = 'http://localhost:8080/api/users';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api/users`
+  : (import.meta.env.PROD ? '/api/users' : 'http://localhost:8080/api/users');
 
 export async function fetchRanking(): Promise<User[]> {
   const response = await axios.get<User[]>(`${API_BASE_URL}/ranking`);
