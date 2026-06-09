@@ -180,8 +180,10 @@
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **실제 AWS 환경 인프라 배포 수행 및 검증**
-   - Terraform 및 Ansible 명령어를 실행하여 AWS상에 리소스를 프로비저닝하고 실환경 테스트를 완수.
+1. **CI/CD 파이프라인 정상 가동 확인**
+   - GitHub Actions의 `app-deploy` 수행 직전에 backend 빌드 테스크 (`./gradlew bootJar`) 추가 완료.
+   - Terraform 리소스 충돌(EntityAlreadyExists)을 방지하기 위해 GitHub Actions에서 `infra-apply`를 제거하고 로컬에서 Terraform 상태 관리를 수행하도록 가이드 완료.
+   - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행.
 
 ---
 
