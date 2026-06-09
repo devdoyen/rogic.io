@@ -74,6 +74,19 @@ jobs:
             echo "Skipping plan: AWS credentials not configured in secrets."
           fi
 
+      - name: Generate Terraform Graph
+        run: |
+          sudo apt-get update && sudo apt-get install -y graphviz
+          cd infra/terraform
+          terraform graph | dot -Tpng > terraform-graph.png
+
+      - name: Upload Terraform Graph
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-architecture-graph
+          path: infra/terraform/terraform-graph.png
+          retention-days: 7
+
   # 3. Infra Deploy Phase: Requires Manual Approval (GitHub Environment Gate)
   infra-apply:
     name: Terraform Infrastructure Apply (Requires Approval)
