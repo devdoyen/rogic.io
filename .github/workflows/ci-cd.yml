@@ -56,10 +56,17 @@ jobs:
           terraform_version: '1.8.5'
 
       - name: Terraform Format & Init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           cd infra/terraform
           terraform fmt -check
-          terraform init -backend=false
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            terraform init
+          else
+            terraform init -backend=false
+          fi
 
       - name: Check Terraform Plan
         env:
