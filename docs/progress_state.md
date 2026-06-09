@@ -181,8 +181,8 @@
 
 ### 핵심 작업 목록
 1. **CI/CD 파이프라인 정상 가동 확인**
-   - GitHub Actions의 `app-deploy` 수행 직전에 backend 빌드 테스크 (`./gradlew bootJar`) 추가 완료.
-   - Terraform 리소스 충돌(EntityAlreadyExists)을 방지하기 위해 GitHub Actions에서 `infra-apply`를 제거하고 로컬에서 Terraform 상태 관리를 수행하도록 가이드 완료.
+   - S3 및 DynamoDB를 연동한 Terraform 원격 백엔드 마이그레이션 및 상태 동기화 완료.
+   - GitHub Actions `infra-apply` 단계에 수동 승인(Environment Gate) 및 리전 환경변수 바인딩 추가 완료.
    - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행.
 
 ---

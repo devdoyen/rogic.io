@@ -109,10 +109,36 @@ jobs:
           path: infra/terraform/terraform-graph.png
           retention-days: 7
 
-  # 3. App Deploy Phase: Run Ansible Playbook (Runs automatically on main push)
+  # 3. Infra Apply Phase: Applies Terraform changes (Requires Manual Approval)
+  infra-apply:
+    name: Terraform Infrastructure Apply (Requires Approval)
+    needs: infra-plan
+    runs-on: ubuntu-latest
+    environment: production-infra # Protects this job using manual approvals in GitHub Environments
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+
+      - name: Terraform Init & Apply
+        run: |
+          cd infra/terraform
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            terraform init
+            terraform apply -auto-approve
+          else
+            echo "Skipping apply: AWS credentials not configured."
+          fi
+
+  # 4. App Deploy Phase: Run Ansible Playbook (Runs automatically on main push)
   app-deploy:
     name: App Deployment (Ansible)
-    needs: ci
+    needs: [ci, infra-apply]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
