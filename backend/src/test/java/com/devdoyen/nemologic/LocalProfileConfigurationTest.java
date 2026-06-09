@@ -21,9 +21,19 @@ import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.springframework.boot.test.mock.mockito.MockBean;
+import com.devdoyen.nemologic.repository.UserRepository;
+import com.devdoyen.nemologic.repository.StageRepository;
+
 @SpringBootTest
 @ActiveProfiles("local")
 public class LocalProfileConfigurationTest {
+
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private StageRepository stageRepository;
 
     @Autowired
     private Environment environment;

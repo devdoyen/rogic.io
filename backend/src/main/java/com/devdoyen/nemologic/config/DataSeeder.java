@@ -31,13 +31,13 @@ public class DataSeeder implements CommandLineRunner {
         if (stageRepository.count() == 0) {
             stageRepository.save(new Stage(
                 null,
-                "Heart Shape",
+                "Diamond Emblem",
                 5,
                 5,
                 new int[][]{
-                    {0, 1, 0, 1, 0},
-                    {1, 1, 1, 1, 1},
-                    {1, 1, 1, 1, 1},
+                    {0, 0, 1, 0, 0},
+                    {0, 1, 1, 1, 0},
+                    {1, 1, 0, 1, 1},
                     {0, 1, 1, 1, 0},
                     {0, 0, 1, 0, 0}
                 }
@@ -45,17 +45,46 @@ public class DataSeeder implements CommandLineRunner {
 
             stageRepository.save(new Stage(
                 null,
-                "Checkerboard",
+                "Cross Ruby",
                 5,
                 5,
                 new int[][]{
-                    {1, 0, 1, 0, 1},
+                    {1, 0, 0, 0, 1},
+                    {0, 1, 0, 1, 0},
+                    {0, 0, 1, 0, 0},
+                    {0, 1, 0, 1, 0},
+                    {1, 0, 0, 0, 1}
+                }
+            ));
+
+            stageRepository.save(new Stage(
+                null,
+                "Crystalline Spark",
+                5,
+                5,
+                new int[][]{
                     {0, 1, 0, 1, 0},
                     {1, 0, 1, 0, 1},
                     {0, 1, 0, 1, 0},
-                    {1, 0, 1, 0, 1}
+                    {1, 0, 1, 0, 1},
+                    {0, 1, 0, 1, 0}
+                }
+            ));
+
+            stageRepository.save(new Stage(
+                null,
+                "Hourglass",
+                5,
+                5,
+                new int[][]{
+                    {1, 1, 1, 1, 1},
+                    {0, 1, 1, 1, 0},
+                    {0, 0, 1, 0, 0},
+                    {0, 1, 1, 1, 0},
+                    {1, 1, 1, 1, 1}
                 }
             ));
         }
+
     }
 }

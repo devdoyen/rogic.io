@@ -24,14 +24,13 @@ public class StageControllerTest {
 
     @Test
     public void getAllStagesShouldReturnStagesList() throws Exception {
-        // We expect at least two stages (e.g. ID 1, "Heart Shape", ID 2 "Checkerboard") to be returned.
-        // In the Red phase, StageService returns an empty list, so this will fail.
+        // We expect four stages to be returned (Diamond Emblem, Cross Ruby, Crystalline Spark, Hourglass).
         mockMvc.perform(get("/api/stages"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$", hasSize(4)))
                 .andExpect(jsonPath("$[0].id", is(1)))
-                .andExpect(jsonPath("$[0].name", is("Heart Shape")))
+                .andExpect(jsonPath("$[0].name", is("Diamond Emblem")))
                 .andExpect(jsonPath("$[0].width", is(5)))
                 .andExpect(jsonPath("$[0].height", is(5)));
     }
@@ -39,12 +38,11 @@ public class StageControllerTest {
     @Test
     public void getStageByIdShouldReturnStageDetails() throws Exception {
         // We expect stage 1 to exist and return its full details.
-        // In the Red phase, StageService returns Optional.empty() resulting in 404, so this will fail.
         mockMvc.perform(get("/api/stages/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is("Heart Shape")))
+                .andExpect(jsonPath("$.name", is("Diamond Emblem")))
                 .andExpect(jsonPath("$.solutionGrid", hasSize(5)));
     }
 
