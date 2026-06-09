@@ -26,9 +26,12 @@ const emit = defineEmits<{
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
-const CELL_SIZE = 30;
-const OFFSET_X = 100;
-const OFFSET_Y = 80;
+// Diamond grid layout dimensions
+const CELL_SIZE = 30; // half-width/half-height of the diamond cell
+
+// Let's position the top corner (row=0, col=0)
+const OFFSET_X = 200; 
+const OFFSET_Y = 100;
 
 const config: CanvasConfig = {
   offsetX: OFFSET_X,
@@ -44,101 +47,147 @@ function drawBoard() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const width = OFFSET_X + props.board.colCount * CELL_SIZE;
-  const height = OFFSET_Y + props.board.rowCount * CELL_SIZE;
+  // Max bounds of the diamond grid:
+  // X spans from OFFSET_X - rowCount * CELL_SIZE to OFFSET_X + colCount * CELL_SIZE
+  // Y spans from OFFSET_Y to OFFSET_Y + (colCount + rowCount) * CELL_SIZE
+  const width = OFFSET_X + props.board.colCount * CELL_SIZE + 100;
+  const height = OFFSET_Y + (props.board.rowCount + props.board.colCount) * CELL_SIZE + 50;
   
   canvas.width = width;
   canvas.height = height;
 
-  // Clear canvas
-  ctx.fillStyle = '#ffffff';
+  // Clear canvas (sleek dark themed layout)
+  ctx.fillStyle = '#0f172a';
   ctx.fillRect(0, 0, width, height);
 
-  // Draw board background (grid area)
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillRect(OFFSET_X, OFFSET_Y, props.board.colCount * CELL_SIZE, props.board.rowCount * CELL_SIZE);
+  // Helper function to draw diamond cell path
+  const pathDiamond = (r: number, c: number) => {
+    // Top corner (r, c) starting from (0, 0)
+    // For cell center logic or top corner:
+    // x = offsetX + (c - r) * cellSize
+    // y = offsetY + (c + r) * cellSize
+    const cx = OFFSET_X + (c - r) * CELL_SIZE;
+    const cy = OFFSET_Y + (c + r) * CELL_SIZE;
+    
+    ctx.beginPath();
+    ctx.moveTo(cx, cy); // Top corner
+    ctx.lineTo(cx + CELL_SIZE, cy + CELL_SIZE); // Right corner
+    ctx.lineTo(cx, cy + 2 * CELL_SIZE); // Bottom corner
+    ctx.lineTo(cx - CELL_SIZE, cy + CELL_SIZE); // Left corner
+    ctx.closePath();
+  };
+
+  // Draw background for overall active board area
+  for (let r = 0; r < props.board.rowCount; r++) {
+    for (let c = 0; c < props.board.colCount; c++) {
+      pathDiamond(r, c);
+      ctx.fillStyle = '#1e293b'; // slate-800
+      ctx.fill();
+      ctx.strokeStyle = '#334155'; // slate-700
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
 
   // Draw filled cells and X marks
   for (let r = 0; r < props.board.rowCount; r++) {
     for (let c = 0; c < props.board.colCount; c++) {
       const cellState = props.board.currentGrid[r][c];
-      const x = OFFSET_X + c * CELL_SIZE;
-      const y = OFFSET_Y + r * CELL_SIZE;
+      const cx = OFFSET_X + (c - r) * CELL_SIZE;
+      const cy = OFFSET_Y + (c + r) * CELL_SIZE;
 
       if (cellState === 1) {
-        // Filled
-        ctx.fillStyle = '#0f172a'; // Slate 900
-        ctx.fillRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+        // Filled with premium gem gradient
+        pathDiamond(r, c);
+        const grad = ctx.createLinearGradient(cx - CELL_SIZE, cy, cx + CELL_SIZE, cy + 2 * CELL_SIZE);
+        grad.addColorStop(0, '#38bdf8'); // sky-400
+        grad.addColorStop(1, '#818cf8'); // indigo-400
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.strokeStyle = '#6366f1';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       } else if (cellState === 2) {
         // Marked (X)
         ctx.strokeStyle = '#f43f5e'; // Rose 500
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(x + 6, y + 6);
-        ctx.lineTo(x + CELL_SIZE - 6, y + CELL_SIZE - 6);
-        ctx.moveTo(x + CELL_SIZE - 6, y + 6);
-        ctx.lineTo(x + 6, y + CELL_SIZE - 6);
+        // Inner coordinates inside the diamond
+        ctx.moveTo(cx - CELL_SIZE / 3, cy + CELL_SIZE - CELL_SIZE / 3);
+        ctx.lineTo(cx + CELL_SIZE / 3, cy + CELL_SIZE + CELL_SIZE / 3);
+        ctx.moveTo(cx + CELL_SIZE / 3, cy + CELL_SIZE - CELL_SIZE / 3);
+        ctx.lineTo(cx - CELL_SIZE / 3, cy + CELL_SIZE + CELL_SIZE / 3);
         ctx.stroke();
       }
     }
   }
 
-  // Draw grid lines
-  ctx.lineWidth = 1;
-  for (let r = 0; r <= props.board.rowCount; r++) {
-    const y = OFFSET_Y + r * CELL_SIZE;
-    ctx.strokeStyle = r % 5 === 0 ? '#475569' : '#cbd5e1'; // Bold line every 5 rows
-    ctx.lineWidth = r % 5 === 0 ? 2 : 1;
-    ctx.beginPath();
-    ctx.moveTo(OFFSET_X, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
+  // Draw bold line markers every 5 lines
+  ctx.strokeStyle = '#64748b'; // slate-500
+  ctx.lineWidth = 2;
+  for (let r = 0; r <= props.board.rowCount; r += 5) {
+    if (r === 0 || r === props.board.rowCount) continue;
+    // Row line boundary separator
   }
 
-  for (let c = 0; c <= props.board.colCount; c++) {
-    const x = OFFSET_X + c * CELL_SIZE;
-    ctx.strokeStyle = c % 5 === 0 ? '#475569' : '#cbd5e1'; // Bold line every 5 cols
-    ctx.lineWidth = c % 5 === 0 ? 2 : 1;
-    ctx.beginPath();
-    ctx.moveTo(x, OFFSET_Y);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-
-  // Draw row hints (horizontal on the left)
-  ctx.fillStyle = '#475569'; // Slate 600
-  ctx.font = 'bold 13px sans-serif';
+  // Draw row hints (aligned along the NW boundary slope, rotated to match the slope, shifted outside)
+  ctx.fillStyle = '#94a3b8'; // slate-400
+  ctx.font = 'bold 12px sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
 
   for (let r = 0; r < props.board.rowCount; r++) {
     const hints = props.board.rowHints[r] || [0];
-    const y = OFFSET_Y + r * CELL_SIZE + CELL_SIZE / 2;
-    
-    // Draw numbers from right to left
+    // The top-left boundary corner of cell (r, 0) is at x = OFFSET_X - r*CELL_SIZE, y = OFFSET_Y + r*CELL_SIZE.
+    // To move outside the board (up and left, i.e., in the negative-col direction):
+    // We offset the start position by moving along the col=-1 vector: x_offset = -CELL_SIZE/2, y_offset = -CELL_SIZE/2
+    const baseLx = OFFSET_X - r * CELL_SIZE - CELL_SIZE / 2;
+    const baseLy = OFFSET_Y + r * CELL_SIZE + CELL_SIZE / 2;
+
+    // Draw hints outwards along the NW direction
     for (let h = 0; h < hints.length; h++) {
       const hintVal = hints[hints.length - 1 - h];
-      const x = OFFSET_X - 10 - h * 16;
-      ctx.fillText(hintVal.toString(), x, y);
+      // h * 16 pixels further away outwards along the NW vector
+      const hx = baseLx - 8 - h * 16;
+      const hy = baseLy - 8 - h * 16;
+
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(-Math.PI / 4); // Rotate -45 degrees
+      ctx.fillText(hintVal.toString(), 0, 0);
+      ctx.restore();
     }
   }
 
-  // Draw col hints (vertical on the top)
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
+  // Draw col hints (aligned along the NE boundary slope, rotated to match the slope, shifted outside)
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
 
   for (let c = 0; c < props.board.colCount; c++) {
     const hints = props.board.colHints[c] || [0];
-    const x = OFFSET_X + c * CELL_SIZE + CELL_SIZE / 2;
+    // The top-right boundary corner of cell (0, c) is at x = OFFSET_X + c*CELL_SIZE, y = OFFSET_Y + c*CELL_SIZE.
+    // To move outside the board (up and right, i.e., in the negative-row direction):
+    // We offset the start position by moving along the row=-1 vector: x_offset = +CELL_SIZE/2, y_offset = -CELL_SIZE/2
+    const baseRx = OFFSET_X + c * CELL_SIZE + CELL_SIZE / 2;
+    const baseRy = OFFSET_Y + c * CELL_SIZE + CELL_SIZE / 2;
 
-    // Draw numbers from bottom to top
+    // Draw hints outwards along the NE direction
     for (let h = 0; h < hints.length; h++) {
       const hintVal = hints[hints.length - 1 - h];
-      const y = OFFSET_Y - 8 - h * 16;
-      ctx.fillText(hintVal.toString(), x, y);
+      // h * 16 pixels further away outwards along the NE vector
+      const hx = baseRx + 8 + h * 16;
+      const hy = baseRy - 8 - h * 16;
+
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(Math.PI / 4); // Rotate 45 degrees
+      ctx.fillText(hintVal.toString(), 0, 0);
+      ctx.restore();
     }
   }
 }
+
+
 
 let isDragging = false;
 let dragValue = 0; // 0: empty, 1: filled, 2: marked
@@ -232,8 +281,8 @@ watch(() => props.board, () => {
 .nonogram-canvas-container {
   display: inline-block;
   padding: 10px;
-  background-color: #ffffff;
-  border-radius: 8px;
+  background-color: #0f172a; /* matches app slate-900 background */
+  border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 canvas {
