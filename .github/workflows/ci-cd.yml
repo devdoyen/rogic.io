@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: "ap-northeast-2"
+  AWS_REGION: "ap-northeast-2"
+
 jobs:
   # 1. CI Phase: Run backend and frontend test suites
   ci:
@@ -82,10 +88,19 @@ jobs:
           fi
 
       - name: Generate Terraform Graph
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           sudo apt-get update && sudo apt-get install -y graphviz
           cd infra/terraform
-          terraform graph | dot -Tpng > terraform-graph.png
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            terraform graph | dot -Tpng > terraform-graph.png
+          else
+            # Generate a mock empty file or skip graph to avoid crash
+            echo "Skipping graph: AWS credentials not configured."
+            touch terraform-graph.png
+          fi
 
       - name: Upload Terraform Graph
         uses: actions/upload-artifact@v4
