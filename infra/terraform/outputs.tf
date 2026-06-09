@@ -1,11 +1,11 @@
 output "server_public_ip" {
   description = "Public IP of the deployed EC2 server"
-  value       = aws_instance.nemologic_server.public_ip
+  value       = aws_eip.nemologic_eip.public_ip
 }
 
 output "ssh_connection_string" {
   description = "SSH connection helper command"
-  value       = "ssh -i ~/.ssh/${var.key_name}.pem ubuntu@${aws_instance.nemologic_server.public_ip}"
+  value       = "ssh -i ~/.ssh/${var.key_name}.pem ubuntu@${aws_eip.nemologic_eip.public_ip}"
 }
 
 output "backup_bucket_name" {

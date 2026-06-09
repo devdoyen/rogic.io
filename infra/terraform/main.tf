@@ -225,3 +225,13 @@ resource "aws_instance" "nemologic_server" {
     Name = "nemologic-server"
   }
 }
+
+# Elastic IP (EIP) Allocation & Association
+resource "aws_eip" "nemologic_eip" {
+  instance = aws_instance.nemologic_server.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "nemologic-eip"
+  }
+}

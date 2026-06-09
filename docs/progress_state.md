@@ -165,6 +165,7 @@
 - **Terraform IaC 구성**: VPC, Subnet, Route Table, Security Group(22, 80, 8080, 5173 오픈) 및 Ubuntu 22.04 LTS 기반 EC2 인스턴스를 선언적으로 프로비저닝하도록 `infra/terraform/` 작성 완료. 또한 EC2에 대한 IAM Role(SSMManagedInstanceCore 권한 적용) 및 Instance Profile 설정을 추가하여 보안성 확보 완료.
   - 최저 비용 설정을 위해 인스턴스 사양을 **`t3a.nano`**(0.5 GB RAM, AMD 칩셋, 월 약 3.38달러)으로 강등 완료.
   - 고유한 난수 접미사가 붙는 백업 전용 **S3 버킷(`aws_s3_bucket`)**을 선언하고 EC2 인스턴스에 S3 버킷 읽기/쓰기(`s3:PutObject` 등) 권한이 바인딩되도록 IAM 정책 연동 완료.
+  - 서버 시작/정지 시 IP 주소가 변경되는 문제를 방지하기 위해 **탄력적 IP(Elastic IP, `aws_eip`)** 리소스를 추가하여 고정 IP를 확보 완료.
 - **Ansible 자동 배포 구성**: 타겟 서버에 Docker/Docker Compose 설치, 소스코드 동기화 및 Docker Compose 빌드/기동을 자동화하는 `infra/ansible/` 구성 완료.
   - 0.5 GB 물리 메모리(RAM) 환경에서의 OOM(Out of Memory) 예방을 위한 **1.5GB SSD Swap 가상 메모리 구성 자동화** 태스크 적용 완료.
   - `awscli` 자동 설치 태스크와 Docker 내부 PostgreSQL 데이터를 덤프한 후 자동으로 식별한 백업용 S3 버킷으로 업로드하는 **데일리 새벽 3시 DB 백업 셸 스크립트 및 Cron Job 자동 등록** 추가 완료.
