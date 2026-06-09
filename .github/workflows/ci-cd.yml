@@ -1,0 +1,140 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # 1. CI Phase: Run backend and frontend test suites
+  ci:
+    name: Run Verification Tests (CI)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          ./gradlew test
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npm ci
+          npm run test -- --run
+
+  # 2. Infra Plan Phase: Dry-run Terraform changes to see impact
+  infra-plan:
+    name: Terraform Dry-Run (Plan)
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+
+      - name: Terraform Format & Init
+        run: |
+          cd infra/terraform
+          terraform fmt -check
+          terraform init -backend=false
+
+      - name: Check Terraform Plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd infra/terraform
+          # Only run plan if AWS credentials are provided
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            terraform plan
+          else
+            echo "Skipping plan: AWS credentials not configured in secrets."
+          fi
+
+  # 3. Infra Deploy Phase: Requires Manual Approval (GitHub Environment Gate)
+  infra-apply:
+    name: Terraform Infrastructure Apply (Requires Approval)
+    needs: infra-plan
+    runs-on: ubuntu-latest
+    environment: production-infra # Protects this job using manual approvals in GitHub Environments
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+
+      - name: Terraform Init & Apply
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd infra/terraform
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            terraform init
+            terraform apply -auto-approve
+          else
+            echo "Error: AWS credentials are required for terraform apply."
+            exit 1
+          fi
+
+  # 4. App Deploy Phase: Run Ansible Playbook (Runs automatically on main push)
+  app-deploy:
+    name: App Deployment (Ansible)
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible rsync
+
+      - name: Set up SSH Private Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/nemologic-key.pem
+          chmod 400 ~/.ssh/nemologic-key.pem
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: 'False'
+        run: |
+          cd infra/ansible
+          # Generate inventory hosts.ini dynamically using secrets if available
+          if [ -n "${{ secrets.EC2_IP }}" ]; then
+            echo "[nemologic_servers]" > hosts.ini
+            echo "nemologic-app-server ansible_host=${{ secrets.EC2_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem" >> hosts.ini
+            ansible-playbook -i hosts.ini playbook.yml
+          else
+            echo "Skipping Ansible: EC2_IP secret not set."
+          fi

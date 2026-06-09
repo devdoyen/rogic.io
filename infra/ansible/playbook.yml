@@ -1,0 +1,165 @@
+---
+- name: Deploy Nemologic App to AWS EC2
+  hosts: nemologic_servers
+  become: true
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+
+    - name: Check if swap file exists
+      stat:
+        path: /swapfile
+      register: swap_file_check
+
+    - name: Create swap file (1.5GB)
+      command: dd if=/dev/zero of=/swapfile bs=1M count=1536
+      when: not swap_file_check.stat.exists
+
+    - name: Set permissions on swap file
+      file:
+        path: /swapfile
+        owner: root
+        group: root
+        mode: '0600'
+      when: not swap_file_check.stat.exists
+
+    - name: Make swap file
+      command: mkswap /swapfile
+      when: not swap_file_check.stat.exists
+
+    - name: Enable swap file
+      command: swapon /swapfile
+      when: not swap_file_check.stat.exists
+
+    - name: Add swap file to fstab
+      mount:
+        name: none
+        src: /swapfile
+        fstype: swap
+        opts: sw
+        state: present
+
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - rsync
+          - awscli
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker CE & Docker Compose Plugin
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: Ensure Docker service is running and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create application directory
+      file:
+        path: /opt/nemologic
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Remove legacy nested directory if exists
+      file:
+        path: /opt/nemologic/nemologic
+        state: absent
+
+    - name: Deploy application source files to remote host
+      synchronize:
+        src: "{{ playbook_dir }}/../../"
+        dest: /opt/nemologic/
+        recursive: yes
+        delete: yes
+        rsync_opts:
+          - "--exclude=.git"
+          - "--exclude=.gradle"
+          - "--exclude=node_modules"
+          - "--exclude=infra/terraform/.terraform"
+          - "--exclude=backend/build/classes"
+          - "--exclude=backend/build/tmp"
+          - "--exclude=backend/build/reports"
+          - "--exclude=backend/build/test-results"
+
+    - name: Ensure environment configurations are set
+      copy:
+        content: |
+          SPRING_PROFILES_ACTIVE=local
+        dest: /opt/nemologic/.env
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Start Docker Compose services
+      shell:
+        cmd: docker compose down && docker compose up --build -d
+        chdir: /opt/nemologic
+      become: true
+
+    - name: Create backups directory
+      file:
+        path: /opt/nemologic/backups
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Deploy DB backup script
+      copy:
+        content: |
+          #!/bin/bash
+          # Find backup bucket name automatically from S3 list
+          BUCKET_NAME=$(aws s3 ls | grep nemologic-db-backup | head -n1 | awk '{print $3}')
+          if [ -z "$BUCKET_NAME" ]; then
+              echo "Error: S3 Backup Bucket not found"
+              exit 1
+          fi
+
+          BACKUP_NAME="db-backup-$(date +%Y%m%d-%H%M%S).sql.gz"
+          
+          # Dump DB and compress
+          docker exec nemologic-db pg_dump -U postgres nemologic | gzip > /tmp/$BACKUP_NAME
+          
+          # Upload to S3
+          aws s3 cp /tmp/$BACKUP_NAME s3://$BUCKET_NAME/postgres/$BACKUP_NAME
+          
+          # Remove local temp backup file
+          rm /tmp/$BACKUP_NAME
+        dest: /opt/nemologic/backups/backup_db.sh
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Set up Daily Cron Job for DB Backups (Run daily at 3:00 AM)
+      cron:
+        name: "nemologic db daily backup"
+        minute: "0"
+        hour: "3"
+        job: "/bin/bash /opt/nemologic/backups/backup_db.sh > /dev/null 2>&1"
+
