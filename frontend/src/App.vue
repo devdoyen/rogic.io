@@ -1,8 +1,11 @@
 <template>
   <div class="app-container">
     <header class="app-header">
-      <h1 class="app-title">Nemologic Puzzle Game</h1>
-      <p class="app-subtitle">TDD Core Engine & HTML5 Canvas Rendering Demo</p>
+      <div class="logo-wrapper">
+        <div class="logo-icon"></div>
+        <h1 class="app-title">Rotagic</h1>
+      </div>
+      <p class="app-subtitle">Rotate Logic Puzzle Game</p>
     </header>
 
     <nav class="app-nav" style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
@@ -341,24 +344,54 @@ body {
 }
 
 .app-header {
-  text-align: center;
-  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+
+.logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 4px solid transparent;
+  border-top-color: #38bdf8;
+  border-bottom-color: #818cf8;
+  border-radius: 50%;
+  animation: spin 3s linear infinite;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .app-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  background: linear-gradient(to right, #38bdf8, #818cf8);
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0;
+  letter-spacing: -1px;
+  line-height: 1.2;
+  padding-bottom: 0.25rem;
 }
 
 .app-subtitle {
   color: #94a3b8;
   font-size: 1rem;
   margin-top: 0.5rem;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .app-main {
@@ -379,6 +412,13 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stage-selector-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -8px rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
 }
 
 .selector-label {
