@@ -29,6 +29,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/nemologic
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
+      AI_API_KEY: ${AI_API_KEY}
     depends_on:
       db:
         condition: service_healthy
