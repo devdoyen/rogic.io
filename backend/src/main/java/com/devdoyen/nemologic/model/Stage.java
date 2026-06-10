@@ -20,13 +20,13 @@ public class Stage {
     @Column(columnDefinition = "TEXT")
     private int[][] solutionGrid;
 
-    @Column(name = "total_attempts", nullable = false)
+    @Column(name = "total_attempts", nullable = false, columnDefinition = "integer default 0")
     private int totalAttempts = 0;
 
-    @Column(name = "total_clears", nullable = false)
+    @Column(name = "total_clears", nullable = false, columnDefinition = "integer default 0")
     private int totalClears = 0;
 
-    @Column(name = "average_elapsed_time", nullable = false)
+    @Column(name = "average_elapsed_time", nullable = false, columnDefinition = "double precision default 0.0")
     private double averageElapsedTime = 0.0;
 
     public Stage() {
