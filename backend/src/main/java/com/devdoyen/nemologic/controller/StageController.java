@@ -17,9 +17,11 @@ import java.util.List;
 public class StageController {
 
     private final StageService stageService;
+    private final com.devdoyen.nemologic.service.AiStageGenerator aiStageGenerator;
 
-    public StageController(StageService stageService) {
+    public StageController(StageService stageService, com.devdoyen.nemologic.service.AiStageGenerator aiStageGenerator) {
         this.stageService = stageService;
+        this.aiStageGenerator = aiStageGenerator;
     }
 
     @GetMapping
@@ -41,6 +43,16 @@ public class StageController {
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/ai-generate")
+    public ResponseEntity<Stage> triggerAiGeneration() {
+        try {
+            Stage generated = aiStageGenerator.generateAndSaveStage();
+            return ResponseEntity.ok(generated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

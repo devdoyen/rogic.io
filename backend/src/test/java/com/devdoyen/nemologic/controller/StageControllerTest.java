@@ -61,4 +61,13 @@ public class StageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalAttempts").exists());
     }
+
+    @Test
+    public void triggerAiGenerationShouldCreateStageAndReturnOk() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/stages/ai-generate"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is("AI Daily Puzzle")))
+                .andExpect(jsonPath("$.width", is(5)))
+                .andExpect(jsonPath("$.height", is(5)));
+    }
 }
