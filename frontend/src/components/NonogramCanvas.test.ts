@@ -22,35 +22,40 @@ describe('NonogramCanvas TDD Red Phase', () => {
 
   describe('Coordinate mapping calculations', () => {
     const config: CanvasConfig = {
-      offsetX: 200, // Top corner X coordinate
-      offsetY: 100, // Top corner Y coordinate
-      cellSize: 30, // Half-width/half-height of diamond cells
+      centerX: 200,
+      centerY: 200,
+      cellSize: 30,
       rowCount: 3,
-      colCount: 3
+      colCount: 3,
+      angle: 0 // orthogonal for simplicity in basic tests
     };
 
-    it('should map click to correct grid cell index inside bounds', () => {
-      // For row=0, col=0: dx = 0, dy = 0. Center is x = 200, y = 130
-      // dx_pixel = (200 - 200)/30 = 0, dy_pixel = (130 - 100)/30 = 1
-      // col = floor((0 + 1)/2) = 0, row = floor((1 - 0)/2) = 0
-      expect(getGridCoordinates(200, 130, config)).toEqual({ row: 0, col: 0 });
+    it('should map click to correct grid cell index inside bounds at 0 angle', () => {
+      // Center cell (1, 1)
+      expect(getGridCoordinates(200, 200, config)).toEqual({ row: 1, col: 1 });
 
-      // For row=1, col=1: col-row=0, col+row=2. Center is x = 200, y = 160
-      // dx = 0, dy = (160 - 100)/30 = 2 -> col = floor((0+2)/2) = 1, row = floor((2-0)/2) = 1
-      expect(getGridCoordinates(200, 160, config)).toEqual({ row: 1, col: 1 });
+      // Top left cell (0, 0)
+      expect(getGridCoordinates(180, 180, config)).toEqual({ row: 0, col: 0 });
 
-      // For row=0, col=2: col-row=2, col+row=2. Center is x = 200 + 2*30 = 260, y = 160
-      // dx = (260 - 200)/30 = 2, dy = (160 - 100)/30 = 2
-      // col = floor(4/2) = 2, row = floor(0/2) = 0
-      expect(getGridCoordinates(260, 160, config)).toEqual({ row: 0, col: 2 });
+      // Bottom right cell (2, 2)
+      expect(getGridCoordinates(220, 220, config)).toEqual({ row: 2, col: 2 });
     });
 
-    it('should return null for clicks inside the hint offset area or out of bounds', () => {
+    it('should map click under 45-degree angle correctly', () => {
+      const rotatedConfig = { ...config, angle: Math.PI / 4 };
+      // Center remains (1, 1)
+      expect(getGridCoordinates(200, 200, rotatedConfig)).toEqual({ row: 1, col: 1 });
+
+      // Cell (0, 1): unrotated center is at x=200, y=170. Rotated by 45 degrees, it maps to x=221.21, y=178.79
+      expect(getGridCoordinates(221, 179, rotatedConfig)).toEqual({ row: 0, col: 1 });
+    });
+
+    it('should return null for clicks out of bounds', () => {
       // Way off top: y = 50
       expect(getGridCoordinates(200, 50, config)).toBeNull();
 
       // Way off left: x = 50
-      expect(getGridCoordinates(50, 160, config)).toBeNull();
+      expect(getGridCoordinates(50, 200, config)).toBeNull();
     });
   });
 
@@ -62,35 +67,35 @@ describe('NonogramCanvas TDD Red Phase', () => {
         [0, 0, 0]
       ]);
       const wrapper = mount(NonogramCanvas, {
-        props: { board }
+        props: { board, initialAngle: 0 }
       });
       const canvas = wrapper.find('[data-testid="nonogram-canvas"]');
 
       // Mock getBoundingClientRect
       canvas.element.getBoundingClientRect = () => ({
         width: 400,
-        height: 300,
+        height: 400,
         top: 0,
         left: 0,
         right: 400,
-        bottom: 300,
+        bottom: 400,
         x: 0,
         y: 0,
         toJSON: () => {}
       });
 
-      // Mouse down on (0, 0) (left click): x = 200, y = 130
+      // Mouse down on (0, 0) which is (92, 92) relative to dynamic center 122
       await canvas.trigger('mousedown', {
         button: 0,
-        clientX: 200,
-        clientY: 130
+        clientX: 92,
+        clientY: 92
       });
       expect(board.currentGrid[0][0]).toBe(1);
 
-      // Drag to (1, 1): x = 200, y = 160
+      // Drag to (1, 1) which is (122, 122)
       window.dispatchEvent(new MouseEvent('mousemove', {
-        clientX: 200,
-        clientY: 160
+        clientX: 122,
+        clientY: 122
       }));
       expect(board.currentGrid[1][1]).toBe(1);
 
@@ -99,10 +104,10 @@ describe('NonogramCanvas TDD Red Phase', () => {
 
       // Move should no longer draw
       window.dispatchEvent(new MouseEvent('mousemove', {
-        clientX: 260,
-        clientY: 160
+        clientX: 152,
+        clientY: 152
       }));
-      expect(board.currentGrid[0][2]).toBe(0);
+      expect(board.currentGrid[2][2]).toBe(0);
     });
 
     it('should drag to clear filled cells', async () => {
@@ -113,34 +118,34 @@ describe('NonogramCanvas TDD Red Phase', () => {
       board.currentGrid[0][0] = 1;
       board.currentGrid[1][1] = 1;
       const wrapper = mount(NonogramCanvas, {
-        props: { board }
+        props: { board, initialAngle: 0 }
       });
       const canvas = wrapper.find('[data-testid="nonogram-canvas"]');
 
       canvas.element.getBoundingClientRect = () => ({
         width: 400,
-        height: 300,
+        height: 400,
         top: 0,
         left: 0,
         right: 400,
-        bottom: 300,
+        bottom: 400,
         x: 0,
         y: 0,
         toJSON: () => {}
       });
 
-      // Mouse down on (0, 0)
+      // Mouse down on (0, 0) which is (85, 85) relative to center 100.5
       await canvas.trigger('mousedown', {
         button: 0,
-        clientX: 200,
-        clientY: 130
+        clientX: 85,
+        clientY: 85
       });
       expect(board.currentGrid[0][0]).toBe(0);
 
-      // Drag to (1, 1)
+      // Drag to (1, 1) which is (115, 115)
       window.dispatchEvent(new MouseEvent('mousemove', {
-        clientX: 200,
-        clientY: 160
+        clientX: 115,
+        clientY: 115
       }));
       expect(board.currentGrid[1][1]).toBe(0);
 
@@ -155,17 +160,17 @@ describe('NonogramCanvas TDD Red Phase', () => {
         [0, 0]
       ]);
       const wrapper = mount(NonogramCanvas, {
-        props: { board, readOnly: true }
+        props: { board, readOnly: true, initialAngle: 0 }
       });
       const canvas = wrapper.find('[data-testid="nonogram-canvas"]');
 
       canvas.element.getBoundingClientRect = () => ({
         width: 400,
-        height: 300,
+        height: 400,
         top: 0,
         left: 0,
         right: 400,
-        bottom: 300,
+        bottom: 400,
         x: 0,
         y: 0,
         toJSON: () => {}
@@ -174,8 +179,8 @@ describe('NonogramCanvas TDD Red Phase', () => {
       // Mouse down on (0, 0)
       await canvas.trigger('mousedown', {
         button: 0,
-        clientX: 200,
-        clientY: 130
+        clientX: 85,
+        clientY: 85
       });
       expect(board.currentGrid[0][0]).toBe(0); // Should remain 0
     });

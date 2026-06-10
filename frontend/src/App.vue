@@ -61,7 +61,7 @@
 
         <!-- Canvas Area: only render if board is initialized -->
         <div v-if="board" class="canvas-wrapper">
-          <NonogramCanvas :board="board" @cell-click="handleCellClick" />
+          <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" @cell-click="handleCellClick" />
         </div>
         <div v-else class="loading-state">
           <p>Loading board data...</p>
@@ -113,7 +113,7 @@
         <h3 class="modal-title" style="margin-top: 0; color: #38bdf8; font-weight: 700;">Review Clear History</h3>
         <p class="modal-stage-info" style="color: #94a3b8; margin-bottom: 1.5rem;">Stage: {{ selectedHistory?.stageName }}</p>
         <div class="modal-canvas-wrapper" style="display: inline-block; padding: 10px; background-color: #ffffff; border-radius: 8px;">
-          <NonogramCanvas :board="modalBoard" :readOnly="true" />
+          <NonogramCanvas :board="modalBoard" :readOnly="true" :initialAngle="0" />
         </div>
         <div style="margin-top: 1.5rem;">
           <button class="modal-close-btn" @click="closeModal" style="padding: 0.5rem 1.5rem; background-color: #f43f5e; border: none; border-radius: 8px; color: #ffffff; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">Close</button>
@@ -127,6 +127,7 @@
 import { ref, onMounted } from 'vue';
 import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
+import { rotateGrid } from './engine/gridRotator';
 import { fetchStages, fetchStageById, fetchAiStages } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
 import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory } from './api/userApi';
@@ -149,6 +150,8 @@ const aiStages = ref<StageSummary[]>([]);
 const selectedAiStageId = ref<number | null>(null);
 const isAiStageActive = ref(false);
 
+const currentRotationSteps = ref(0);
+
 const isModalOpen = ref(false);
 const selectedHistory = ref<any>(null);
 const modalBoard = ref<PuzzleBoard | null>(null);
@@ -170,7 +173,10 @@ async function loadStagesList() {
 async function loadStageDetails(id: number) {
   try {
     const details = await fetchStageById(id);
-    board.value = new PuzzleBoard(details.solutionGrid);
+    const k = Math.floor(Math.random() * 4);
+    currentRotationSteps.value = k;
+    const rotated = rotateGrid(details.solutionGrid, k);
+    board.value = new PuzzleBoard(rotated);
     solved.value = false;
     startTime.value = Date.now();
   } catch (error) {
