@@ -78,6 +78,29 @@
         state: started
         enabled: yes
 
+    - name: Configure Docker daemon to use awslogs
+      copy:
+        content: |
+          {
+            "log-driver": "awslogs",
+            "log-opts": {
+              "awslogs-group": "/aws/ec2/nemologic",
+              "awslogs-region": "ap-northeast-2",
+              "awslogs-create-group": "true"
+            }
+          }
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: '0644'
+      register: docker_daemon_config
+
+    - name: Restart Docker if daemon config changed
+      service:
+        name: docker
+        state: restarted
+      when: docker_daemon_config.changed
+
     - name: Create application directory
       file:
         path: /opt/nemologic

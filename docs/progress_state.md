@@ -182,7 +182,12 @@
 - **단위 테스트 통과**: 회전 유틸리티(`gridRotator.ts`) 및 48개 전체 프론트엔드 테스트 케이스 100% 통과(Pass) 완료.
 - **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리 수정하여 TDD 완료.
 
+### AWS CloudWatch Logs 연동 및 Docker 데몬 로깅 자동화 - 완료
+- **Terraform IaC 구성**: Dedicated CloudWatch Log Group `/aws/ec2/nemologic`을 생성하고 7일 보관 주기를 설정함. EC2 인스턴스의 IAM 역할에 CloudWatch Logs 쓰기 권한(`logs:PutLogEvents` 등)을 가진 정책을 바인딩함.
+- **Docker 호스트 수준 로깅 최적화**: 로컬 개발 환경의 실행 편의성을 보존하고자 `docker-compose.yml`을 일절 건드리지 않고, Ansible을 통해 EC2 내 `/etc/docker/daemon.json`을 수정하여 기본 log-driver를 `awslogs`로 격리 지정 완료. 이에 따라 컨테이너별 스트림 분리 수집이 무중단 자동화됨.
+
 ---
+
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 

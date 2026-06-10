@@ -276,3 +276,41 @@ resource "aws_eip" "nemologic_eip" {
     Name = "nemologic-eip"
   }
 }
+
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "nemologic_log_group" {
+  name              = "/aws/ec2/nemologic"
+  retention_in_days = 7
+
+  tags = {
+    Name = "nemologic-log-group"
+  }
+}
+
+# Policy for CloudWatch Logs Access
+resource "aws_iam_policy" "cloudwatch_log_policy" {
+  name        = "nemologic-cloudwatch-log-policy"
+  description = "Allow EC2 instance to send logs to CloudWatch"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams",
+          "logs:DescribeLogGroups"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cloudwatch_log_attachment" {
+  role       = aws_iam_role.nemologic_ec2_role.name
+  policy_arn = aws_iam_policy.cloudwatch_log_policy.arn
+}
+
