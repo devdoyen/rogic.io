@@ -33,4 +33,14 @@ public class StageController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @org.springframework.web.bind.annotation.PostMapping("/{id}/start")
+    public ResponseEntity<Void> startStage(@PathVariable Long id) {
+        try {
+            stageService.startStage(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

@@ -27,64 +27,89 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(new User(null, "Player3", 1000, 5));
         }
 
-        // Seed default stages if database is empty
-        if (stageRepository.count() == 0) {
-            stageRepository.save(new Stage(
-                null,
-                "Diamond Emblem",
-                5,
-                5,
-                new int[][]{
-                    {0, 0, 1, 0, 0},
-                    {0, 1, 1, 1, 0},
-                    {1, 1, 0, 1, 1},
-                    {0, 1, 1, 1, 0},
-                    {0, 0, 1, 0, 0}
-                }
-            ));
+        // Seed default stages if they don't exist
+        saveStageIfAbsent("Diamond Emblem", 5, 5, new int[][]{
+            {0, 0, 1, 0, 0},
+            {0, 1, 1, 1, 0},
+            {1, 1, 0, 1, 1},
+            {0, 1, 1, 1, 0},
+            {0, 0, 1, 0, 0}
+        });
 
-            stageRepository.save(new Stage(
-                null,
-                "Cross Ruby",
-                5,
-                5,
-                new int[][]{
-                    {1, 0, 0, 0, 1},
-                    {0, 1, 0, 1, 0},
-                    {0, 0, 1, 0, 0},
-                    {0, 1, 0, 1, 0},
-                    {1, 0, 0, 0, 1}
-                }
-            ));
+        saveStageIfAbsent("Cross Ruby", 5, 5, new int[][]{
+            {1, 0, 0, 0, 1},
+            {0, 1, 0, 1, 0},
+            {0, 0, 1, 0, 0},
+            {0, 1, 0, 1, 0},
+            {1, 0, 0, 0, 1}
+        });
 
-            stageRepository.save(new Stage(
-                null,
-                "Crystalline Spark",
-                5,
-                5,
-                new int[][]{
-                    {0, 1, 0, 1, 0},
-                    {1, 0, 1, 0, 1},
-                    {0, 1, 0, 1, 0},
-                    {1, 0, 1, 0, 1},
-                    {0, 1, 0, 1, 0}
-                }
-            ));
+        saveStageIfAbsent("Crystalline Spark", 5, 5, new int[][]{
+            {0, 1, 0, 1, 0},
+            {1, 0, 1, 0, 1},
+            {0, 1, 0, 1, 0},
+            {1, 0, 1, 0, 1},
+            {0, 1, 0, 1, 0}
+        });
 
-            stageRepository.save(new Stage(
-                null,
-                "Hourglass",
-                5,
-                5,
-                new int[][]{
-                    {1, 1, 1, 1, 1},
-                    {0, 1, 1, 1, 0},
-                    {0, 0, 1, 0, 0},
-                    {0, 1, 1, 1, 0},
-                    {1, 1, 1, 1, 1}
-                }
-            ));
+        saveStageIfAbsent("Hourglass", 5, 5, new int[][]{
+            {1, 1, 1, 1, 1},
+            {0, 1, 1, 1, 0},
+            {0, 0, 1, 0, 0},
+            {0, 1, 1, 1, 0},
+            {1, 1, 1, 1, 1}
+        });
+
+        saveStageIfAbsent("Smile Face", 10, 10, new int[][]{
+            {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
+            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 1, 1, 1, 1, 0, 0, 1},
+            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
+            {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        });
+
+        saveStageIfAbsent("Ascending Star", 15, 15, new int[][]{
+            {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0},
+            {0,0,0,0,0,1,1,1,1,1,0,0,0,0,0},
+            {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+            {0,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+            {0,0,1,1,1,1,1,1,1,1,1,1,1,0,0},
+            {0,0,0,1,1,1,1,1,1,1,1,1,0,0,0},
+            {0,0,0,0,1,1,1,1,1,1,1,0,0,0,0},
+            {0,0,0,0,1,1,1,1,1,1,1,0,0,0,0},
+            {0,0,0,1,1,1,1,0,1,1,1,1,0,0,0},
+            {0,0,1,1,1,1,0,0,0,1,1,1,1,0,0},
+            {0,1,1,1,0,0,0,0,0,0,0,1,1,1,0},
+            {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
+            {1,1,0,0,0,0,0,0,0,0,0,0,0,1,1},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+        });
+
+        int[][] grid20 = new int[20][20];
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 20; j++) {
+                grid20[i][j] = (i + j) % 2 == 0 ? 1 : 0;
+            }
         }
+        saveStageIfAbsent("Checkerboard 20x20", 20, 20, grid20);
 
+        int[][] grid30 = new int[30][30];
+        for (int i = 0; i < 30; i++) {
+            grid30[i][i] = 1;
+            grid30[i][29 - i] = 1;
+        }
+        saveStageIfAbsent("Giant Cross 30x30", 30, 30, grid30);
+    }
+
+    private void saveStageIfAbsent(String name, int width, int height, int[][] solutionGrid) {
+        if (stageRepository.findByName(name).isEmpty()) {
+            stageRepository.save(new Stage(null, name, width, height, solutionGrid));
+        }
     }
 }

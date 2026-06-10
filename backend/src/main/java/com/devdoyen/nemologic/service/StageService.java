@@ -26,4 +26,32 @@ public class StageService {
     public Optional<Stage> getStageById(Long id) {
         return stageRepository.findById(id);
     }
+
+    @Transactional
+    public void startStage(Long id) {
+        Stage stage = stageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
+        stage.setTotalAttempts(stage.getTotalAttempts() + 1);
+        stageRepository.save(stage);
+    }
+
+    @Transactional
+    public void recordClear(Long id, int elapsedTime) {
+        Stage stage = stageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
+        
+        int currentClears = stage.getTotalClears();
+        double currentAvg = stage.getAverageElapsedTime();
+        
+        double newAvg;
+        if (currentClears == 0) {
+            newAvg = elapsedTime;
+        } else {
+            newAvg = (currentAvg * currentClears + elapsedTime) / (currentClears + 1);
+        }
+        
+        stage.setTotalClears(currentClears + 1);
+        stage.setAverageElapsedTime(newAvg);
+        stageRepository.save(stage);
+    }
 }

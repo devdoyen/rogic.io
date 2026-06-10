@@ -18,13 +18,15 @@ public class UserServiceTest {
     private UserRepository userRepository;
     private HistoryRepository historyRepository;
     private StageRepository stageRepository;
+    private StageService stageService;
 
     @BeforeEach
     public void setUp() {
         userRepository = mock(UserRepository.class);
         historyRepository = mock(HistoryRepository.class);
         stageRepository = mock(StageRepository.class);
-        userService = new UserService(userRepository, historyRepository, stageRepository);
+        stageService = mock(StageService.class);
+        userService = new UserService(userRepository, historyRepository, stageRepository, stageService);
     }
 
 

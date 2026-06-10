@@ -24,11 +24,11 @@ public class StageControllerTest {
 
     @Test
     public void getAllStagesShouldReturnStagesList() throws Exception {
-        // We expect four stages to be returned (Diamond Emblem, Cross Ruby, Crystalline Spark, Hourglass).
+        // We expect eight stages to be returned after seeding larger stages.
         mockMvc.perform(get("/api/stages"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(4)))
+                .andExpect(jsonPath("$", hasSize(8)))
                 .andExpect(jsonPath("$[0].id", is(1)))
                 .andExpect(jsonPath("$[0].name", is("Diamond Emblem")))
                 .andExpect(jsonPath("$[0].width", is(5)))
@@ -50,5 +50,15 @@ public class StageControllerTest {
     public void getStageByIdShouldReturnNotFoundForInvalidId() throws Exception {
         mockMvc.perform(get("/api/stages/999"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void startStageShouldIncrementAttemptsAndReturnOk() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/stages/1/start"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/stages/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalAttempts").exists());
     }
 }

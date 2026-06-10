@@ -20,6 +20,15 @@ public class Stage {
     @Column(columnDefinition = "TEXT")
     private int[][] solutionGrid;
 
+    @Column(name = "total_attempts", nullable = false)
+    private int totalAttempts = 0;
+
+    @Column(name = "total_clears", nullable = false)
+    private int totalClears = 0;
+
+    @Column(name = "average_elapsed_time", nullable = false)
+    private double averageElapsedTime = 0.0;
+
     public Stage() {
     }
 
@@ -90,5 +99,41 @@ public class Stage {
 
     public int[][] solutionGrid() {
         return solutionGrid;
+    }
+
+    public int getTotalAttempts() {
+        return totalAttempts;
+    }
+
+    public void setTotalAttempts(int totalAttempts) {
+        this.totalAttempts = totalAttempts;
+    }
+
+    public int getTotalClears() {
+        return totalClears;
+    }
+
+    public void setTotalClears(int totalClears) {
+        this.totalClears = totalClears;
+    }
+
+    public double getAverageElapsedTime() {
+        return averageElapsedTime;
+    }
+
+    public void setAverageElapsedTime(double averageElapsedTime) {
+        this.averageElapsedTime = averageElapsedTime;
+    }
+
+    public int totalAttempts() {
+        return totalAttempts;
+    }
+
+    public int totalClears() {
+        return totalClears;
+    }
+
+    public double averageElapsedTime() {
+        return averageElapsedTime;
     }
 }

@@ -19,14 +19,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final HistoryRepository historyRepository;
     private final StageRepository stageRepository;
+    private final StageService stageService;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
 
-    public UserService(UserRepository userRepository, HistoryRepository historyRepository, StageRepository stageRepository) {
+    public UserService(UserRepository userRepository, HistoryRepository historyRepository, StageRepository stageRepository, StageService stageService) {
         this.userRepository = userRepository;
         this.historyRepository = historyRepository;
         this.stageRepository = stageRepository;
+        this.stageService = stageService;
     }
 
     @Transactional
@@ -63,6 +65,7 @@ public class UserService {
             int time = (elapsedTime != null) ? elapsedTime : 0;
             History history = new History(savedUser, stage, java.time.LocalDateTime.now(), xpAmount, time);
             historyRepository.save(history);
+            stageService.recordClear(stageId, time);
         }
 
         return savedUser;
