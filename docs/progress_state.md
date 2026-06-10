@@ -162,29 +162,26 @@
   - 가로/세로 힌트 텍스트 배치를 각각 NW(북서), NE(북동) 사선 방향으로 정렬 구현 완료.
 
 ### AWS 실제 배포 환경 구성 (Terraform & Ansible) - 완료
-- **Terraform IaC 구성**: VPC, Subnet, Route Table, Security Group(22, 80, 8080, 5173 오픈) 및 Ubuntu 22.04 LTS 기반 EC2 인스턴스를 선언적으로 프로비저닝하도록 `infra/terraform/` 작성 완료. 또한 EC2에 대한 IAM Role(SSMManagedInstanceCore 권한 적용) 및 Instance Profile 설정을 추가하여 보안성 확보 완료.
-  - 최저 비용 설정을 위해 인스턴스 사양을 **`t3a.nano`**(0.5 GB RAM, AMD 칩셋, 월 약 3.38달러)으로 강등 완료.
-  - 고유한 난수 접미사가 붙는 백업 전용 **S3 버킷(`aws_s3_bucket`)**을 선언하고 EC2 인스턴스에 S3 버킷 읽기/쓰기(`s3:PutObject` 등) 권한이 바인딩되도록 IAM 정책 연동 완료.
-  - 서버 시작/정지 시 IP 주소가 변경되는 문제를 방지하기 위해 **탄력적 IP(Elastic IP, `aws_eip`)** 리소스를 추가하여 고정 IP를 확보 완료.
-- **Ansible 자동 배포 구성**: 타겟 서버에 Docker/Docker Compose 설치, 소스코드 동기화 및 Docker Compose 빌드/기동을 자동화하는 `infra/ansible/` 구성 완료.
-  - 0.5 GB 물리 메모리(RAM) 환경에서의 OOM(Out of Memory) 예방을 위한 **1.5GB SSD Swap 가상 메모리 구성 자동화** 태스크 적용 완료.
-  - `awscli` 자동 설치 태스크와 Docker 내부 PostgreSQL 데이터를 덤프한 후 자동으로 식별한 백업용 S3 버킷으로 업로드하는 **데일리 새벽 3시 DB 백업 셸 스크립트 및 Cron Job 자동 등록** 추가 완료.
-- **프론트엔드 API 동적 환경변수 지원 및 Nginx 리버스 프록시 구축**: 
-  - `stageApi.ts` 및 `userApi.ts`에 `import.meta.env.VITE_API_BASE_URL` 환경변수를 연동하여 배포 주소에 맞춰 API 경로가 동적으로 맵핑되도록 수정 완료.
-  - 프로덕션 환경의 동일 도메인(Same-Origin) 호출 지원을 위해 `frontend/nginx.conf` 내에 `/api/` 리버스 프록시 설정을 추가하고, 프로덕션 빌드 시 상대 경로 `/api`를 사용하도록 구조 개편 완료.
-- **백엔드 CORS 와일드카드 허용**: 실 배포 IP 환경에서의 유동적인 자원 공유를 위해 `StageController`와 `UserController`에 적용된 `@CrossOrigin` 허용 Origin 대상을 기존 `http://localhost:5173`에서 와일드카드(`*`)로 전환 완료.
-- **테스트 케이스 보완 및 정상 통과**: Mocking 환경 변경 및 CORS 수정 사항에 맞춰 백엔드 `LocalProfileConfigurationTest`와 `StageControllerTest`를 동기화하여 전체 테스트(프론트엔드 42개, 백엔드 전체 테스트)가 100% 통과(Pass)함 확인 완료.
-
-### Rotagic (Rotate Logic) 컨셉 및 회전 애니메이션 연동 (Step 20) - 완료
-- **수학적 좌표 매핑 일반화 및 2D 회전 역변환**: `coordinateMapper.ts` 및 `NonogramCanvas.vue` 개편 완료.
-- **틀 및 숫자 고정 레이아웃 및 직립 텍스트 정렬**: 플레이 중에는 45도 다이아몬드 틀(마름모)과 힌트 숫자의 위치를 NW/NE 방향으로 고정하며, 힌트 숫자를 45도 기울이지 않고 가독성을 위해 화면 기준 수직(직립) 방향으로 바로 그려지도록 렌더링을 보완 완료.
-- **데이터 회전 및 해결 복귀 애니메이션**: 내부 정답 2D 데이터 배열을 90도 단위의 랜덤 단계(0, 90, 180, 270도)로 무작위 회전시킨 뒤 퍼즐을 조작하게 하고, 해결이 완료되면 힌트 숫자를 숨긴 후 원래 모양(정방향 0도)으로 부드럽게 복귀 회전 애니메이션 적용 완료.
-- **단위 테스트 통과**: 회전 유틸리티(`gridRotator.ts`) 및 48개 전체 프론트엔드 테스트 케이스 100% 통과(Pass) 완료.
-- **단일 레포지토리 격리 규칙 준수**: `backend/` 디렉토리에 영향 없이 `frontend/` 및 진행 문서만 격리 수정하여 TDD 완료.
-
-### AWS CloudWatch Logs 연동 및 Docker 데몬 로깅 자동화 - 완료
-- **Terraform IaC 구성**: Dedicated CloudWatch Log Group `/aws/ec2/nemologic`을 생성하고 7일 보관 주기를 설정함. EC2 인스턴스의 IAM 역할에 CloudWatch Logs 쓰기 권한(`logs:PutLogEvents` 등)을 가진 정책을 바인딩함.
-- **Docker 호스트 수준 로깅 최적화**: 로컬 개발 환경의 실행 편의성을 보존하고자 `docker-compose.yml`을 일절 건드리지 않고, Ansible을 통해 EC2 내 `/etc/docker/daemon.json`을 수정하여 기본 log-driver를 `awslogs`로 격리 지정 완료. 이에 따라 컨테이너별 스트림 분리 수집이 무중단 자동화됨.
+### 서비스 기능 고도화: 문제 확장, 통계 트래킹, UI/UX 개선 및 Gemini API 실연동 (Step 21) - 완료
+- **동적 Canvas 스케일링 및 100vh 스크롤 제거**:
+  - `NonogramCanvas.vue`에 격자 크기($N$)에 따른 동적 `CELL_SIZE` 연산 도입 (30px ~ 10px).
+  - `App.vue` 레이아웃을 3단 Grid로 전면 개편하여 전체 스크롤을 방지하고 한 화면(Viewport Height)에 맞춤. 불필요한 사용법 텍스트를 도움말 모달로 축소하여 공간 효율 극대화.
+- **통합 퍼즐 탐색기 구축**:
+  - 기존의 여러 드롭다운 셀렉터를 단일 탭(Normal / AI) 기반 스크롤 카드 리스트 뷰로 통합하여 직관적인 UI 제공 및 테스트 호환성(v-show 숨김 드롭다운 유지) 충족.
+- **퍼즐 시작 및 성공 통계 수집 시스템**:
+  - `Stage.java` 엔티티에 `totalAttempts`, `totalClears`, `averageElapsedTime` 필드 추가.
+  - 퍼즐 로드 시 `POST /api/stages/{id}/start` API를 호출하도록 구현하고, 클리어 완료 시 `StageService`에서 실시간 클리어 성공 횟수 증가 및 평균 해결 시간 누적 계산 알고리즘 연동.
+  - 스테이지 카드 상에 정답률(%)과 평균 해결 시간(초)을 실시간 바인딩하여 시각화 완료.
+- **10x10 ~ 30x30 대형 퍼즐 데이터 시딩**:
+  - `DataSeeder.java`에 10x10 Smile Face, 15x15 Ascending Star, 20x20 Checkerboard, 30x30 Giant Cross 추가 적재 완료.
+- **Gemini API 연동 및 3회 Retry/Validation 파이프라인**:
+  - `GeminiAiClient.java`를 신설하여 Google Gemini 1.5 Flash API 실연동. (Key 유실 시 Mock 데이터 자동 Safe-Fallback 지원, 테스트 환경 시 프로필 격리 `@Profile("!test")`).
+  - `AiStageGenerator.java` 내에 API JSON 포맷 파싱 및 2차원 격자 정합성 체크(0/1 값 범위 및 크기 일치성) 검증 로직 추가 및 실패 시 최대 3회 재시도(Retry)하는 구조 구축.
+- **TDD 기반 테스트 검증**:
+  - `StageServiceTest` 및 `AiStageGeneratorTest`에 재시도 횟수(3회) 검증과 통계 계산 단위 테스트 보강.
+  - 백엔드 27개 전체 JUnit 테스트 빌드 성공 및 프론트엔드 48개 전체 Vitest 테스트 100% 통과 완료.
+- **통계 미노출 렌더링 수정**:
+  - 시도 횟수가 0인 초기 상태 퍼즐에서 정답률과 소요 시간이 노출되지 않던 문제를 `App.vue` 내 조건 분기(`v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null"`) 및 삼항 연산식 수정을 통해 해결.
 
 ---
 
@@ -203,5 +200,6 @@
 - **TDD 필수 준수**: 코어 모듈 및 비즈니스 로직 작성 시 반드시 테스트 코드가 선행되어 통과 여부를 검증해야 합니다.
 - **디렉토리 격리**: 단일 작업 단위에서는 메인 디렉토리(`frontend/` 또는 `backend/`)를 독립적으로만 수정하며, 여러 메인 디렉토리의 파일들을 동시에 혼재해 수정하지 않도록 통제합니다.
 - **반응성 디커플링**: 코어 비즈니스 로직 모듈 내에는 Vue 프레임워크나 반응성 종속성(Ref, Reactive)을 절대 사용하지 않습니다.
+
 
 
