@@ -5,6 +5,9 @@ export interface StageSummary {
   name: string;
   width: number;
   height: number;
+  totalAttempts?: number;
+  totalClears?: number;
+  averageElapsedTime?: number;
 }
 
 export interface StageDetails extends StageSummary {
@@ -28,4 +31,8 @@ export async function fetchStageById(id: number): Promise<StageDetails> {
 export async function fetchAiStages(): Promise<StageSummary[]> {
   const response = await axios.get<StageSummary[]>(API_BASE_URL);
   return response.data.filter(s => s.name.includes('AI'));
+}
+
+export async function startStage(id: number): Promise<void> {
+  await axios.post(`${API_BASE_URL}/${id}/start`);
 }

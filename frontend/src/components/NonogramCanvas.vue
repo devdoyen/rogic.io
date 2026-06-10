@@ -28,7 +28,14 @@ const emit = defineEmits<{
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
 // Standard grid layout dimensions
-const CELL_SIZE = 30;
+const getCellSize = (maxCount: number) => {
+  if (maxCount <= 10) return 30;
+  if (maxCount <= 15) return 20;
+  if (maxCount <= 20) return 15;
+  return 10; // 30x30 or larger
+};
+
+let CELL_SIZE = getCellSize(Math.max(props.board.colCount, props.board.rowCount));
 
 const playAngle = props.initialAngle !== undefined ? props.initialAngle : Math.PI / 4;
 const targetOrthogonalAngle = computed(() => {
@@ -316,10 +323,12 @@ onUnmounted(() => {
 
 // Redraw if board changes
 watch(() => props.board, () => {
+  CELL_SIZE = getCellSize(Math.max(props.board.colCount, props.board.rowCount));
   currentAngle.value = getStartingAngle();
   const dims = getDimensions();
   config.centerX = dims.width / 2;
   config.centerY = dims.height / 2;
+  config.cellSize = CELL_SIZE;
   config.rowCount = props.board.rowCount;
   config.colCount = props.board.colCount;
   config.angle = currentAngle.value;
