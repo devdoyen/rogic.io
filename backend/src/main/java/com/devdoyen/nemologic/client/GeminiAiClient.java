@@ -31,7 +31,7 @@ public class GeminiAiClient implements AiClient {
             return getFallbackJson();
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -40,7 +40,7 @@ public class GeminiAiClient implements AiClient {
             Map<String, Object> requestBody = new HashMap<>();
             Map<String, Object> contents = new HashMap<>();
             Map<String, Object> parts = new HashMap<>();
-            parts.put("text", "Generate a valid nonogram puzzle in JSON format. The response must follow this exact JSON schema: { \"name\": \"Puzzle Name\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\" }. The name of the puzzle should be prefixed with 'AI Daily'. Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). Grid string must be a valid serialized JSON array representing width x height cells containing only 0 and 1.");
+            parts.put("text", "Generate a valid, creative, and unique nonogram puzzle in JSON format (do NOT generate a heart shape, create a different recognizable shape like a tree, a letter, a face, a cup, an arrow, etc.). The response must follow this exact JSON schema: { \"name\": \"AI Daily ObjectName\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,0,1,0,0],[0,1,1,1,0],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\" } (this example is a diamond, do not copy it exactly, design your own unique pattern). Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). Grid string must be a valid serialized JSON array representing width x height cells containing only 0 and 1.");
             contents.put("parts", Collections.singletonList(parts));
             requestBody.put("contents", Collections.singletonList(contents));
 

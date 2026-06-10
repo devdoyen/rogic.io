@@ -187,7 +187,8 @@
   - `NonogramSolverTest.java` 단위 테스트 선행 작성을 통한 TDD 실현 (5x5 유일 해 통과, 2x2 대칭형 다중 해 차단, 0개 해 검출 등 4개 유닛 테스트 케이스 검증).
   - `AiStageGenerator.java`와 `NonogramSolver` 연동을 완료하여, AI 문제 생성 시 정합성 판단 결과 유일하지 않은 퍼즐일 경우 예외를 발생시키고 최대 3회 재시도하도록 통합 검증 파이프라인 고도화 완료. 관련 `AiStageGeneratorTest.java` 단위 테스트 추가 및 백엔드 전체 테스트(31개) 통과 완료.
   - `StageController.java` 내에 수동 AI 문제 생성 트리거 엔드포인트(`POST /api/stages/ai-generate`)를 추가하여, 스케줄 배치 실행을 기다리지 않고 실시간 검증 동작을 테스트할 수 있도록 연동 및 관련 MockMvc 통합 테스트 케이스 추가 완료 (총 32개 백엔드 테스트 빌드 통과).
-  - `GeminiAiClient.java` 에서 `gemini-1.5-flash` 모델 호출 시 v1beta API 엔드포인트 404 모델 에러가 나는 문제를 해결하기 위해 정식 서비스(GA) 버전 엔드포인트인 `v1` 주소로 갱신하여 연동에 성공함.
+  - `GeminiAiClient.java`에서 2026년 기준 실질적으로 비활성화(limit 0)된 `gemini-2.0-flash` 모델을 대신하여, 현재 무료 티어가 정상 동작하는 `gemini-2.5-flash` 모델로 식별자 변경 및 프롬프트 개선 완료.
+  - 배포 시 API Key 유실 방지를 위해 [playbook.yml](file:///c:/Users/82107/dev/project/nemologic/infra/ansible/playbook.yml) 및 [ci-cd.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/ci-cd.yml)을 수정하여, GitHub Repository Secrets(`AI_API_KEY`)를 통해 원격 운영 서버 `.env` 파일에 API Key가 안전하게 자동 주입되도록 배포 파이프라인 연동 완료.
 
 ---
 

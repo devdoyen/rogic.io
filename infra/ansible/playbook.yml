@@ -134,6 +134,7 @@
       copy:
         content: |
           SPRING_PROFILES_ACTIVE=local
+          AI_API_KEY={{ lookup('env', 'AI_API_KEY') }}
         dest: /opt/nemologic/.env
         owner: ubuntu
         group: ubuntu
