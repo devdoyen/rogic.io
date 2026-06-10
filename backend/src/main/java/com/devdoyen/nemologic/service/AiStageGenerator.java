@@ -15,11 +15,13 @@ public class AiStageGenerator {
 
     private final AiClient aiClient;
     private final StageRepository stageRepository;
+    private final NonogramSolver nonogramSolver;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public AiStageGenerator(AiClient aiClient, StageRepository stageRepository) {
+    public AiStageGenerator(AiClient aiClient, StageRepository stageRepository, NonogramSolver nonogramSolver) {
         this.aiClient = aiClient;
         this.stageRepository = stageRepository;
+        this.nonogramSolver = nonogramSolver;
     }
 
     @Transactional
@@ -38,6 +40,10 @@ public class AiStageGenerator {
                 int[][] grid = objectMapper.readValue(dto.getGrid(), int[][].class);
 
                 validateGrid(grid, dto.getWidth(), dto.getHeight());
+
+                if (!nonogramSolver.isUnique(grid)) {
+                    throw new IllegalArgumentException("Generated puzzle does not have a unique solution");
+                }
 
                 Stage newStage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), grid);
                 return stageRepository.save(newStage);

@@ -16,11 +16,14 @@ public class AiStageGeneratorTest {
     private StageRepository stageRepository;
     private AiStageGenerator aiStageGenerator;
 
+    private NonogramSolver nonogramSolver;
+
     @BeforeEach
     public void setUp() {
         aiClient = mock(AiClient.class);
         stageRepository = mock(StageRepository.class);
-        aiStageGenerator = new AiStageGenerator(aiClient, stageRepository);
+        nonogramSolver = new NonogramSolver();
+        aiStageGenerator = new AiStageGenerator(aiClient, stageRepository, nonogramSolver);
     }
 
     @Test
@@ -52,6 +55,18 @@ public class AiStageGeneratorTest {
     @Test
     public void testGenerateAndSaveStageRetriesOnFailureAndEventuallyThrows() {
         when(aiClient.generateDailyPuzzleJson()).thenReturn("invalid json");
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            aiStageGenerator.generateAndSaveStage();
+        });
+
+        verify(aiClient, times(3)).generateDailyPuzzleJson();
+    }
+
+    @Test
+    public void testGenerateAndSaveStageRetriesOnNonUniqueSolution() {
+        String mockNonUniqueJsonResponse = "{\"name\": \"Invalid AI Puzzle\", \"width\": 2, \"height\": 2, \"grid\": \"[[1,0],[0,1]]\"}";
+        when(aiClient.generateDailyPuzzleJson()).thenReturn(mockNonUniqueJsonResponse);
 
         assertThrows(IllegalArgumentException.class, () -> {
             aiStageGenerator.generateAndSaveStage();
