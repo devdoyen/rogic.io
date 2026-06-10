@@ -24,17 +24,49 @@ public class AiStageGenerator {
 
     @Transactional
     public Stage generateAndSaveStage() {
-        String json = aiClient.generateDailyPuzzleJson();
-        if (json == null || json.isEmpty()) {
-            throw new IllegalArgumentException("AI response is empty");
+        int maxAttempts = 3;
+        Exception lastException = null;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                String json = aiClient.generateDailyPuzzleJson();
+                if (json == null || json.isEmpty()) {
+                    throw new IllegalArgumentException("AI response is empty");
+                }
+
+                AiResponseDto dto = objectMapper.readValue(json, AiResponseDto.class);
+                int[][] grid = objectMapper.readValue(dto.getGrid(), int[][].class);
+
+                validateGrid(grid, dto.getWidth(), dto.getHeight());
+
+                Stage newStage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), grid);
+                return stageRepository.save(newStage);
+            } catch (Exception e) {
+                lastException = e;
+                System.err.println("[AI] Attempt " + attempt + " failed: " + e.getMessage());
+            }
         }
-        try {
-            AiResponseDto dto = objectMapper.readValue(json, AiResponseDto.class);
-            int[][] grid = objectMapper.readValue(dto.getGrid(), int[][].class);
-            Stage newStage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), grid);
-            return stageRepository.save(newStage);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to parse daily puzzle JSON", e);
+
+        throw new IllegalArgumentException("Failed to generate valid stage after " + maxAttempts + " attempts", lastException);
+    }
+
+    private void validateGrid(int[][] grid, int expectedWidth, int expectedHeight) {
+        if (grid == null) {
+            throw new IllegalArgumentException("Grid is null");
+        }
+        if (grid.length != expectedHeight) {
+            throw new IllegalArgumentException("Grid height mismatch. Expected: " + expectedHeight + ", Actual: " + grid.length);
+        }
+        for (int r = 0; r < expectedHeight; r++) {
+            if (grid[r] == null || grid[r].length != expectedWidth) {
+                throw new IllegalArgumentException("Grid width mismatch at row " + r + ". Expected: " + expectedWidth);
+            }
+            for (int c = 0; c < expectedWidth; c++) {
+                int val = grid[r][c];
+                if (val != 0 && val != 1) {
+                    throw new IllegalArgumentException("Invalid cell value: " + val + " at (" + r + ", " + c + "). Must be 0 or 1.");
+                }
+            }
         }
     }
 

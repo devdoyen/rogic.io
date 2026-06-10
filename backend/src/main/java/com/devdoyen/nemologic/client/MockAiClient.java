@@ -1,8 +1,10 @@
 package com.devdoyen.nemologic.client;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("test")
 public class MockAiClient implements AiClient {
 
     @Override

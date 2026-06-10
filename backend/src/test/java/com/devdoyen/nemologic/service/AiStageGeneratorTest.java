@@ -48,4 +48,15 @@ public class AiStageGeneratorTest {
 
         verify(mockGenerator, times(1)).generateAndSaveStage();
     }
+
+    @Test
+    public void testGenerateAndSaveStageRetriesOnFailureAndEventuallyThrows() {
+        when(aiClient.generateDailyPuzzleJson()).thenReturn("invalid json");
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            aiStageGenerator.generateAndSaveStage();
+        });
+
+        verify(aiClient, times(3)).generateDailyPuzzleJson();
+    }
 }
