@@ -31,7 +31,7 @@ public class GeminiAiClient implements AiClient {
             return getFallbackJson();
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=" + apiKey;
 
         try {
             HttpHeaders headers = new HttpHeaders();
