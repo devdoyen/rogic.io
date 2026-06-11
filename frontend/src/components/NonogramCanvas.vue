@@ -48,7 +48,7 @@ const getCellSize = (maxCount: number) => {
 
 let CELL_SIZE = getCellSize(Math.max(props.board.colCount, props.board.rowCount));
 
-const playAngle = props.initialAngle !== undefined ? props.initialAngle : Math.PI / 4;
+const playAngle = props.initialAngle !== undefined ? props.initialAngle : 0;
 const targetOrthogonalAngle = computed(() => {
   return (props.initialAngle !== undefined ? props.initialAngle : 0) - (props.rotationSteps || 0) * Math.PI / 2;
 });
@@ -89,7 +89,7 @@ const getDimensions = () => {
   };
 };
 
-const VIEWPORT_SIZE = 480;
+const VIEWPORT_SIZE = 600;
 const scale = ref(1.0);
 const isDragging = ref(false);
 
@@ -402,15 +402,14 @@ watch(() => props.board.isSolved(), (solved) => {
 .nonogram-canvas-container {
   position: relative;
   display: inline-block;
-  padding: 10px;
-  background-color: #0f172a; /* matches app slate-900 background */
+  padding: 0;
+  background-color: transparent;
   border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 .canvas-frame {
-  width: 480px;
-  height: 480px;
+  width: 600px;
+  height: 600px;
   overflow: hidden;
   display: flex;
   justify-content: center;

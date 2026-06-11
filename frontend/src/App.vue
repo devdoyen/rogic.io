@@ -83,77 +83,77 @@
       <!-- Center Main Column: Canvas & Solved Banner -->
       <main class="app-main">
         <template v-if="currentTab === 'play'">
-          <!-- Floating Stage Selector -->
-          <div class="puzzle-selector-floating-container" v-if="currentActiveStage">
-            <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
-              <span class="active-stage-badge-name">{{ currentActiveStage.name }}</span>
-              <span class="active-stage-badge-size">{{ currentActiveStage.width }}x{{ currentActiveStage.height }}</span>
-              <span class="active-stage-badge-tag" :class="isAiStageActive ? 'ai-tag' : 'normal-tag'">
-                {{ isAiStageActive ? 'AI' : 'Normal' }}
-              </span>
-              <span class="active-stage-arrow" :class="{ 'open': isStageListOpen }">▼</span>
-            </div>
-
-            <!-- Slide-down Dropdown List -->
-            <transition name="slide-down">
-              <div v-if="isStageListOpen" class="puzzle-selector-dropdown">
-                <div class="category-tabs">
-                  <button 
-                    class="category-tab-btn" 
-                    :class="{ active: selectedCategory === 'normal' }"
-                    @click.stop="selectedCategory = 'normal'"
-                  >Normal</button>
-                  <button 
-                    class="category-tab-btn" 
-                    :class="{ active: selectedCategory === 'ai' }"
-                    @click.stop="selectedCategory = 'ai'"
-                  >Daily AI</button>
-                </div>
-
-                <div class="stage-card-list">
-                  <template v-if="selectedCategory === 'normal'">
-                    <div 
-                      v-for="stage in stages" 
-                      :key="stage.id" 
-                      class="stage-item-card"
-                      :class="{ active: selectedStageId === stage.id && !isAiStageActive }"
-                      @click.stop="selectStageCard(stage.id, false)"
-                    >
-                      <div class="stage-card-info">
-                        <span class="stage-card-name">{{ stage.name }}</span>
-                        <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
-                        <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
-                          Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
-                        </div>
-                      </div>
-                      <div class="stage-card-tag normal-tag">Normal</div>
-                    </div>
-                  </template>
-                  <template v-else>
-                    <div 
-                      v-for="stage in aiStages" 
-                      :key="stage.id" 
-                      class="stage-item-card"
-                      :class="{ active: selectedAiStageId === stage.id && isAiStageActive }"
-                      @click.stop="selectStageCard(stage.id, true)"
-                    >
-                      <div class="stage-card-info">
-                        <span class="stage-card-name">{{ stage.name }}</span>
-                        <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
-                        <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
-                          Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
-                        </div>
-                      </div>
-                      <div class="stage-card-tag ai-tag">AI Daily</div>
-                    </div>
-                  </template>
-                </div>
-              </div>
-            </transition>
-          </div>
-
           <!-- Canvas Area -->
           <div v-if="board" class="canvas-wrapper-container">
+            <!-- Floating Stage Selector -->
+            <div class="puzzle-selector-floating-container" v-if="currentActiveStage">
+              <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
+                <span class="active-stage-badge-name">{{ currentActiveStage.name }}</span>
+                <span class="active-stage-badge-size">{{ currentActiveStage.width }}x{{ currentActiveStage.height }}</span>
+                <span class="active-stage-badge-tag" :class="isAiStageActive ? 'ai-tag' : 'normal-tag'">
+                  {{ isAiStageActive ? 'AI' : 'Normal' }}
+                </span>
+                <span class="active-stage-arrow" :class="{ 'open': isStageListOpen }">▼</span>
+              </div>
+
+              <!-- Slide-down Dropdown List -->
+              <transition name="slide-down">
+                <div v-if="isStageListOpen" class="puzzle-selector-dropdown">
+                  <div class="category-tabs">
+                    <button 
+                      class="category-tab-btn" 
+                      :class="{ active: selectedCategory === 'normal' }"
+                      @click.stop="selectedCategory = 'normal'"
+                    >Normal</button>
+                    <button 
+                      class="category-tab-btn" 
+                      :class="{ active: selectedCategory === 'ai' }"
+                      @click.stop="selectedCategory = 'ai'"
+                    >Daily AI</button>
+                  </div>
+
+                  <div class="stage-card-list">
+                    <template v-if="selectedCategory === 'normal'">
+                      <div 
+                        v-for="stage in stages" 
+                        :key="stage.id" 
+                        class="stage-item-card"
+                        :class="{ active: selectedStageId === stage.id && !isAiStageActive }"
+                        @click.stop="selectStageCard(stage.id, false)"
+                      >
+                        <div class="stage-card-info">
+                          <span class="stage-card-name">{{ stage.name }}</span>
+                          <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
+                          <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
+                            Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
+                          </div>
+                        </div>
+                        <div class="stage-card-tag normal-tag">Normal</div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div 
+                        v-for="stage in aiStages" 
+                        :key="stage.id" 
+                        class="stage-item-card"
+                        :class="{ active: selectedAiStageId === stage.id && isAiStageActive }"
+                        @click.stop="selectStageCard(stage.id, true)"
+                      >
+                        <div class="stage-card-info">
+                          <span class="stage-card-name">{{ stage.name }}</span>
+                          <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
+                          <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
+                            Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
+                          </div>
+                        </div>
+                        <div class="stage-card-tag ai-tag">AI Daily</div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
             <div class="canvas-wrapper">
               <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" @cell-click="handleCellClick" />
             </div>
@@ -648,8 +648,10 @@ body {
 
 /* Floating Stage Selector */
 .puzzle-selector-floating-container {
-  position: relative;
-  margin-bottom: 1rem;
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 100;
   display: flex;
   justify-content: center;
@@ -714,6 +716,7 @@ body {
   left: 50%;
   transform: translateX(-50%) translateY(8px);
   width: 340px;
+  max-height: 350px;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -977,15 +980,16 @@ body {
   flex-grow: 1;
   min-height: 0;
   width: 100%;
+  position: relative;
 }
 
 .canvas-wrapper {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 1rem;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   justify-content: center;
   align-items: center;
