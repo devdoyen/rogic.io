@@ -30,7 +30,7 @@ export async function fetchStageById(id: number): Promise<StageDetails> {
 
 export async function fetchAiStages(): Promise<StageSummary[]> {
   const response = await axios.get<StageSummary[]>(API_BASE_URL);
-  return response.data.filter(s => s.name.includes('AI'));
+  return response.data;
 }
 
 export async function startStage(id: number): Promise<void> {

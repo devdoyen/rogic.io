@@ -43,7 +43,7 @@ public class GeminiAiClient implements AiClient {
                 Map<String, Object> requestBody = new HashMap<>();
                 Map<String, Object> contents = new HashMap<>();
                 Map<String, Object> parts = new HashMap<>();
-                parts.put("text", "Generate a valid, creative, and unique nonogram puzzle in JSON format (do NOT generate a heart shape, create a different recognizable shape like a tree, a letter, a face, a cup, an arrow, etc.). The response must follow this exact JSON schema: { \"name\": \"AI Daily ObjectName\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,0,1,0,0],[0,1,1,1,0],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\" } (this example is a diamond, do not copy it exactly, design your own unique pattern). Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). Grid string must be a valid serialized JSON array representing width x height cells containing only 0 and 1.");
+                parts.put("text", "Generate a valid, creative, and unique nonogram puzzle in JSON format (do NOT generate a heart shape, create a different recognizable shape like a tree, a letter, a face, a cup, an arrow, etc.). The response must follow this exact JSON schema: { \"name\": \"AI Puzzle: ObjectName\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,0,1,0,0],[0,1,1,1,0],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\" } (this example is a diamond, do not copy it exactly, design your own unique pattern). Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). Grid string must be a valid serialized JSON array representing width x height cells containing only 0 and 1.");
                 contents.put("parts", Collections.singletonList(parts));
                 requestBody.put("contents", Collections.singletonList(contents));
 
@@ -89,6 +89,6 @@ public class GeminiAiClient implements AiClient {
     }
 
     private String getFallbackJson() {
-        return "{\"name\": \"AI Daily Puzzle Fallback\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        return "{\"name\": \"AI Puzzle Fallback\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
     }
 }

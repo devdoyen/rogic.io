@@ -37,16 +37,16 @@ describe('stageApi TDD Red Phase', () => {
     expect(result).toEqual(mockDetails);
   });
 
-  it('fetchAiStages should call get and return stage summaries filtered by AI prefix or substring', async () => {
+  it('fetchAiStages should call get and return all stage summaries', async () => {
     const mockData = [
       { id: 1, name: 'Heart Shape', width: 5, height: 5 },
-      { id: 2, name: 'AI Daily Puzzle', width: 5, height: 5 }
+      { id: 2, name: 'AI Puzzle', width: 5, height: 5 }
     ];
     
     vi.mocked(axios.get).mockResolvedValue({ data: mockData });
 
     const result = await fetchAiStages();
     expect(axios.get).toHaveBeenCalledWith('http://localhost:8080/api/stages');
-    expect(result).toEqual([{ id: 2, name: 'AI Daily Puzzle', width: 5, height: 5 }]);
+    expect(result).toEqual(mockData);
   });
 });

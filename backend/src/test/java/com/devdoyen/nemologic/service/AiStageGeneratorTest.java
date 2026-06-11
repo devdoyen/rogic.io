@@ -28,14 +28,14 @@ public class AiStageGeneratorTest {
 
     @Test
     public void testParseJsonAndSaveStage() {
-        String mockJsonResponse = "{\"name\": \"AI Daily Puzzle\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        String mockJsonResponse = "{\"name\": \"AI Puzzle\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
         when(aiClient.generateDailyPuzzleJson()).thenReturn(mockJsonResponse);
         when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Stage stage = aiStageGenerator.generateAndSaveStage();
 
         assertNotNull(stage);
-        assertEquals("AI Daily Puzzle", stage.getName());
+        assertEquals("AI Puzzle", stage.getName());
         assertEquals(5, stage.getWidth());
         assertEquals(5, stage.getHeight());
         assertNotNull(stage.getSolutionGrid());

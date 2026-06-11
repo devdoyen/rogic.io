@@ -211,8 +211,25 @@ describe('App.vue Leaderboard Integration TDD', () => {
 
   it('should render AI daily puzzles list, select AI puzzle, and submit clearStage with difficulty HARD', async () => {
     const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
-    const mockStageDetails = { id: 7, name: 'AI Daily Puzzle', width: 1, height: 1, solutionGrid: [[1]] };
-    const mockAiStages = [{ id: 7, name: 'AI Daily Puzzle', width: 1, height: 1 }];
+    const mockStageDetails = { 
+      id: 7, 
+      name: 'AI Puzzle', 
+      width: 10, 
+      height: 10, 
+      solutionGrid: [
+        [1,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ] 
+    };
+    const mockAiStages = [{ id: 7, name: 'AI Puzzle', width: 10, height: 10 }];
     const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
 
     vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
@@ -229,7 +246,7 @@ describe('App.vue Leaderboard Integration TDD', () => {
     // Check if AI Daily Puzzle section renders the list
     const aiOptions = wrapper.findAll('.ai-stage-select option');
     expect(aiOptions.length).toBeGreaterThan(0);
-    expect(aiOptions[0].text()).toContain('AI Daily Puzzle');
+    expect(aiOptions[0].text()).toContain('AI Puzzle');
 
     // Click/Select AI Stage
     const aiSelect = wrapper.find('.ai-stage-select');

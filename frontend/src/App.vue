@@ -90,9 +90,6 @@
               <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
                 <span class="active-stage-badge-name">{{ currentActiveStage.name }}</span>
                 <span class="active-stage-badge-size">{{ currentActiveStage.width }}x{{ currentActiveStage.height }}</span>
-                <span class="active-stage-badge-tag" :class="isAiStageActive ? 'ai-tag' : 'normal-tag'">
-                  {{ isAiStageActive ? 'AI' : 'Normal' }}
-                </span>
                 <span class="active-stage-arrow" :class="{ 'open': isStageListOpen }">▼</span>
               </div>
 
@@ -105,9 +102,9 @@
                       :key="stage.id" 
                       class="stage-item-card"
                       :class="{ 
-                        active: (stage.isAi ? (selectedAiStageId === stage.id && isAiStageActive) : (selectedStageId === stage.id && !isAiStageActive))
+                        active: (isStageAi(stage) ? (selectedAiStageId === stage.id && isAiStageActive) : (selectedStageId === stage.id && !isAiStageActive))
                       }"
-                      @click.stop="selectStageCard(stage.id, stage.isAi)"
+                      @click.stop="selectStageCard(stage.id, isStageAi(stage))"
                     >
                       <div class="stage-card-info">
                         <span class="stage-card-name">{{ stage.name }}</span>
@@ -115,9 +112,6 @@
                         <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
                           Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
                         </div>
-                      </div>
-                      <div class="stage-card-tag" :class="stage.isAi ? 'ai-tag' : 'normal-tag'">
-                        {{ stage.isAi ? 'AI Daily' : 'Normal' }}
                       </div>
                     </div>
                     <div v-if="allUnclearedStages.length === 0" class="empty-stages" style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
@@ -243,11 +237,16 @@ const clearedStageIds = computed(() => {
 });
 
 const allUnclearedStages = computed(() => {
-  const normalList = stages.value.map(s => ({ ...s, isAi: false }));
-  const aiList = aiStages.value.map(s => ({ ...s, isAi: true }));
-  const combined = [...normalList, ...aiList];
+  const stageMap = new Map<number, StageSummary>();
+  stages.value.forEach(s => stageMap.set(s.id, s));
+  aiStages.value.forEach(s => stageMap.set(s.id, s));
+  const combined = Array.from(stageMap.values());
   return combined.filter(s => !clearedStageIds.value.has(s.id));
 });
+
+function isStageAi(stage: StageSummary): boolean {
+  return aiStages.value.some(s => s.id === stage.id);
+}
 
 function selectStageCard(id: number, isAi: boolean) {
   if (isAi) {
