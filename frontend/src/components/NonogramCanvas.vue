@@ -95,8 +95,14 @@ const isDragging = ref(false);
 
 const fitScale = computed(() => {
   if (isTestEnv) return 1.0;
-  const { width } = getDimensions();
-  return VIEWPORT_SIZE / width;
+  const boardWidth = props.board.colCount * CELL_SIZE;
+  const boardHeight = props.board.rowCount * CELL_SIZE;
+  const maxRowHintsLength = Math.max(...props.board.rowHints.map(h => h.length), 1);
+  const maxColHintsLength = Math.max(...props.board.colHints.map(h => h.length), 1);
+  const reqW = boardWidth + maxRowHintsLength * 32 + 24;
+  const reqH = boardHeight + maxColHintsLength * 32 + 24;
+  const requiredSize = Math.max(reqW, reqH);
+  return VIEWPORT_SIZE / requiredSize;
 });
 
 const canvasStyle = computed(() => {

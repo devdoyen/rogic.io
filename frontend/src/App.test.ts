@@ -217,12 +217,12 @@ describe('App.vue Leaderboard Integration TDD', () => {
       width: 10, 
       height: 10, 
       solutionGrid: [
-        [1,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0,0],
@@ -259,8 +259,11 @@ describe('App.vue Leaderboard Integration TDD', () => {
 
     expect(fetchStageSpy).toHaveBeenCalledWith(7);
 
-    // Solve the board
-    (wrapper.vm as any).board.toggleFill(0, 0);
+    // Solve the board (toggling the 4 center cells which are rotationally invariant)
+    (wrapper.vm as any).board.toggleFill(4, 4);
+    (wrapper.vm as any).board.toggleFill(4, 5);
+    (wrapper.vm as any).board.toggleFill(5, 4);
+    (wrapper.vm as any).board.toggleFill(5, 5);
     await (wrapper.vm as any).handleCellClick();
 
     // Should call clearStage with HARD difficulty for AI stage
