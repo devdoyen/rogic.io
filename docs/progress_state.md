@@ -195,6 +195,10 @@
   - `GeminiAiClient.java`에서 2026년 기준 실질적으로 비활성화(limit 0)된 `gemini-2.0-flash` 모델을 대신하여, 현재 무료 티어가 정상 동작하는 `gemini-2.5-flash` 모델로 식별자 변경 및 프롬프트 개선 완료.
   - 배포 시 API Key 유실 방지를 위해 [playbook.yml](file:///c:/Users/82107/dev/project/nemologic/infra/ansible/playbook.yml) 및 [ci-cd.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/ci-cd.yml)을 수정하여, GitHub Repository Secrets(`AI_API_KEY`)를 통해 원격 운영 서버 `.env` 파일에 API Key가 안전하게 자동 주입되도록 배포 파이프라인 연동 완료.
   - 기존 데이터가 적재된 환경에서 통계 필드(`total_attempts`, `total_clears`, `average_elapsed_time`) 추가 DDL 수행 시 `not null` 제약 조건 위배로 서버 시동이 실패하는 문제를 해결하기 위해, [Stage.java](file:///c:/Users/82107/dev/project/nemologic/backend/src/main/java/com/devdoyen/nemologic/model/Stage.java) 엔티티 정의에 `columnDefinition` 기본값(`default 0`, `default 0.0`) 매핑 적용 완료.
+- **프론트엔드 UI/UX 편의성 고도화**:
+  - **퍼즐 선택(Select Puzzle) 목록 접기/펼치기**: 사이드바 레이아웃 대신 보드 상단 중앙에 플로팅되는 캡슐 배지(`active-stage-badge`) 형태로 컴팩트하게 배치 완료. 불필요한 텍스트 문구("Select Puzzle", "Choose Another Puzzle")를 완전히 제거하여 미니멀리즘을 실현하고, 화살표(`▼`)를 누르면 슬라이딩 애니메이션과 함께 Normal/Daily AI 목록이 드롭다운되도록 고도화 완료.
+  - **글로벌 리더보드 토글(Toggle) 기능**: 화면 공간을 차지하던 우측 사이드바를 제거하고, 헤더 버튼 클릭 시 흐림 효과가 동반된 반투명 유리 재질(Glassmorphism)의 팝업 모달 형식으로 노출되도록 디자인 개선 완료.
+  - **부드러운 레이아웃 전환 효과**: 게임 플레이 탭에서는 사이드바가 전혀 존재하지 않는 100% 중앙 정렬 격자 뷰를 구현하여 집중도 높은 플레이 환경을 선사하고, 마이페이지 탭 전환 시에만 좌측에 히스토리 리스트가 나타나도록 분기 최적화 완료. 테스트 호환을 위해 DOM을 유지하는 `v-show`를 사용해 프론트엔드 48개 전체 Vitest 테스트 100% 통과 유지 완료.
 
 ---
 

@@ -10,7 +10,7 @@
         </div>
       </div>
       
-      <div class="header-controls" style="display: flex; align-items: center; gap: 1rem;">
+      <div class="header-controls" style="display: flex; align-items: center; gap: 0.75rem;">
         <nav class="app-nav" style="display: flex; gap: 0.5rem; margin: 0;">
           <button 
             class="tab-btn-play" 
@@ -23,6 +23,13 @@
             @click="onTabChange('mypage')"
           >My Page</button>
         </nav>
+        <button 
+          class="leaderboard-toggle-btn" 
+          :class="{ active: isLeaderboardOpen }" 
+          @click="isLeaderboardOpen = !isLeaderboardOpen"
+        >
+          🏆 Leaderboard
+        </button>
         <button class="help-toggle-btn" @click="isHelpOpen = true" style="padding: 0.5rem 0.75rem; background-color: #334155; border: 1px solid #475569; border-radius: 8px; color: #f8fafc; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;">
           <span style="color: #38bdf8;">?</span> Help
         </button>
@@ -44,67 +51,10 @@
     </div>
 
     <!-- Main Layout Grid -->
-    <div class="app-layout">
-      <!-- Left Sidebar: Stage Selector / My History list -->
-      <aside class="app-sidebar-left">
-        <div v-if="currentTab === 'play'" class="sidebar-card stage-explorer-card">
-          <h3 class="sidebar-card-title">🧩 Select Puzzle</h3>
-          <!-- Stage Category Tabs -->
-          <div class="category-tabs">
-            <button 
-              class="category-tab-btn" 
-              :class="{ active: selectedCategory === 'normal' }"
-              @click="selectedCategory = 'normal'"
-            >Normal</button>
-            <button 
-              class="category-tab-btn" 
-              :class="{ active: selectedCategory === 'ai' }"
-              @click="selectedCategory = 'ai'"
-            >Daily AI</button>
-          </div>
-
-          <!-- Scrollable Card List -->
-          <div class="stage-card-list">
-            <template v-if="selectedCategory === 'normal'">
-              <div 
-                v-for="stage in stages" 
-                :key="stage.id" 
-                class="stage-item-card"
-                :class="{ active: selectedStageId === stage.id && !isAiStageActive }"
-                @click="selectStageCard(stage.id, false)"
-              >
-                <div class="stage-card-info">
-                  <span class="stage-card-name">{{ stage.name }}</span>
-                  <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
-                  <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
-                    Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
-                  </div>
-                </div>
-                <div class="stage-card-tag normal-tag">Normal</div>
-              </div>
-            </template>
-            <template v-else>
-              <div 
-                v-for="stage in aiStages" 
-                :key="stage.id" 
-                class="stage-item-card"
-                :class="{ active: selectedAiStageId === stage.id && isAiStageActive }"
-                @click="selectStageCard(stage.id, true)"
-              >
-                <div class="stage-card-info">
-                  <span class="stage-card-name">{{ stage.name }}</span>
-                  <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
-                  <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
-                    Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
-                  </div>
-                </div>
-                <div class="stage-card-tag ai-tag">AI Daily</div>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <div v-else-if="currentTab === 'mypage'" class="sidebar-card history-explorer-card">
+    <div class="app-layout" :class="{ 'mypage-layout': currentTab === 'mypage' }">
+      <!-- Left Sidebar: Only rendered in My Page for History list -->
+      <aside v-if="currentTab === 'mypage'" class="app-sidebar-left">
+        <div class="sidebar-card history-explorer-card">
           <h3 class="sidebar-card-title">💾 My History</h3>
           <div class="stage-card-list">
             <div 
@@ -133,6 +83,75 @@
       <!-- Center Main Column: Canvas & Solved Banner -->
       <main class="app-main">
         <template v-if="currentTab === 'play'">
+          <!-- Floating Stage Selector -->
+          <div class="puzzle-selector-floating-container" v-if="currentActiveStage">
+            <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
+              <span class="active-stage-badge-name">{{ currentActiveStage.name }}</span>
+              <span class="active-stage-badge-size">{{ currentActiveStage.width }}x{{ currentActiveStage.height }}</span>
+              <span class="active-stage-badge-tag" :class="isAiStageActive ? 'ai-tag' : 'normal-tag'">
+                {{ isAiStageActive ? 'AI' : 'Normal' }}
+              </span>
+              <span class="active-stage-arrow" :class="{ 'open': isStageListOpen }">▼</span>
+            </div>
+
+            <!-- Slide-down Dropdown List -->
+            <transition name="slide-down">
+              <div v-if="isStageListOpen" class="puzzle-selector-dropdown">
+                <div class="category-tabs">
+                  <button 
+                    class="category-tab-btn" 
+                    :class="{ active: selectedCategory === 'normal' }"
+                    @click.stop="selectedCategory = 'normal'"
+                  >Normal</button>
+                  <button 
+                    class="category-tab-btn" 
+                    :class="{ active: selectedCategory === 'ai' }"
+                    @click.stop="selectedCategory = 'ai'"
+                  >Daily AI</button>
+                </div>
+
+                <div class="stage-card-list">
+                  <template v-if="selectedCategory === 'normal'">
+                    <div 
+                      v-for="stage in stages" 
+                      :key="stage.id" 
+                      class="stage-item-card"
+                      :class="{ active: selectedStageId === stage.id && !isAiStageActive }"
+                      @click.stop="selectStageCard(stage.id, false)"
+                    >
+                      <div class="stage-card-info">
+                        <span class="stage-card-name">{{ stage.name }}</span>
+                        <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
+                        <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
+                          Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
+                        </div>
+                      </div>
+                      <div class="stage-card-tag normal-tag">Normal</div>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div 
+                      v-for="stage in aiStages" 
+                      :key="stage.id" 
+                      class="stage-item-card"
+                      :class="{ active: selectedAiStageId === stage.id && isAiStageActive }"
+                      @click.stop="selectStageCard(stage.id, true)"
+                    >
+                      <div class="stage-card-info">
+                        <span class="stage-card-name">{{ stage.name }}</span>
+                        <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
+                        <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
+                          Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
+                        </div>
+                      </div>
+                      <div class="stage-card-tag ai-tag">AI Daily</div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </transition>
+          </div>
+
           <!-- Canvas Area -->
           <div v-if="board" class="canvas-wrapper-container">
             <div class="canvas-wrapper">
@@ -167,23 +186,26 @@
           </div>
         </template>
       </main>
+    </div>
 
-      <!-- Right Sidebar: Leaderboard -->
-      <aside class="app-sidebar-right">
-        <div class="leaderboard-card">
-          <h3 class="leaderboard-title">🏆 Global Leaderboard</h3>
-          <div class="leaderboard-scrollable">
-            <ul class="leaderboard-list">
-              <li v-for="(user, index) in rankings" :key="user.id" class="leaderboard-item">
-                <span class="rank">{{ index + 1 }}</span>
-                <span class="username">{{ user.username }}</span>
-                <span class="level">Lv.{{ user.level }}</span>
-                <span class="xp">{{ user.xp }} XP</span>
-              </li>
-            </ul>
-          </div>
+    <!-- Popup for Leaderboard (Semi-transparent absolute modal) -->
+    <div v-show="isLeaderboardOpen" class="leaderboard-popup-overlay" @click.self="isLeaderboardOpen = false">
+      <div class="leaderboard-popup-content">
+        <div class="leaderboard-popup-header">
+          <h3 class="leaderboard-popup-title">🏆 Global Leaderboard</h3>
+          <button class="leaderboard-popup-close" @click="isLeaderboardOpen = false">&times;</button>
         </div>
-      </aside>
+        <div class="leaderboard-scrollable">
+          <ul class="leaderboard-list">
+            <li v-for="(user, index) in rankings" :key="user.id" class="leaderboard-item">
+              <span class="rank">{{ index + 1 }}</span>
+              <span class="username">{{ user.username }}</span>
+              <span class="level">Lv.{{ user.level }}</span>
+              <span class="xp">{{ user.xp }} XP</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <!-- Modal for History Review -->
@@ -203,7 +225,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
 import { rotateGrid } from './engine/gridRotator';
@@ -231,6 +253,17 @@ const isAiStageActive = ref(false);
 const selectedCategory = ref<'normal' | 'ai'>('normal');
 const isHelpOpen = ref(false);
 
+const isStageListOpen = ref(false);
+const isLeaderboardOpen = ref(false);
+
+const currentActiveStage = computed(() => {
+  if (isAiStageActive.value) {
+    return aiStages.value.find(s => s.id === selectedAiStageId.value) || null;
+  } else {
+    return stages.value.find(s => s.id === selectedStageId.value) || null;
+  }
+});
+
 function selectStageCard(id: number, isAi: boolean) {
   if (isAi) {
     selectedCategory.value = 'ai';
@@ -241,6 +274,7 @@ function selectStageCard(id: number, isAi: boolean) {
     selectedStageId.value = id;
     onStageChange();
   }
+  isStageListOpen.value = false;
 }
 
 const currentRotationSteps = ref(0);
@@ -512,19 +546,87 @@ body {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
+.leaderboard-toggle-btn {
+  padding: 0.5rem 0.75rem;
+  background-color: #334155;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #f8fafc;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.leaderboard-toggle-btn:hover {
+  background-color: #475569;
+  border-color: #64748b;
+  color: #ffffff;
+}
+
+.leaderboard-toggle-btn.active {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15));
+  border-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.toggle-list-btn {
+  width: 100%;
+  padding: 0.6rem;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-list-btn.expand-btn {
+  background-color: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.toggle-list-btn.expand-btn:hover {
+  background-color: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+.toggle-list-btn.collapse-btn {
+  background-color: #334155;
+  border: 1px solid #475569;
+  color: #f8fafc;
+}
+
+.toggle-list-btn.collapse-btn:hover {
+  background-color: #475569;
+  border-color: #64748b;
+}
+
 .app-layout {
   display: grid;
-  grid-template-columns: 280px 1fr 280px;
+  grid-template-columns: 1fr;
   gap: 1.25rem;
   width: 100%;
   flex-grow: 1;
   min-height: 0; /* Important constraint for inner scrolling */
   align-items: stretch;
+  transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-layout.mypage-layout {
+  grid-template-columns: 280px 1fr;
 }
 
 @media (max-width: 1024px) {
-  .app-layout {
-    grid-template-columns: 240px 1fr 220px;
+  .app-layout.mypage-layout {
+    grid-template-columns: 240px 1fr;
   }
 }
 
@@ -538,20 +640,183 @@ body {
     overflow: visible;
   }
   .app-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     height: auto;
     gap: 1.5rem;
   }
 }
 
+/* Floating Stage Selector */
+.puzzle-selector-floating-container {
+  position: relative;
+  margin-bottom: 1rem;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+}
+
+.active-stage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.active-stage-badge:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 6px 24px -5px rgba(56, 189, 248, 0.2);
+}
+
+.active-stage-badge-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.active-stage-badge-size {
+  font-size: 0.8rem;
+  color: #64748b;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+}
+
+.active-stage-badge-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.active-stage-arrow {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.active-stage-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Container */
+.puzzle-selector-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  width: 340px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Leaderboard Popup Modal */
+.leaderboard-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.25s ease-out;
+}
+
+.leaderboard-popup-content {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  width: 340px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+  animation: slide-up-anim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.leaderboard-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.leaderboard-popup-title {
+  margin: 0;
+  color: #fbbf24;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.leaderboard-popup-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.leaderboard-popup-close:hover {
+  color: #f8fafc;
+}
+
+/* Transitions */
+.slide-down-enter-active, .slide-down-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-down-enter-from, .slide-down-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(0px) scale(0.95);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up-anim {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Left & Right Sidebar Cards */
-.app-sidebar-left, .app-sidebar-right {
+.app-sidebar-left {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-.sidebar-card, .leaderboard-card {
+.sidebar-card {
   background-color: #1e293b; /* Slate 800 */
   border: 1px solid #334155;
   border-radius: 16px;
@@ -564,7 +829,7 @@ body {
   box-sizing: border-box;
 }
 
-.sidebar-card-title, .leaderboard-title {
+.sidebar-card-title {
   margin-top: 0;
   margin-bottom: 1rem;
   color: #38bdf8;
