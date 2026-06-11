@@ -231,6 +231,18 @@
     - 다음 스테이지 이동에 대해 가용 수량이 남았을 경우, 반짝임(`✨`) 및 진행 방향 화살표(`➔`) 아이콘과 함께 100%에서 0%로 줄어드는 **CSS 애니메이션 기반 축소식 진행바(Progress Bar)** 형태로 전환 잔여시간을 시각화.
     - 모든 스테이지를 클리어한 시점에는 persistent한 컵(`🏆`) 및 별무리(`🌟🌟🌟`) 효과를 가진 다크 글로우 글래스모피즘 카드를 노출하여 전언어적인 사용자 피드백 전달 완료.
     - Vitest unit/integration 테스트 시 stages/aiStages API 호출 비목킹 환경에서도 computed property (`allUnclearedStages`, `currentActiveStage`, `isStageAi`)가 에러를 던지지 않도록 기본 배열 폴백(`|| []`)을 처리하여 48개 테스트 전원 100% 통과 확보.
+  - **모바일 브라우저 강제 줌/스케일 및 레이아웃 깨짐 방지**:
+    - `frontend/index.html` 내 viewport 메타 태그를 `width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no`로 갱신하여 모바일 디바이스에서 브라우저가 화면을 임의로 확대/축소하는 동작 방지.
+    - 모바일 뷰(`max-width: 768px`) 진입 시 `body`, `.app-container`, `.app-layout` 등의 높이가 `auto`로 풀려서 캔버스 스케일링 기준 축이 흐트러지고 스크롤바가 생기던 레이아웃 버그를 차단하기 위해 **100vh 뷰포트 고정** 설정을 그대로 유지하도록 CSS 미디어 쿼리 최적화 완료.
+    - 캔버스 자체의 물리 크기(600px+)가 Flexbox 컨테이너의 최소 크기 계산(`min-width: auto`)에 의해서 부모 너비를 강제로 늘려 화면 우측이 잘리던 현상을 완벽히 해결하기 위해, `canvas` 요소에 `position: absolute`를 지정하고 `.canvas-frame` 및 `.canvas-wrapper` 등 부모 그리드에 `min-width: 0; min-height: 0`을 바인딩하여 캔버스 레이아웃을 부모 뷰포트 크기로 완벽히 격리(Isolation) 완료.
+    - 헤더 및 컨테이너 내부 여백(padding), 타이틀 폰트 크기, 로고 아이콘 규격 등을 모바일 공간 효율성에 맞춰 축소하고, 마이페이지 히스토리 카드 영역에만 독립적인 스크롤(`overflow-y: auto`)을 부여하여 캔버스가 어떠한 디바이스에서도 여백 없이 꽉 채워지고 잘림 현상 없이 리사이즈되도록 대응 완료.
+    - `App.vue` 내 `body` 및 `.app-container` 선택자에 `touch-action: pan-x pan-y`를 부여하여 모바일 브라우저의 더블 탭 확대 동작(Double-tap Zoom)을 차단하고 캔버스 내 조작에 집중 가능한 환경 구현.
+    - `onMounted` 시점에 멀티 터치 핀치 줌 제스처를 감지하여 브라우저 수준 줌을 강제 취소(`touchstart` 이벤트 내 `e.touches.length > 1` 발생 시 `e.preventDefault()`)하는 리스너 등록 및 해제(Unmount) 로직 통합.
+    - **모바일 뷰포트 UI 최적화 및 Help 모달 고도화 (Step 22) - 완료**:
+      - 모바일 디바이스(세로폭 375px 이하 등)에서 헤더의 기능성 버튼들이 짤리는 문제를 해결하기 위해, Leaderboard 및 Help 버튼뿐만 아니라 Game Play와 My Page 네비게이션 탭 버튼에도 동일하게 반응형 텍스트 숨김 클래스(`.btn-text` { display: none })를 적용하여 모바일 환경에서는 4개의 버튼이 각각 직관적이고 미니멀한 아이콘(🎮, 👤, 🏆, ❓)으로만 컴팩트하게 노출되도록 전면 개선 완료.
+      - 헤더의 Help 버튼을 클릭했을 때 실제 설명 모달(`isHelpModalOpen` 상태 바인딩)이 정상적으로 팝업되도록 클릭 이벤트를 복구하여 "Help 버튼을 눌러도 아무것도 안 나오는" 오류 완벽히 해결.
+      - 퍼즐 목록 선택용 플로팅 배지(`.active-stage-badge`)의 가로길이가 모바일에서 극도로 좁아져 텍스트 줄바꿈이 일어나는 문제를 방지하기 위해, 모바일 화면 비율 기준 너비(`width: 85vw`, `max-width: 340px`) 및 최소 너비(`min-width: 240px`) 설정을 적용하고 `space-between` 정렬을 통해 텍스트 잘림/줄바꿈 없이 힌트 및 방향 화살표와 조화를 이루도록 UI 크기 및 배치 개선 완료.
+      - 최초 1회 방문자를 판별하여 자동으로 도움말 모달을 표시하는 로컬스토리지 연동 로직 유지와 동시에, 모달 작동 및 manual 열기/닫기 흐름에 대한 신규 Vitest 단위 테스트 2개를 설계하여 `App.test.ts`에 포함시키고 전체 프론트엔드 50개 테스트 통과 완료.
 
 ---
 

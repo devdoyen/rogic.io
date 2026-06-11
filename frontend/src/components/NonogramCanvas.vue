@@ -442,6 +442,8 @@ watch(() => props.board.isSolved(), (solved) => {
   border-radius: 12px;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .canvas-frame {
@@ -454,11 +456,13 @@ watch(() => props.board.isSolved(), (solved) => {
   background-color: #0f172a;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
 }
 
 canvas {
   display: block;
   cursor: pointer;
+  position: absolute;
 }
 
 /* Floating Zoom HUD */

@@ -16,22 +16,29 @@
             class="tab-btn-play" 
             :class="{ active: currentTab === 'play' }" 
             @click="onTabChange('play')"
-          >Game Play</button>
+          >
+            🎮 <span class="btn-text">Game Play</span>
+          </button>
           <button 
             class="tab-btn-mypage" 
             :class="{ active: currentTab === 'mypage' }" 
             @click="onTabChange('mypage')"
-          >My Page</button>
+          >
+            👤 <span class="btn-text">My Page</span>
+          </button>
         </nav>
         <button 
           class="leaderboard-toggle-btn" 
           :class="{ active: isLeaderboardOpen }" 
           @click="isLeaderboardOpen = !isLeaderboardOpen"
         >
-          🏆 Leaderboard
+          🏆 <span class="btn-text">Leaderboard</span>
         </button>
-        <button class="help-toggle-btn" @click="isHelpOpen = true" style="padding: 0.5rem 0.75rem; background-color: #334155; border: 1px solid #475569; border-radius: 8px; color: #f8fafc; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.25rem;">
-          <span style="color: #38bdf8;">?</span> Help
+        <button 
+          class="help-toggle-btn" 
+          @click="isHelpModalOpen = true"
+        >
+          ❓ <span class="btn-text">Help</span>
         </button>
       </div>
     </header>
@@ -196,6 +203,34 @@
         </div>
         <div style="margin-top: 1.5rem;">
           <button class="modal-close-btn" @click="closeModal" style="padding: 0.5rem 1.5rem; background-color: #f43f5e; border: none; border-radius: 8px; color: #ffffff; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Help / Instructions (Auto-shown to first-time visitors) -->
+    <div v-if="isHelpModalOpen" class="help-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 10000;" @click.self="isHelpModalOpen = false">
+      <div class="modal-content" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55); animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <h3 class="modal-title" style="margin-top: 0; color: #38bdf8; font-weight: 700; font-size: 1.4rem;">🎮 How to Play</h3>
+        <div class="help-content-body" style="text-align: left; color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin: 1.5rem 0; display: flex; flex-direction: column; gap: 0.75rem;">
+          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">🔹</span>
+            <div><strong>Left Click / Tap:</strong> Fill cells to match the puzzle solution (Blue cells).</div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">🔹</span>
+            <div><strong>Right Click:</strong> Mark empty cells where blocks cannot be placed (Red X).</div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">🔹</span>
+            <div><strong>Mouse Wheel / HUD:</strong> Zoom in and out of the canvas. Drag to move or fill.</div>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">🔹</span>
+            <div><strong>Hint Numbers:</strong> Numbers show consecutive filled cells in rows and columns.</div>
+          </div>
+        </div>
+        <div>
+          <button class="modal-close-btn" @click="isHelpModalOpen = false" style="padding: 0.6rem 2rem; background: linear-gradient(135deg, #38bdf8, #818cf8); border: none; border-radius: 8px; color: #ffffff; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">Start Game</button>
         </div>
       </div>
     </div>
@@ -372,7 +407,7 @@ const aiStages = ref<StageSummary[]>([]);
 const selectedAiStageId = ref<number | null>(null);
 const isAiStageActive = ref(false);
 const selectedCategory = ref<'normal' | 'ai'>('normal');
-const isHelpOpen = ref(false);
+const isHelpModalOpen = ref(false);
 
 const isStageListOpen = ref(false);
 const isLeaderboardOpen = ref(false);
@@ -582,6 +617,12 @@ async function initializeUserSession() {
   }
 }
 
+function preventPinchZoom(e: TouchEvent) {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}
+
 onMounted(async () => {
   await initializeUserSession();
   await Promise.all([
@@ -591,11 +632,20 @@ onMounted(async () => {
     loadUserHistory()
   ]);
   window.addEventListener('resize', handleConfettiResize);
+  document.addEventListener('touchstart', preventPinchZoom, { passive: false });
+
+  // Show Help modal to first-time visitors
+  const visited = localStorage.getItem('rotagic_visited');
+  if (!visited) {
+    isHelpModalOpen.value = true;
+    localStorage.setItem('rotagic_visited', 'true');
+  }
 });
 
 onUnmounted(() => {
   resetCountdown();
   window.removeEventListener('resize', handleConfettiResize);
+  document.removeEventListener('touchstart', preventPinchZoom);
   stopConfetti();
 });
 </script>
@@ -614,6 +664,7 @@ body {
   align-items: center;
   height: 100vh;
   overflow: hidden; /* Prevent body scroll */
+  touch-action: pan-x pan-y;
 }
 
 .app-container {
@@ -625,6 +676,7 @@ body {
   max-width: 1200px;
   width: 100%;
   overflow: hidden;
+  touch-action: pan-x pan-y;
 }
 
 .app-header {
@@ -681,6 +733,9 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .app-nav button.active {
@@ -694,7 +749,8 @@ body {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.leaderboard-toggle-btn {
+.leaderboard-toggle-btn,
+.help-toggle-btn {
   padding: 0.5rem 0.75rem;
   background-color: #334155;
   border: 1px solid #475569;
@@ -709,7 +765,8 @@ body {
   transition: all 0.2s ease;
 }
 
-.leaderboard-toggle-btn:hover {
+.leaderboard-toggle-btn:hover,
+.help-toggle-btn:hover {
   background-color: #475569;
   border-color: #64748b;
   color: #ffffff;
@@ -720,6 +777,13 @@ body {
   border-color: #fbbf24;
   color: #fbbf24;
   box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+.help-toggle-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
 }
 
 .toggle-list-btn {
@@ -779,18 +843,73 @@ body {
 }
 
 @media (max-width: 768px) {
-  body {
-    overflow: auto;
-    height: auto;
+  .app-header {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    gap: 0.5rem;
+  }
+  .app-title {
+    font-size: 1.4rem;
+  }
+  .app-subtitle {
+    display: none;
+  }
+  .logo-icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    border-width: 3px;
   }
   .app-container {
-    height: auto;
-    overflow: visible;
+    padding: 0.5rem;
+  }
+  .app-nav button, 
+  .leaderboard-toggle-btn,
+  .help-toggle-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
   }
   .app-layout {
     grid-template-columns: 1fr !important;
+    gap: 0.75rem;
+  }
+  .app-layout.mypage-layout {
+    overflow-y: auto;
+    height: 100%;
+  }
+  .app-sidebar-left {
     height: auto;
-    gap: 1.5rem;
+    flex-shrink: 0;
+  }
+  .mypage-dashboard {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .active-stage-badge {
+    width: 85vw;
+    max-width: 340px;
+    padding: 0.5rem 1.25rem;
+  }
+  .puzzle-selector-dropdown {
+    width: 85vw;
+    max-width: 340px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-nav button .btn-text,
+  .leaderboard-toggle-btn .btn-text,
+  .help-toggle-btn .btn-text {
+    display: none;
+  }
+  .app-nav button,
+  .leaderboard-toggle-btn,
+  .help-toggle-btn {
+    padding: 0.5rem;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -808,15 +927,20 @@ body {
 .active-stage-badge {
   display: inline-flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.6rem;
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.5rem 1.2rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 9999px;
   cursor: pointer;
   box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  max-width: 90vw;
+  box-sizing: border-box;
+  min-width: 240px;
 }
 
 .active-stage-badge:hover {
@@ -829,6 +953,11 @@ body {
   font-weight: 700;
   font-size: 0.95rem;
   color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  text-align: left;
 }
 
 .active-stage-badge-size {
@@ -1126,6 +1255,7 @@ body {
   justify-content: center;
   align-items: center;
   flex-grow: 1;
+  min-width: 0;
   min-height: 0;
   width: 100%;
   position: relative;
@@ -1143,6 +1273,8 @@ body {
   align-items: center;
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 .loading-state {

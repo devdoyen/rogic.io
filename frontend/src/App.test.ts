@@ -269,6 +269,63 @@ describe('App.vue Leaderboard Integration TDD', () => {
     // Should call clearStage with HARD difficulty for AI stage
     expect(clearStageSpy).toHaveBeenCalledWith(1, 'HARD', 7, expect.any(Number));
   });
+
+  it('should manage Help modal visibility: auto-open on first visit, manually open via Help button, close via close button', async () => {
+    localStorage.clear(); // First-time visit scenario
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Verify modal is open automatically
+    expect((wrapper.vm as any).isHelpModalOpen).toBe(true);
+    expect(wrapper.find('.help-modal-overlay').exists()).toBe(true);
+    expect(localStorage.getItem('rotagic_visited')).toBe('true');
+
+    // Click modal close/Start button
+    const closeBtn = wrapper.find('.help-modal-overlay .modal-close-btn');
+    expect(closeBtn.exists()).toBe(true);
+    await closeBtn.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Verify modal is closed
+    expect((wrapper.vm as any).isHelpModalOpen).toBe(false);
+    expect(wrapper.find('.help-modal-overlay').exists()).toBe(false);
+
+    // Verify manual open via Help button
+    const helpBtn = wrapper.find('.help-toggle-btn');
+    expect(helpBtn.exists()).toBe(true);
+    await helpBtn.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect((wrapper.vm as any).isHelpModalOpen).toBe(true);
+    expect(wrapper.find('.help-modal-overlay').exists()).toBe(true);
+  });
+
+  it('should not auto-open Help modal if user has visited before', async () => {
+    localStorage.clear();
+    localStorage.setItem('rotagic_visited', 'true'); // Visited scenario
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Verify modal is NOT open automatically
+    expect((wrapper.vm as any).isHelpModalOpen).toBe(false);
+    expect(wrapper.find('.help-modal-overlay').exists()).toBe(false);
+  });
 });
 
 
