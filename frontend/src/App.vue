@@ -123,15 +123,25 @@
             </div>
 
             <div class="canvas-wrapper">
-              <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" @cell-click="handleCellClick" />
+              <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" :readOnly="solved" @cell-click="handleCellClick" />
             </div>
           </div>
           <div v-else class="loading-state">
             <p>Loading board data...</p>
           </div>
 
-          <div v-if="solved" class="solved-banner">
-            <h2>🎉 Solved! Congratulations!</h2>
+          <div v-if="solved" class="celebration-overlay-container">
+            <div v-if="allUnclearedStages.length > 0" class="transition-indicator-card">
+              <span class="indicator-icon">✨</span>
+              <div class="indicator-progress-container">
+                <div class="indicator-progress-bar"></div>
+              </div>
+              <span class="indicator-next-arrow">➔</span>
+            </div>
+            <div v-else class="all-cleared-card">
+              <div class="trophy-icon">🏆</div>
+              <div class="star-burst">🌟🌟🌟</div>
+            </div>
           </div>
         </template>
 
@@ -189,11 +199,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Confetti Overlay Canvas -->
+    <canvas ref="confettiCanvas" class="confetti-canvas"></canvas>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
 import { rotateGrid } from './engine/gridRotator';
@@ -209,6 +222,146 @@ const stages = ref<StageSummary[]>([]);
 const selectedStageId = ref<number | null>(null);
 const board = ref<PuzzleBoard | null>(null);
 const solved = ref(false);
+const nextPuzzleSeconds = ref(3);
+let countdownTimer: any = null;
+
+const confettiCanvas = ref<HTMLCanvasElement | null>(null);
+let confettiAnimationId: any = null;
+
+interface Confetti {
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  speedX: number;
+  speedY: number;
+  rotation: number;
+  rotationSpeed: number;
+}
+
+const confettis = ref<Confetti[]>([]);
+
+function initConfetti() {
+  const canvas = confettiCanvas.value;
+  if (!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#f43f5e', '#38bdf8', '#818cf8', '#fbbf24', '#34d399', '#a78bfa'];
+  const newConfettis: Confetti[] = [];
+  for (let i = 0; i < 120; i++) {
+    newConfettis.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      size: Math.random() * 8 + 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedX: Math.random() * 4 - 2,
+      speedY: Math.random() * 5 + 4,
+      rotation: Math.random() * 360,
+      rotationSpeed: Math.random() * 4 - 2
+    });
+  }
+  confettis.value = newConfettis;
+}
+
+function startConfetti() {
+  initConfetti();
+  const canvas = confettiCanvas.value;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+
+  function loop() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let active = false;
+    confettis.value.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+      p.rotation += p.rotationSpeed;
+
+      if (p.y < canvas.height) {
+        active = true;
+      }
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rotation * Math.PI) / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.restore();
+    });
+
+    if (active && solved.value) {
+      confettiAnimationId = requestAnimationFrame(loop);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  confettiAnimationId = requestAnimationFrame(loop);
+}
+
+function stopConfetti() {
+  if (confettiAnimationId) {
+    cancelAnimationFrame(confettiAnimationId);
+    confettiAnimationId = null;
+  }
+  const canvas = confettiCanvas.value;
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+function handleConfettiResize() {
+  const canvas = confettiCanvas.value;
+  if (canvas) {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+}
+
+watch(solved, (newVal) => {
+  if (newVal) {
+    startConfetti();
+  } else {
+    stopConfetti();
+  }
+});
+
+function resetCountdown() {
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+  nextPuzzleSeconds.value = 3;
+}
+
+function startNextPuzzleCountdown() {
+  nextPuzzleSeconds.value = 3;
+  if (countdownTimer) clearInterval(countdownTimer);
+  
+  countdownTimer = setInterval(() => {
+    nextPuzzleSeconds.value--;
+    if (nextPuzzleSeconds.value <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      navigateToNextPuzzle();
+    }
+  }, 1000);
+}
+
+function navigateToNextPuzzle() {
+  const remaining = allUnclearedStages.value;
+  if (remaining.length > 0) {
+    const nextStage = remaining[0];
+    selectStageCard(nextStage.id, isStageAi(nextStage));
+  }
+}
 const rankings = ref<User[]>([]);
 const currentUser = ref<UserSession | null>(null);
 const currentTab = ref<'play' | 'mypage'>('play');
@@ -226,26 +379,26 @@ const isLeaderboardOpen = ref(false);
 
 const currentActiveStage = computed(() => {
   if (isAiStageActive.value) {
-    return aiStages.value.find(s => s.id === selectedAiStageId.value) || null;
+    return (aiStages.value || []).find(s => s.id === selectedAiStageId.value) || null;
   } else {
-    return stages.value.find(s => s.id === selectedStageId.value) || null;
+    return (stages.value || []).find(s => s.id === selectedStageId.value) || null;
   }
 });
 
 const clearedStageIds = computed(() => {
-  return new Set(histories.value.map(h => h.stageId));
+  return new Set((histories.value || []).map(h => h.stageId));
 });
 
 const allUnclearedStages = computed(() => {
   const stageMap = new Map<number, StageSummary>();
-  stages.value.forEach(s => stageMap.set(s.id, s));
-  aiStages.value.forEach(s => stageMap.set(s.id, s));
+  (stages.value || []).forEach(s => stageMap.set(s.id, s));
+  (aiStages.value || []).forEach(s => stageMap.set(s.id, s));
   const combined = Array.from(stageMap.values());
   return combined.filter(s => !clearedStageIds.value.has(s.id));
 });
 
 function isStageAi(stage: StageSummary): boolean {
-  return aiStages.value.some(s => s.id === stage.id);
+  return (aiStages.value || []).some(s => s.id === stage.id);
 }
 
 function selectStageCard(id: number, isAi: boolean) {
@@ -282,6 +435,7 @@ async function loadStagesList() {
 }
 
 async function loadStageDetails(id: number) {
+  resetCountdown();
   try {
     // Record starting attempt
     await startStage(id);
@@ -359,6 +513,7 @@ async function handleCellClick() {
         await clearStage(userId, difficulty, stageId, elapsedTime);
         await loadRankingsList();
         await loadUserHistory();
+        startNextPuzzleCountdown();
       } catch (error) {
         console.error('Failed to submit stage clear:', error);
       }
@@ -435,6 +590,13 @@ onMounted(async () => {
     loadRankingsList(),
     loadUserHistory()
   ]);
+  window.addEventListener('resize', handleConfettiResize);
+});
+
+onUnmounted(() => {
+  resetCountdown();
+  window.removeEventListener('resize', handleConfettiResize);
+  stopConfetti();
 });
 </script>
 
@@ -979,6 +1141,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 .loading-state {
@@ -987,15 +1151,112 @@ body {
   text-align: center;
 }
 
-.solved-banner {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  padding: 0.75rem 2rem;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.confetti-canvas {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+}
+
+.celebration-overlay-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-top: 0.75rem;
+  z-index: 10000;
+}
+
+.transition-indicator-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(30, 41, 59, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 1.2rem;
+  border-radius: 9999px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.indicator-icon {
+  font-size: 1.1rem;
+  animation: spin-pulse 2s infinite linear;
+}
+
+.indicator-progress-container {
+  width: 120px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.indicator-progress-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 9999px;
+  animation: countdown-shrink 3s linear forwards;
+}
+
+.indicator-next-arrow {
+  color: #38bdf8;
+  font-size: 1rem;
+  animation: arrow-bounce 1s infinite alternate ease-in-out;
+}
+
+.all-cleared-card {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 1.25rem 2.5rem;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px -10px rgba(251, 191, 36, 0.2);
+  text-align: center;
+  animation: pop-in 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.trophy-icon {
+  font-size: 3rem;
+  animation: trophy-bounce 1.5s infinite alternate ease-in-out;
+}
+
+.star-burst {
+  font-size: 1.1rem;
+  margin-top: 0.25rem;
+  opacity: 0.9;
+  letter-spacing: 0.25rem;
+  animation: pulse-glow 2s infinite alternate ease-in-out;
+}
+
+@keyframes countdown-shrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+@keyframes spin-pulse {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+@keyframes arrow-bounce {
+  from { transform: translateX(0); }
+  to { transform: translateX(4px); }
+}
+
+@keyframes trophy-bounce {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-8px) scale(1.05); }
+}
+
+@keyframes pulse-glow {
+  from { opacity: 0.6; text-shadow: 0 0 4px rgba(251, 191, 36, 0.2); }
+  to { opacity: 1; text-shadow: 0 0 12px rgba(251, 191, 36, 0.6); }
 }
 
 /* Leaderboard custom styles */

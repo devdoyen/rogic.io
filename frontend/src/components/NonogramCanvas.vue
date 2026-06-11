@@ -1,6 +1,6 @@
 <template>
   <div class="nonogram-canvas-container">
-    <div class="canvas-frame">
+    <div class="canvas-frame" ref="frameRef">
       <canvas 
         ref="canvasRef" 
         data-testid="nonogram-canvas" 
@@ -46,7 +46,7 @@ const getCellSize = (maxCount: number) => {
   return 10; // 30x30 or larger
 };
 
-let CELL_SIZE = getCellSize(Math.max(props.board.colCount, props.board.rowCount));
+const CELL_SIZE = computed(() => getCellSize(Math.max(props.board.colCount, props.board.rowCount)));
 
 const playAngle = props.initialAngle !== undefined ? props.initialAngle : 0;
 const targetOrthogonalAngle = computed(() => {
@@ -72,8 +72,9 @@ const currentAngle = ref(getStartingAngle());
 
 // Dynamic calculations for bounds
 const getDimensions = () => {
-  const boardWidth = props.board.colCount * CELL_SIZE;
-  const boardHeight = props.board.rowCount * CELL_SIZE;
+  const cellSizeVal = CELL_SIZE.value;
+  const boardWidth = props.board.colCount * cellSizeVal;
+  const boardHeight = props.board.rowCount * cellSizeVal;
   const boardDiag = Math.sqrt(boardWidth * boardWidth + boardHeight * boardHeight);
 
   const maxRowHintsLength = Math.max(...props.board.rowHints.map(h => h.length), 1);
@@ -89,27 +90,37 @@ const getDimensions = () => {
   };
 };
 
-const VIEWPORT_SIZE = 600;
 const scale = ref(1.0);
 const isDragging = ref(false);
 
+const frameRef = ref<HTMLElement | null>(null);
+const frameWidth = ref(600);
+const frameHeight = ref(600);
+
+const updateFrameSize = () => {
+  if (frameRef.value) {
+    frameWidth.value = frameRef.value.clientWidth || 600;
+    frameHeight.value = frameRef.value.clientHeight || 600;
+  }
+};
+
 const fitScale = computed(() => {
   if (isTestEnv) return 1.0;
-  const boardWidth = props.board.colCount * CELL_SIZE;
-  const boardHeight = props.board.rowCount * CELL_SIZE;
-  const maxRowHintsLength = Math.max(...props.board.rowHints.map(h => h.length), 1);
-  const maxColHintsLength = Math.max(...props.board.colHints.map(h => h.length), 1);
-  const reqW = boardWidth + maxRowHintsLength * 32 + 24;
-  const reqH = boardHeight + maxColHintsLength * 32 + 24;
-  const requiredSize = Math.max(reqW, reqH);
-  return VIEWPORT_SIZE / requiredSize;
+  const { width: canvasSize } = getDimensions();
+  const scaleX = frameWidth.value / canvasSize;
+  const scaleY = frameHeight.value / canvasSize;
+  return Math.min(scaleX, scaleY);
 });
 
 const canvasStyle = computed(() => {
+  const transitionTime = props.board.isSolved() ? '0.3s' : '0.15s';
+  const transitionStyle = (isDragging.value && !props.board.isSolved()) 
+    ? 'none' 
+    : `transform ${transitionTime} cubic-bezier(0.2, 0.8, 0.2, 1)`;
   return {
     transform: `scale(${scale.value})`,
     transformOrigin: 'center center',
-    transition: isDragging.value ? 'none' : 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)'
+    transition: transitionStyle
   };
 });
 
@@ -131,7 +142,7 @@ const initialDims = getDimensions();
 const config = {
   centerX: initialDims.width / 2,
   centerY: initialDims.height / 2,
-  cellSize: CELL_SIZE,
+  cellSize: CELL_SIZE.value,
   rowCount: props.board.rowCount,
   colCount: props.board.colCount,
   angle: currentAngle.value
@@ -144,6 +155,7 @@ function drawBoard() {
   if (!ctx) return;
 
   const { width, height, halfW, halfH } = getDimensions();
+  const cellSizeVal = CELL_SIZE.value;
   canvas.width = width;
   canvas.height = height;
 
@@ -163,39 +175,39 @@ function drawBoard() {
 
   // Draw background for overall active board area
   ctx.fillStyle = '#1e293b'; // slate-800
-  ctx.fillRect(-halfW, -halfH, props.board.colCount * CELL_SIZE, props.board.rowCount * CELL_SIZE);
+  ctx.fillRect(-halfW, -halfH, props.board.colCount * cellSizeVal, props.board.rowCount * cellSizeVal);
 
   // Draw grid cells
   for (let r = 0; r < props.board.rowCount; r++) {
     for (let c = 0; c < props.board.colCount; c++) {
-      const x = -halfW + c * CELL_SIZE;
-      const y = -halfH + r * CELL_SIZE;
+      const x = -halfW + c * cellSizeVal;
+      const y = -halfH + r * cellSizeVal;
 
       ctx.strokeStyle = '#334155'; // slate-700
       ctx.lineWidth = 1;
-      ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+      ctx.strokeRect(x, y, cellSizeVal, cellSizeVal);
 
       const cellState = props.board.currentGrid[r][c];
       if (cellState === 1) {
         // Filled with premium gem gradient
-        const grad = ctx.createLinearGradient(x, y, x + CELL_SIZE, y + CELL_SIZE);
+        const grad = ctx.createLinearGradient(x, y, x + cellSizeVal, y + cellSizeVal);
         grad.addColorStop(0, '#38bdf8'); // sky-400
         grad.addColorStop(1, '#818cf8'); // indigo-400
         ctx.fillStyle = grad;
-        ctx.fillRect(x + 1.5, y + 1.5, CELL_SIZE - 3, CELL_SIZE - 3);
+        ctx.fillRect(x + 1.5, y + 1.5, cellSizeVal - 3, cellSizeVal - 3);
 
         ctx.strokeStyle = '#6366f1';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(x + 1.5, y + 1.5, CELL_SIZE - 3, CELL_SIZE - 3);
+        ctx.strokeRect(x + 1.5, y + 1.5, cellSizeVal - 3, cellSizeVal - 3);
       } else if (cellState === 2) {
         // Marked (X)
         ctx.strokeStyle = '#f43f5e'; // Rose 500
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(x + CELL_SIZE / 4, y + CELL_SIZE / 4);
-        ctx.lineTo(x + 3 * CELL_SIZE / 4, y + 3 * CELL_SIZE / 4);
-        ctx.moveTo(x + 3 * CELL_SIZE / 4, y + CELL_SIZE / 4);
-        ctx.lineTo(x + CELL_SIZE / 4, y + 3 * CELL_SIZE / 4);
+        ctx.moveTo(x + cellSizeVal / 4, y + cellSizeVal / 4);
+        ctx.lineTo(x + 3 * cellSizeVal / 4, y + 3 * cellSizeVal / 4);
+        ctx.moveTo(x + 3 * cellSizeVal / 4, y + cellSizeVal / 4);
+        ctx.lineTo(x + cellSizeVal / 4, y + 3 * cellSizeVal / 4);
         ctx.stroke();
       }
     }
@@ -206,7 +218,7 @@ function drawBoard() {
   ctx.lineWidth = 2.5;
   for (let r = 0; r <= props.board.rowCount; r += 5) {
     if (r > 0 && r < props.board.rowCount) {
-      const y = -halfH + r * CELL_SIZE;
+      const y = -halfH + r * cellSizeVal;
       ctx.beginPath();
       ctx.moveTo(-halfW, y);
       ctx.lineTo(halfW, y);
@@ -215,7 +227,7 @@ function drawBoard() {
   }
   for (let c = 0; c <= props.board.colCount; c += 5) {
     if (c > 0 && c < props.board.colCount) {
-      const x = -halfW + c * CELL_SIZE;
+      const x = -halfW + c * cellSizeVal;
       ctx.beginPath();
       ctx.moveTo(x, -halfH);
       ctx.lineTo(x, halfH);
@@ -233,7 +245,7 @@ function drawBoard() {
 
     for (let r = 0; r < props.board.rowCount; r++) {
       const hints = props.board.rowHints[r] || [0];
-      const y = -halfH + r * CELL_SIZE + CELL_SIZE / 2;
+      const y = -halfH + r * cellSizeVal + cellSizeVal / 2;
       for (let h = 0; h < hints.length; h++) {
         const hintVal = hints[hints.length - 1 - h];
         const hx = -halfW - 8 - h * 16;
@@ -252,7 +264,7 @@ function drawBoard() {
 
     for (let c = 0; c < props.board.colCount; c++) {
       const hints = props.board.colHints[c] || [0];
-      const x = -halfW + c * CELL_SIZE + CELL_SIZE / 2;
+      const x = -halfW + c * cellSizeVal + cellSizeVal / 2;
       for (let h = 0; h < hints.length; h++) {
         const hintVal = hints[hints.length - 1 - h];
         const hy = -halfH - 8 - h * 16;
@@ -371,7 +383,18 @@ function animateRotationToTarget() {
   requestAnimationFrame(tick);
 }
 
+let resizeObserver: ResizeObserver | null = null;
+
 onMounted(() => {
+  if (frameRef.value) {
+    updateFrameSize();
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        updateFrameSize();
+      });
+      resizeObserver.observe(frameRef.value);
+    }
+  }
   scale.value = fitScale.value;
   drawBoard();
 });
@@ -379,17 +402,23 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleWindowMouseMove);
   window.removeEventListener('mouseup', handleWindowMouseUp);
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+  }
+});
+
+watch(fitScale, (newFitScale) => {
+  scale.value = newFitScale;
 });
 
 // Redraw if board changes
 watch(() => props.board, () => {
-  CELL_SIZE = getCellSize(Math.max(props.board.colCount, props.board.rowCount));
   currentAngle.value = getStartingAngle();
   scale.value = fitScale.value;
   const dims = getDimensions();
   config.centerX = dims.width / 2;
   config.centerY = dims.height / 2;
-  config.cellSize = CELL_SIZE;
+  config.cellSize = CELL_SIZE.value;
   config.rowCount = props.board.rowCount;
   config.colCount = props.board.colCount;
   config.angle = currentAngle.value;
@@ -407,15 +436,17 @@ watch(() => props.board.isSolved(), (solved) => {
 <style scoped>
 .nonogram-canvas-container {
   position: relative;
-  display: inline-block;
+  display: block;
   padding: 0;
   background-color: transparent;
   border-radius: 12px;
+  width: 100%;
+  height: 100%;
 }
 
 .canvas-frame {
-  width: 600px;
-  height: 600px;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   display: flex;
   justify-content: center;

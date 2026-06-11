@@ -186,4 +186,3 @@ describe('NonogramCanvas TDD Red Phase', () => {
     });
   });
 });
-
