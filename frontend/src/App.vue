@@ -99,56 +99,30 @@
               <!-- Slide-down Dropdown List -->
               <transition name="slide-down">
                 <div v-if="isStageListOpen" class="puzzle-selector-dropdown">
-                  <div class="category-tabs">
-                    <button 
-                      class="category-tab-btn" 
-                      :class="{ active: selectedCategory === 'normal' }"
-                      @click.stop="selectedCategory = 'normal'"
-                    >Normal</button>
-                    <button 
-                      class="category-tab-btn" 
-                      :class="{ active: selectedCategory === 'ai' }"
-                      @click.stop="selectedCategory = 'ai'"
-                    >Daily AI</button>
-                  </div>
-
                   <div class="stage-card-list">
-                    <template v-if="selectedCategory === 'normal'">
-                      <div 
-                        v-for="stage in stages" 
-                        :key="stage.id" 
-                        class="stage-item-card"
-                        :class="{ active: selectedStageId === stage.id && !isAiStageActive }"
-                        @click.stop="selectStageCard(stage.id, false)"
-                      >
-                        <div class="stage-card-info">
-                          <span class="stage-card-name">{{ stage.name }}</span>
-                          <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
-                          <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
-                            Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
-                          </div>
+                    <div 
+                      v-for="stage in allUnclearedStages" 
+                      :key="stage.id" 
+                      class="stage-item-card"
+                      :class="{ 
+                        active: (stage.isAi ? (selectedAiStageId === stage.id && isAiStageActive) : (selectedStageId === stage.id && !isAiStageActive))
+                      }"
+                      @click.stop="selectStageCard(stage.id, stage.isAi)"
+                    >
+                      <div class="stage-card-info">
+                        <span class="stage-card-name">{{ stage.name }}</span>
+                        <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
+                        <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
+                          Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
                         </div>
-                        <div class="stage-card-tag normal-tag">Normal</div>
                       </div>
-                    </template>
-                    <template v-else>
-                      <div 
-                        v-for="stage in aiStages" 
-                        :key="stage.id" 
-                        class="stage-item-card"
-                        :class="{ active: selectedAiStageId === stage.id && isAiStageActive }"
-                        @click.stop="selectStageCard(stage.id, true)"
-                      >
-                        <div class="stage-card-info">
-                          <span class="stage-card-name">{{ stage.name }}</span>
-                          <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
-                          <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
-                            Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
-                          </div>
-                        </div>
-                        <div class="stage-card-tag ai-tag">AI Daily</div>
+                      <div class="stage-card-tag" :class="stage.isAi ? 'ai-tag' : 'normal-tag'">
+                        {{ stage.isAi ? 'AI Daily' : 'Normal' }}
                       </div>
-                    </template>
+                    </div>
+                    <div v-if="allUnclearedStages.length === 0" class="empty-stages" style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
+                      🎉 All puzzles solved!
+                    </div>
                   </div>
                 </div>
               </transition>
@@ -264,6 +238,17 @@ const currentActiveStage = computed(() => {
   }
 });
 
+const clearedStageIds = computed(() => {
+  return new Set(histories.value.map(h => h.stageId));
+});
+
+const allUnclearedStages = computed(() => {
+  const normalList = stages.value.map(s => ({ ...s, isAi: false }));
+  const aiList = aiStages.value.map(s => ({ ...s, isAi: true }));
+  const combined = [...normalList, ...aiList];
+  return combined.filter(s => !clearedStageIds.value.has(s.id));
+});
+
 function selectStageCard(id: number, isAi: boolean) {
   if (isAi) {
     selectedCategory.value = 'ai';
@@ -374,6 +359,7 @@ async function handleCellClick() {
         const elapsedTime = Math.floor((Date.now() - startTime.value) / 1000);
         await clearStage(userId, difficulty, stageId, elapsedTime);
         await loadRankingsList();
+        await loadUserHistory();
       } catch (error) {
         console.error('Failed to submit stage clear:', error);
       }
@@ -447,7 +433,8 @@ onMounted(async () => {
   await Promise.all([
     loadStagesList(),
     loadAiStagesList(),
-    loadRankingsList()
+    loadRankingsList(),
+    loadUserHistory()
   ]);
 });
 </script>
