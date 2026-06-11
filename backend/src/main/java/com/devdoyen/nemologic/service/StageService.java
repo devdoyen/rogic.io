@@ -19,7 +19,16 @@ public class StageService {
 
     @Transactional(readOnly = true)
     public List<Stage> getAllStages() {
-        return stageRepository.findAll();
+        return stageRepository.findByActive(true);
+    }
+
+    @Transactional
+    public void activateAllInactiveStages() {
+        List<Stage> inactive = stageRepository.findByActive(false);
+        for (Stage stage : inactive) {
+            stage.setActive(true);
+            stageRepository.save(stage);
+        }
     }
 
     @Transactional(readOnly = true)

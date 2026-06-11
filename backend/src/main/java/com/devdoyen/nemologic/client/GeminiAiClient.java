@@ -31,47 +31,61 @@ public class GeminiAiClient implements AiClient {
             return getFallbackJson();
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        int maxAttempts = 3;
+        Exception lastException = null;
 
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
 
-            Map<String, Object> requestBody = new HashMap<>();
-            Map<String, Object> contents = new HashMap<>();
-            Map<String, Object> parts = new HashMap<>();
-            parts.put("text", "Generate a valid, creative, and unique nonogram puzzle in JSON format (do NOT generate a heart shape, create a different recognizable shape like a tree, a letter, a face, a cup, an arrow, etc.). The response must follow this exact JSON schema: { \"name\": \"AI Daily ObjectName\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,0,1,0,0],[0,1,1,1,0],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\" } (this example is a diamond, do not copy it exactly, design your own unique pattern). Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). Grid string must be a valid serialized JSON array representing width x height cells containing only 0 and 1.");
-            contents.put("parts", Collections.singletonList(parts));
-            requestBody.put("contents", Collections.singletonList(contents));
+                Map<String, Object> requestBody = new HashMap<>();
+                Map<String, Object> contents = new HashMap<>();
+                Map<String, Object> parts = new HashMap<>();
+                parts.put("text", "Generate a valid, creative, and unique nonogram puzzle in JSON format (do NOT generate a heart shape, create a different recognizable shape like a tree, a letter, a face, a cup, an arrow, etc.). The response must follow this exact JSON schema: { \"name\": \"AI Daily ObjectName\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,0,1,0,0],[0,1,1,1,0],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\" } (this example is a diamond, do not copy it exactly, design your own unique pattern). Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). Grid string must be a valid serialized JSON array representing width x height cells containing only 0 and 1.");
+                contents.put("parts", Collections.singletonList(parts));
+                requestBody.put("contents", Collections.singletonList(contents));
 
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            String response = restTemplate.postForObject(url, entity, String.class);
+                HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+                String response = restTemplate.postForObject(url, entity, String.class);
 
-            JsonNode root = objectMapper.readTree(response);
-            String rawText = root.path("candidates")
-                    .get(0)
-                    .path("content")
-                    .path("parts")
-                    .get(0)
-                    .path("text")
-                    .asText();
+                JsonNode root = objectMapper.readTree(response);
+                String rawText = root.path("candidates")
+                        .get(0)
+                        .path("content")
+                        .path("parts")
+                        .get(0)
+                        .path("text")
+                        .asText();
 
-            rawText = rawText.trim();
-            if (rawText.startsWith("```json")) {
-                rawText = rawText.substring(7);
+                rawText = rawText.trim();
+                if (rawText.startsWith("```json")) {
+                    rawText = rawText.substring(7);
+                }
+                if (rawText.startsWith("```")) {
+                    rawText = rawText.substring(3);
+                }
+                if (rawText.endsWith("```")) {
+                    rawText = rawText.substring(0, rawText.length() - 3);
+                }
+                return rawText.trim();
+
+            } catch (Exception e) {
+                lastException = e;
+                System.err.println("[AI] API call attempt " + attempt + " failed: " + e.getMessage());
+                if (attempt < maxAttempts) {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
             }
-            if (rawText.startsWith("```")) {
-                rawText = rawText.substring(3);
-            }
-            if (rawText.endsWith("```")) {
-                rawText = rawText.substring(0, rawText.length() - 3);
-            }
-            return rawText.trim();
-
-        } catch (Exception e) {
-            System.err.println("[AI] Failed to query Gemini API: " + e.getMessage() + ". Falling back to Mock data.");
-            return getFallbackJson();
         }
+
+        System.err.println("[AI] All " + maxAttempts + " attempts to query Gemini API failed: " + lastException.getMessage() + ". Falling back to Mock data.");
+        return getFallbackJson();
     }
 
     private String getFallbackJson() {

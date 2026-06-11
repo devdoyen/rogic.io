@@ -26,6 +26,11 @@ public class AiStageGenerator {
 
     @Transactional
     public Stage generateAndSaveStage() {
+        return generateAndSaveStage(true);
+    }
+
+    @Transactional
+    public Stage generateAndSaveStage(boolean active) {
         int maxAttempts = 3;
         Exception lastException = null;
 
@@ -46,6 +51,7 @@ public class AiStageGenerator {
                 }
 
                 Stage newStage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), grid);
+                newStage.setActive(active);
                 return stageRepository.save(newStage);
             } catch (Exception e) {
                 lastException = e;

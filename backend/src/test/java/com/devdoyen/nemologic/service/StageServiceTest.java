@@ -69,4 +69,23 @@ public class StageServiceTest {
         assertEquals(120.0, stage.getAverageElapsedTime(), 0.001);
         verify(stageRepository, times(1)).save(stage);
     }
+
+    @Test
+    public void testActivateAllInactiveStages() {
+        Stage s1 = new Stage(1L, "Inactive Stage 1", 5, 5, new int[5][5]);
+        s1.setActive(false);
+        Stage s2 = new Stage(2L, "Inactive Stage 2", 5, 5, new int[5][5]);
+        s2.setActive(false);
+
+        java.util.List<Stage> inactiveStages = java.util.List.of(s1, s2);
+        when(stageRepository.findByActive(false)).thenReturn(inactiveStages);
+        when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        stageService.activateAllInactiveStages();
+
+        assertTrue(s1.isActive());
+        assertTrue(s2.isActive());
+        verify(stageRepository, times(1)).save(s1);
+        verify(stageRepository, times(1)).save(s2);
+    }
 }

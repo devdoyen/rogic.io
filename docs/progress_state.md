@@ -175,7 +175,12 @@
 - **10x10 ~ 30x30 대형 퍼즐 데이터 시딩**:
   - `DataSeeder.java`에 10x10 Smile Face, 15x15 Ascending Star, 20x20 Checkerboard, 30x30 Giant Cross 추가 적재 완료.
 - **Gemini API 연동 및 3회 Retry/Validation 파이프라인**:
-  - `GeminiAiClient.java`를 신설하여 Google Gemini 1.5 Flash API 실연동. (Key 유실 시 Mock 데이터 자동 Safe-Fallback 지원, 테스트 환경 시 프로필 격리 `@Profile("!test")`).
+  - `GeminiAiClient.java`를 신설하여 Google Gemini 1.5/2.5 Flash API 실연동. (Key 유실 시 Mock 데이터 자동 Safe-Fallback 지원, 테스트 환경 시 프로필 격리 `@Profile("!test")`).
+  - **503 Service Unavailable 대응 고도화**: API 모델을 보다 성숙하고 안정적인 `gemini-1.5-flash`로 전환하고, `GeminiAiClient` 내에 2초 간격의 최대 3회 자체 재시도(Retry) 루프를 구축하여 한시적인 수요 급증 시 자동 복구하도록 개선 완료.
+  - **비정형 분리형 데일리 릴리즈 구조 도입**:
+    - `Stage` 엔티티에 `active` 컬럼을 도입하여 미공개 퍼즐 상태 관리 지원.
+    - `DailyPuzzleScheduler.java`에서 트래픽 피크가 없는 **04:17 AM**(`0 17 4 * * ?`)에 백그라운드로 AI 데일리 퍼즐을 비활성(`active = false`) 상태로 선생성하도록 세팅 완료.
+    - 매일 **자정 00:00 AM**(`0 0 0 * * ?`)에 릴리즈용 스케줄을 트리거하여 비활성화된 AI 스테이지들을 일괄 활성화(`active = true`) 상태로 사용자에게 최종 노출시키는 2단계 릴리즈 체계 연동 완료.
   - `AiStageGenerator.java` 내에 API JSON 포맷 파싱 및 2차원 격자 정합성 체크(0/1 값 범위 및 크기 일치성) 검증 로직 추가 및 실패 시 최대 3회 재시도(Retry)하는 구조 구축.
 - **TDD 기반 테스트 검증**:
   - `StageServiceTest` 및 `AiStageGeneratorTest`에 재시도 횟수(3회) 검증과 통계 계산 단위 테스트 보강.

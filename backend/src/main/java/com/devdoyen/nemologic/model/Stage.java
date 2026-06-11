@@ -29,6 +29,9 @@ public class Stage {
     @Column(name = "average_elapsed_time", nullable = false, columnDefinition = "double precision default 0.0")
     private double averageElapsedTime = 0.0;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
+
     public Stage() {
     }
 
@@ -135,5 +138,13 @@ public class Stage {
 
     public double averageElapsedTime() {
         return averageElapsedTime;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

@@ -45,11 +45,23 @@ public class AiStageGeneratorTest {
     @Test
     public void testDailyPuzzleSchedulerTriggerChain() {
         AiStageGenerator mockGenerator = mock(AiStageGenerator.class);
-        DailyPuzzleScheduler scheduler = new DailyPuzzleScheduler(mockGenerator);
+        StageService mockStageService = mock(StageService.class);
+        DailyPuzzleScheduler scheduler = new DailyPuzzleScheduler(mockGenerator, mockStageService);
 
         scheduler.generateDailyPuzzle();
 
-        verify(mockGenerator, times(1)).generateAndSaveStage();
+        verify(mockGenerator, times(1)).generateAndSaveStage(false);
+    }
+
+    @Test
+    public void testDailyPuzzleSchedulerReleaseChain() {
+        AiStageGenerator mockGenerator = mock(AiStageGenerator.class);
+        StageService mockStageService = mock(StageService.class);
+        DailyPuzzleScheduler scheduler = new DailyPuzzleScheduler(mockGenerator, mockStageService);
+
+        scheduler.releaseDailyPuzzle();
+
+        verify(mockStageService, times(1)).activateAllInactiveStages();
     }
 
     @Test
