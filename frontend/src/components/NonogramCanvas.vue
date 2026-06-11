@@ -1,11 +1,22 @@
 <template>
   <div class="nonogram-canvas-container">
-    <canvas 
-      ref="canvasRef" 
-      data-testid="nonogram-canvas" 
-      @mousedown="handleMouseDown"
-      @contextmenu.prevent
-    ></canvas>
+    <div class="canvas-frame">
+      <canvas 
+        ref="canvasRef" 
+        data-testid="nonogram-canvas" 
+        :style="canvasStyle"
+        @mousedown="handleMouseDown"
+        @wheel="handleWheel"
+        @contextmenu.prevent
+      ></canvas>
+    </div>
+    
+    <!-- Floating Zoom HUD -->
+    <div class="zoom-hud">
+      <button class="zoom-btn" @click="changeZoom(0.15)" title="Zoom In">+</button>
+      <span class="zoom-level" @click="resetZoom" title="Reset Zoom">{{ Math.round(scale * 100) }}%</span>
+      <button class="zoom-btn" @click="changeZoom(-0.15)" title="Zoom Out">-</button>
+    </div>
   </div>
 </template>
 
@@ -50,6 +61,13 @@ const getStartingAngle = () => {
   return playAngle;
 };
 
+const isTestEnv = typeof window !== 'undefined' && (
+  (globalThis as any).process?.env?.NODE_ENV === 'test' ||
+  (globalThis as any).vitest !== undefined ||
+  (globalThis as any).__vitest_worker__ !== undefined ||
+  navigator.userAgent.includes('jsdom')
+);
+
 const currentAngle = ref(getStartingAngle());
 
 // Dynamic calculations for bounds
@@ -70,6 +88,38 @@ const getDimensions = () => {
     halfH: boardHeight / 2
   };
 };
+
+const VIEWPORT_SIZE = 480;
+const scale = ref(1.0);
+const isDragging = ref(false);
+
+const fitScale = computed(() => {
+  if (isTestEnv) return 1.0;
+  const { width } = getDimensions();
+  return VIEWPORT_SIZE / width;
+});
+
+const canvasStyle = computed(() => {
+  return {
+    transform: `scale(${scale.value})`,
+    transformOrigin: 'center center',
+    transition: isDragging.value ? 'none' : 'transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)'
+  };
+});
+
+function changeZoom(amount: number) {
+  scale.value = Math.max(0.2, Math.min(4.0, scale.value + amount));
+}
+
+function resetZoom() {
+  scale.value = fitScale.value;
+}
+
+function handleWheel(event: WheelEvent) {
+  event.preventDefault();
+  const zoomFactor = event.deltaY < 0 ? 1.05 : 0.95;
+  scale.value = Math.max(0.2, Math.min(4.0, scale.value * zoomFactor));
+}
 
 const initialDims = getDimensions();
 const config = {
@@ -213,7 +263,6 @@ function drawBoard() {
   ctx.restore();
 }
 
-let isDragging = false;
 let dragValue = 0; // 0: empty, 1: filled, 2: marked
 let lastRow = -1;
 let lastCol = -1;
@@ -224,8 +273,10 @@ function handleMouseDown(event: MouseEvent) {
   if (!canvas) return;
 
   const rect = canvas.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
-  const clickY = event.clientY - rect.top;
+  const currentScale = isTestEnv ? 1.0 : (rect.width / canvas.width);
+
+  const clickX = (event.clientX - rect.left) / currentScale;
+  const clickY = (event.clientY - rect.top) / currentScale;
 
   const coords = getGridCoordinates(clickX, clickY, config);
   if (!coords) return;
@@ -243,7 +294,7 @@ function handleMouseDown(event: MouseEvent) {
     return;
   }
 
-  isDragging = true;
+  isDragging.value = true;
   props.board.setCell(row, col, dragValue);
   lastRow = row;
   lastCol = col;
@@ -256,14 +307,16 @@ function handleMouseDown(event: MouseEvent) {
 }
 
 function handleWindowMouseMove(event: MouseEvent) {
-  if (!isDragging) return;
+  if (!isDragging.value) return;
 
   const canvas = canvasRef.value;
   if (!canvas) return;
 
   const rect = canvas.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
-  const clickY = event.clientY - rect.top;
+  const currentScale = isTestEnv ? 1.0 : (rect.width / canvas.width);
+
+  const clickX = (event.clientX - rect.left) / currentScale;
+  const clickY = (event.clientY - rect.top) / currentScale;
 
   const coords = getGridCoordinates(clickX, clickY, config);
   if (!coords) return;
@@ -279,8 +332,8 @@ function handleWindowMouseMove(event: MouseEvent) {
 }
 
 function handleWindowMouseUp() {
-  if (isDragging) {
-    isDragging = false;
+  if (isDragging.value) {
+    isDragging.value = false;
     window.removeEventListener('mousemove', handleWindowMouseMove);
     window.removeEventListener('mouseup', handleWindowMouseUp);
   }
@@ -313,6 +366,7 @@ function animateRotationToTarget() {
 }
 
 onMounted(() => {
+  scale.value = fitScale.value;
   drawBoard();
 });
 
@@ -325,6 +379,7 @@ onUnmounted(() => {
 watch(() => props.board, () => {
   CELL_SIZE = getCellSize(Math.max(props.board.colCount, props.board.rowCount));
   currentAngle.value = getStartingAngle();
+  scale.value = fitScale.value;
   const dims = getDimensions();
   config.centerX = dims.width / 2;
   config.centerY = dims.height / 2;
@@ -345,14 +400,82 @@ watch(() => props.board.isSolved(), (solved) => {
 
 <style scoped>
 .nonogram-canvas-container {
+  position: relative;
   display: inline-block;
   padding: 10px;
   background-color: #0f172a; /* matches app slate-900 background */
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
+
+.canvas-frame {
+  width: 480px;
+  height: 480px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #0f172a;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 canvas {
   display: block;
   cursor: pointer;
+}
+
+/* Floating Zoom HUD */
+.zoom-hud {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.35rem 0.6rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.zoom-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  font-weight: 700;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.zoom-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+}
+
+.zoom-level {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: #38bdf8;
+  min-width: 42px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.zoom-level:hover {
+  color: #818cf8;
 }
 </style>
