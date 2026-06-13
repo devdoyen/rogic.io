@@ -255,16 +255,20 @@
       - `infra/ansible/nginx.prod.conf` 및 `docker-compose.prod.yml`을 신설하여 로컬 개발 환경(localhost)과 운영 환경(rotagic.com)의 Nginx 설정을 격리하고 운영 환경에서는 80 -> 443 HTTPS 리다이렉트와 SSL 종단 처리가 이루어지도록 구성.
       - Ansible playbook을 보완하여 Certbot 설치, 최초 인증서 발급(Standalone), 갱신 주기와 컨테이너 중지/기동을 연동하는 Pre/Post Hooks 스크립트 배포 자동화 구현.
       - GitHub Actions Workflow (`ci-cd.yml`) 수정하여 `ALERT_EMAIL` 보안 변수를 Ansible 환경변수로 자동 주입하도록 보완.
+    - **Grafana Cloud 및 Grafana Alloy 연동 모니터링 체계 구축 (Step 24) - 완료**:
+      - 스프링 부트 백엔드에 `spring-boot-starter-actuator` 및 `micrometer-registry-prometheus` 의존성을 추가하고 `/actuator/prometheus` 엔드포인트를 개방함.
+      - 가벼운 원격 수집기인 Grafana Alloy용 설정 파일(`config.alloy`)을 신설하여 15초 주기로 백엔드 지표를 긁어가서 Grafana Cloud의 Prometheus 원격 저장소(Mimir)로 전송하도록 설계.
+      - `docker-compose.prod.yml`에 Alloy 서비스 컨테이너 정의를 추가하고, GitHub Secrets를 통해 주입받은 인증 변수(`GRAFANA_CLOUD_PROM_URL`, `GRAFANA_CLOUD_PROM_USER`, `GRAFANA_CLOUD_PROM_TOKEN`)를 매핑함.
+      - Ansible playbook 및 GitHub Actions 워크플로우를 보완하여 배포 시 모니터링 에이전트 가동을 자동화함.
 
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **CI/CD 파이프라인 정상 가동 및 SSL 적용 확인**
-   - S3 및 DynamoDB를 연동한 Terraform 원격 백엔드 마이그레이션 및 상태 동기화 완료.
+1. **CI/CD 파이프라인 정상 가동, SSL 적용 및 Grafana 모니터링 연동 확인**
    - GitHub Actions `infra-apply` 단계에 수동 승인(Environment Gate) 및 리전 환경변수 바인딩 추가 완료.
-   - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행 (SSL 인증서 발급 및 HTTPS 접속 테스트).
+   - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행 (SSL 인증서 발급, HTTPS 접속 테스트 및 Grafana Cloud 대시보드 메트릭 수집 검증).
 
 ---
 

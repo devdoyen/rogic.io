@@ -136,6 +136,9 @@
         content: |
           SPRING_PROFILES_ACTIVE=local
           AI_API_KEY={{ lookup('env', 'AI_API_KEY') }}
+          GRAFANA_CLOUD_PROM_URL={{ lookup('env', 'GRAFANA_CLOUD_PROM_URL') }}
+          GRAFANA_CLOUD_PROM_USER={{ lookup('env', 'GRAFANA_CLOUD_PROM_USER') }}
+          GRAFANA_CLOUD_PROM_TOKEN={{ lookup('env', 'GRAFANA_CLOUD_PROM_TOKEN') }}
         dest: /opt/nemologic/.env
         owner: ubuntu
         group: ubuntu

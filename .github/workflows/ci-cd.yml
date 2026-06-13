@@ -178,6 +178,9 @@ jobs:
           ANSIBLE_HOST_KEY_CHECKING: 'False'
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
           ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          GRAFANA_CLOUD_PROM_URL: ${{ secrets.GRAFANA_CLOUD_PROM_URL }}
+          GRAFANA_CLOUD_PROM_USER: ${{ secrets.GRAFANA_CLOUD_PROM_USER }}
+          GRAFANA_CLOUD_PROM_TOKEN: ${{ secrets.GRAFANA_CLOUD_PROM_TOKEN }}
         run: |
           cd infra/ansible
           # Generate inventory hosts.ini dynamically using secrets if available

@@ -8,3 +8,16 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: nemologic-alloy
+    volumes:
+      - ./infra/monitoring/config.alloy:/etc/alloy/config.alloy:ro
+    environment:
+      - GRAFANA_CLOUD_PROM_URL=${GRAFANA_CLOUD_PROM_URL}
+      - GRAFANA_CLOUD_PROM_USER=${GRAFANA_CLOUD_PROM_USER}
+      - GRAFANA_CLOUD_PROM_TOKEN=${GRAFANA_CLOUD_PROM_TOKEN}
+    command: [ "run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data" ]
+    depends_on:
+      - backend
