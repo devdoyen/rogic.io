@@ -15,3 +15,10 @@ variable "key_name" {
   type        = string
   default     = "nemologic-key"
 }
+
+variable "alert_email" {
+  description = "Email address to receive Gemini API failure alerts"
+  type        = string
+  default     = "dev@example.com"
+}
+
