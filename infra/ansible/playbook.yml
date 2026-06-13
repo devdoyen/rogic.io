@@ -51,6 +51,7 @@
           - lsb-release
           - rsync
           - awscli
+          - certbot
         state: present
 
     - name: Add Docker GPG key
@@ -140,9 +141,80 @@
         group: ubuntu
         mode: '0644'
 
+    - name: Deploy production Nginx configuration
+      copy:
+        src: /opt/nemologic/infra/ansible/nginx.prod.conf
+        dest: /opt/nemologic/frontend/nginx.conf
+        remote_src: yes
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Deploy production Docker Compose override
+      copy:
+        src: /opt/nemologic/infra/ansible/docker-compose.prod.yml
+        dest: /opt/nemologic/docker-compose.prod.yml
+        remote_src: yes
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Check if SSL certificate exists
+      stat:
+        path: /etc/letsencrypt/live/rotagic.com/fullchain.pem
+      register: ssl_cert_check
+
+    - name: Stop frontend container if running (for standalone certbot)
+      shell:
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop frontend || true
+        chdir: /opt/nemologic
+      become: true
+      when: not ssl_cert_check.stat.exists
+
+    - name: Generate SSL certificate via Certbot (standalone)
+      command: >
+        certbot certonly --standalone
+        -d rotagic.com -d www.rotagic.com
+        --email "{{ lookup('env', 'ALERT_EMAIL') | default('admin@rotagic.com', true) }}"
+        --agree-tos
+        --non-interactive
+      become: true
+      when: not ssl_cert_check.stat.exists
+
+    - name: Ensure Certbot renewal-hooks directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      loop:
+        - /etc/letsencrypt/renewal-hooks/pre
+        - /etc/letsencrypt/renewal-hooks/post
+
+    - name: Deploy Certbot renewal pre-hook
+      copy:
+        content: |
+          #!/bin/bash
+          docker compose -f /opt/nemologic/docker-compose.yml -f /opt/nemologic/docker-compose.prod.yml stop frontend
+        dest: /etc/letsencrypt/renewal-hooks/pre/stop-frontend.sh
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Deploy Certbot renewal post-hook
+      copy:
+        content: |
+          #!/bin/bash
+          docker compose -f /opt/nemologic/docker-compose.yml -f /opt/nemologic/docker-compose.prod.yml start frontend
+        dest: /etc/letsencrypt/renewal-hooks/post/start-frontend.sh
+        owner: root
+        group: root
+        mode: '0755'
+
     - name: Start Docker Compose services
       shell:
-        cmd: docker compose down && docker compose up --build -d
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml down && docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
         chdir: /opt/nemologic
       become: true
 

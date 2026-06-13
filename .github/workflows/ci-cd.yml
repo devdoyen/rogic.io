@@ -177,6 +177,7 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: 'False'
           AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
         run: |
           cd infra/ansible
           # Generate inventory hosts.ini dynamically using secrets if available

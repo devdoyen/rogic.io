@@ -249,16 +249,22 @@
       - `/aws/ec2/nemologic` 로그 그룹을 스캔하여 Spring Boot의 `ERROR` 수준의 애플리케이션 예외 로그 및 Nginx/Tomcat의 `500` HTTP 응답 상태 코드 등을 포괄 감지하는 `?ERROR ?" 500 " ?"Internal Server Error"` 패턴 기반의 CloudWatch Logs Metric Filter 구성.
       - 매칭 에러 건수가 5분 이내에 1회 이상 발생 시 알림 메일을 송출하도록 CloudWatch Metric Alarm을 정의하여 시스템 통합 장애 모니터링 환경 완비.
 
----
+    - **Let's Encrypt 및 Nginx 컨테이너 HTTPS/SSL 보안 구성 자동화 (Step 23) - 완료**:
+      - Route53 A 레코드 등록에 맞춰 단일 EC2 호스트 환경에서 Certbot을 활용한 Let's Encrypt 무료 SSL 인증서 자동 발급 및 갱신 파이프라인 구축.
+      - `infra/terraform/main.tf` 수정하여 보안 그룹에 HTTPS(443) 인바운드 허용 추가.
+      - `infra/ansible/nginx.prod.conf` 및 `docker-compose.prod.yml`을 신설하여 로컬 개발 환경(localhost)과 운영 환경(rotagic.com)의 Nginx 설정을 격리하고 운영 환경에서는 80 -> 443 HTTPS 리다이렉트와 SSL 종단 처리가 이루어지도록 구성.
+      - Ansible playbook을 보완하여 Certbot 설치, 최초 인증서 발급(Standalone), 갱신 주기와 컨테이너 중지/기동을 연동하는 Pre/Post Hooks 스크립트 배포 자동화 구현.
+      - GitHub Actions Workflow (`ci-cd.yml`) 수정하여 `ALERT_EMAIL` 보안 변수를 Ansible 환경변수로 자동 주입하도록 보완.
 
+---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
 
 ### 핵심 작업 목록
-1. **CI/CD 파이프라인 정상 가동 확인**
+1. **CI/CD 파이프라인 정상 가동 및 SSL 적용 확인**
    - S3 및 DynamoDB를 연동한 Terraform 원격 백엔드 마이그레이션 및 상태 동기화 완료.
    - GitHub Actions `infra-apply` 단계에 수동 승인(Environment Gate) 및 리전 환경변수 바인딩 추가 완료.
-   - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행.
+   - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행 (SSL 인증서 발급 및 HTTPS 접속 테스트).
 
 ---
 
