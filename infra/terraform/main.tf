@@ -314,9 +314,9 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_log_attachment" {
   policy_arn = aws_iam_policy.cloudwatch_log_policy.arn
 }
 
-# SNS Topic for AI Alerts
+# SNS Topic for System Alerts
 resource "aws_sns_topic" "nemologic_alerts" {
-  name = "nemologic-error-alerts"
+  name = "nemologic-system-alerts"
 }
 
 # SNS Email Subscription
@@ -326,34 +326,34 @@ resource "aws_sns_topic_subscription" "email_subscription" {
   endpoint  = var.alert_email
 }
 
-# CloudWatch Log Metric Filter for Gemini API errors
-resource "aws_cloudwatch_log_metric_filter" "gemini_error_filter" {
-  name           = "GeminiApiErrorFilter"
-  pattern        = "\"attempts to query Gemini API failed\""
+# CloudWatch Log Metric Filter for General Server Errors
+resource "aws_cloudwatch_log_metric_filter" "server_error_filter" {
+  name           = "ServerErrorFilter"
+  pattern        = "?ERROR ?\" 500 \" ?\"Internal Server Error\""
   log_group_name = aws_cloudwatch_log_group.nemologic_log_group.name
 
   metric_transformation {
-    name      = "GeminiApiErrorCount"
-    namespace = "Nemologic/AI"
+    name      = "ServerErrorCount"
+    namespace = "Nemologic/System"
     value     = "1"
   }
 }
 
-# CloudWatch Metric Alarm for Gemini API errors
-resource "aws_cloudwatch_metric_alarm" "gemini_error_alarm" {
-  alarm_name          = "nemologic-gemini-api-error-alarm"
+# CloudWatch Metric Alarm for General Server Errors
+resource "aws_cloudwatch_metric_alarm" "server_error_alarm" {
+  alarm_name          = "nemologic-server-error-alarm"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
-  metric_name         = "GeminiApiErrorCount"
-  namespace           = "Nemologic/AI"
+  metric_name         = "ServerErrorCount"
+  namespace           = "Nemologic/System"
   period              = 300
   statistic           = "Sum"
   threshold           = 1
-  alarm_description   = "This alarm triggers when the Gemini API fail count is 1 or more."
+  alarm_description   = "This alarm triggers when general server errors (ERROR level logs or HTTP 500 status codes) are detected in the logs."
   alarm_actions       = [aws_sns_topic.nemologic_alerts.arn]
 
   tags = {
-    Name = "nemologic-gemini-api-error-alarm"
+    Name = "nemologic-server-error-alarm"
   }
 }
 

@@ -19,6 +19,5 @@ variable "key_name" {
 variable "alert_email" {
   description = "Email address to receive Gemini API failure alerts"
   type        = string
-  default     = "dev@example.com"
 }
 

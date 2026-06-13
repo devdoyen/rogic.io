@@ -244,10 +244,10 @@
       - 헤더의 Help 버튼을 클릭했을 때 실제 설명 모달(`isHelpModalOpen` 상태 바인딩)이 정상적으로 팝업되도록 클릭 이벤트를 복구하여 "Help 버튼을 눌러도 아무것도 안 나오는" 오류 완벽히 해결.
       - 퍼즐 목록 선택용 플로팅 배지(`.active-stage-badge`)의 가로길이가 모바일에서 극도로 좁아져 텍스트 줄바꿈이 일어나는 문제를 방지하기 위해, 모바일 화면 비율 기준 너비(`width: 85vw`, `max-width: 340px`) 및 최소 너비(`min-width: 240px`) 설정을 적용하고 `space-between` 정렬을 통해 텍스트 잘림/줄바꿈 없이 힌트 및 방향 화살표와 조화를 이루도록 UI 크기 및 배치 개선 완료.
       - 최초 1회 방문자를 판별하여 자동으로 도움말 모달을 표시하는 로컬스토리지 연동 로직 유지와 동시에, 모달 작동 및 manual 열기/닫기 흐름에 대한 신규 Vitest 단위 테스트 2개를 설계하여 `App.test.ts`에 포함시키고 전체 프론트엔드 50개 테스트 통과 완료.
-    - **CloudWatch Logs 기반 AI 에러 알림 시스템 구축 (Terraform) - 완료**:
-      - AWS Simple Notification Service(SNS) 토픽 및 이메일 구독(`alert_email` 변수 활용) 리소스를 Terraform에 설계.
-      - `/aws/ec2/nemologic` 로그 그룹을 스캔하여 `"attempts to query Gemini API failed"` 패턴을 매칭하는 CloudWatch Logs Metric Filter 구성.
-      - 매칭 카운트가 5분 이내에 1회 이상 발생 시 알림 메일을 송출하도록 CloudWatch Metric Alarm을 정의하여 인프라 레벨의 장애 모니터링 환경 완비.
+    - **CloudWatch Logs 기반 일반 서버 에러(500/ERROR) 알림 시스템 구축 및 GitHub Secrets 연동 (Terraform) - 완료**:
+      - AWS Simple Notification Service(SNS) 토픽 및 이메일 구독(`alert_email` 변수 활용) 리소스를 Terraform에 설계하고, 민감 데이터인 수신자 이메일을 GitHub Secrets (`ALERT_EMAIL`)를 통해 `TF_VAR_alert_email` 환경변수로 빌드/배포 시 동적 주입하도록 `ci-cd.yml` 파이프라인 연동 완료.
+      - `/aws/ec2/nemologic` 로그 그룹을 스캔하여 Spring Boot의 `ERROR` 수준의 애플리케이션 예외 로그 및 Nginx/Tomcat의 `500` HTTP 응답 상태 코드 등을 포괄 감지하는 `?ERROR ?" 500 " ?"Internal Server Error"` 패턴 기반의 CloudWatch Logs Metric Filter 구성.
+      - 매칭 에러 건수가 5분 이내에 1회 이상 발생 시 알림 메일을 송출하도록 CloudWatch Metric Alarm을 정의하여 시스템 통합 장애 모니터링 환경 완비.
 
 ---
 
