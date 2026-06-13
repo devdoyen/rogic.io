@@ -27,11 +27,10 @@ public class GeminiAiClient implements AiClient {
     @Override
     public String generateDailyPuzzleJson() {
         if (apiKey == null || apiKey.trim().isEmpty()) {
-            System.err.println("[AI] API Key is missing. Falling back to Mock data.");
-            return getFallbackJson();
+            throw new IllegalStateException("[AI] API Key is missing. Cannot generate AI puzzle.");
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + apiKey;
         int maxAttempts = 3;
         Exception lastException = null;
 
@@ -84,11 +83,6 @@ public class GeminiAiClient implements AiClient {
             }
         }
 
-        System.err.println("[AI] All " + maxAttempts + " attempts to query Gemini API failed: " + lastException.getMessage() + ". Falling back to Mock data.");
-        return getFallbackJson();
-    }
-
-    private String getFallbackJson() {
-        return "{\"name\": \"AI Puzzle Fallback\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        throw new RuntimeException("[AI] All " + maxAttempts + " attempts to query Gemini API failed", lastException);
     }
 }

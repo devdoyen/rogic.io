@@ -86,4 +86,15 @@ public class AiStageGeneratorTest {
 
         verify(aiClient, times(3)).generateDailyPuzzleJson();
     }
+
+    @Test
+    public void testGenerateAndSaveStageRetriesWhenClientThrowsException() {
+        when(aiClient.generateDailyPuzzleJson()).thenThrow(new RuntimeException("API error"));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            aiStageGenerator.generateAndSaveStage();
+        });
+
+        verify(aiClient, times(3)).generateDailyPuzzleJson();
+    }
 }

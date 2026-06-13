@@ -175,8 +175,9 @@
 - **10x10 ~ 30x30 대형 퍼즐 데이터 시딩**:
   - `DataSeeder.java`에 10x10 Smile Face, 15x15 Ascending Star, 20x20 Checkerboard, 30x30 Giant Cross 추가 적재 완료.
 - **Gemini API 연동 및 3회 Retry/Validation 파이프라인**:
-  - `GeminiAiClient.java`를 신설하여 Google Gemini 1.5/2.5 Flash API 실연동. (Key 유실 시 Mock 데이터 자동 Safe-Fallback 지원, 테스트 환경 시 프로필 격리 `@Profile("!test")`).
-  - **503 Service Unavailable 대응 고도화**: API 모델을 보다 성숙하고 안정적인 `gemini-1.5-flash`로 전환하고, `GeminiAiClient` 내에 2초 간격의 최대 3회 자체 재시도(Retry) 루프를 구축하여 한시적인 수요 급증 시 자동 복구하도록 개선 완료.
+  - `GeminiAiClient.java`를 신설하여 Google Gemini 2.5 Flash API 실연동 (테스트 환경 시 프로필 격리 `@Profile("!test")`).
+  - **API 오류 발생 시 예외 전파 및 문제 생성 방지**: API Key 누락 혹은 API 호출 실패(3회 재시도 모두 실패 등) 시 기존에 `AI Puzzle Fallback` 퍼즐을 생성하여 리턴하던 Safe-Fallback 로직을 제거하고, `IllegalStateException` / `RuntimeException` 예외를 던지도록 수정하여 비정상적인 데이터 축적을 방지하고 실패 처리를 명확히 함.
+  - **안정적인 API 모델 연동**: 현재 API 버전에서 404 에러를 유발하는 `gemini-1.5-flash` 대신, 정상 호출 및 기능이 확인된 `gemini-2.5-flash` 모델을 사용하도록 변경하고, `GeminiAiClient` 내에 2초 간격의 최대 3회 자체 재시도(Retry) 루프를 유지하여 자동 복구하도록 개선 완료.
   - **비정형 분리형 데일리 릴리즈 구조 도입**:
     - `Stage` 엔티티에 `active` 컬럼을 도입하여 미공개 퍼즐 상태 관리 지원.
     - `DailyPuzzleScheduler.java`에서 트래픽 피크가 없는 **04:17 AM**(`0 17 4 * * ?`)에 백그라운드로 AI 데일리 퍼즐을 비활성(`active = false`) 상태로 선생성하도록 세팅 완료.
