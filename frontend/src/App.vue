@@ -63,35 +63,7 @@
     </div>
 
     <!-- Main Layout Grid -->
-    <div class="app-layout" :class="{ 'mypage-layout': currentTab === 'mypage' }">
-      <!-- Left Sidebar: Only rendered in My Page for History list -->
-      <aside v-if="currentTab === 'mypage'" class="app-sidebar-left">
-        <div class="sidebar-card history-explorer-card">
-          <h3 class="sidebar-card-title">💾 My History</h3>
-          <div class="stage-card-list">
-            <div 
-              v-for="item in histories" 
-              :key="item.id" 
-              class="history-item" 
-              @click="openHistoryModal(item)"
-              style="cursor: pointer;"
-            >
-              <div class="history-card-header">
-                <span class="stage-name" style="font-weight: 600;">{{ item.stageName }}</span>
-                <span class="xp-earned" style="color: #10b981; font-weight: 600;">+{{ item.xpEarned }} XP</span>
-              </div>
-              <div class="history-card-body" style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.85rem; color: #64748b;">
-                <span class="elapsed-time">⏱️ {{ item.elapsedTime }}s</span>
-                <span class="cleared-at">{{ item.clearedAt.split('T')[0] }}</span>
-              </div>
-            </div>
-            <div v-if="histories.length === 0" class="empty-history" style="text-align: center; padding: 2rem; color: #64748b;">
-              No history found.
-            </div>
-          </div>
-        </div>
-      </aside>
-
+    <div class="app-layout">
       <!-- Center Main Column: Canvas & Solved Banner -->
       <main class="app-main">
         <template v-if="currentTab === 'play'">
@@ -159,6 +131,7 @@
 
         <template v-else-if="currentTab === 'mypage'">
           <div class="mypage-dashboard">
+            <!-- Profile Info Card -->
             <div class="mypage-user-profile">
               <div class="profile-avatar">👤</div>
               <div class="profile-details">
@@ -169,9 +142,30 @@
                 </div>
               </div>
             </div>
-            <div class="mypage-instruction-box">
-              <h3>💡 Puzzle Replay</h3>
-              <p>Click any history card on the left to review your solved puzzle solutions in read-only mode.</p>
+
+            <!-- History List Section -->
+            <div class="mypage-history-section">
+              <div class="stage-card-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 280px; overflow-y: auto; padding-right: 0.25rem;">
+                <div 
+                  v-for="item in histories" 
+                  :key="item.id" 
+                  class="history-item" 
+                  @click="openHistoryModal(item)"
+                  style="cursor: pointer;"
+                >
+                  <div class="history-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="stage-name" style="font-weight: 600;">{{ item.stageName }}</span>
+                    <span class="xp-earned" style="color: #10b981; font-weight: 600;">+{{ item.xpEarned }} XP</span>
+                  </div>
+                  <div class="history-card-body" style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.85rem; color: #64748b;">
+                    <span class="elapsed-time">⏱️ {{ item.elapsedTime }}s</span>
+                    <span class="cleared-at">{{ item.clearedAt.split('T')[0] }}</span>
+                  </div>
+                </div>
+                <div v-if="histories.length === 0" class="empty-history" style="text-align: center; padding: 2rem; color: #64748b;">
+                  No history found.
+                </div>
+              </div>
             </div>
           </div>
         </template>
@@ -200,10 +194,10 @@
 
     <!-- Modal for History Review -->
     <div v-if="isModalOpen && modalBoard" class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 1000;">
-      <div class="modal-content" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55); animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+      <div class="modal-content" style="max-width: 500px;">
         <h3 class="modal-title" style="margin-top: 0; color: #38bdf8; font-weight: 700;">Review Clear History</h3>
         <p class="modal-stage-info" style="color: #94a3b8; margin-bottom: 1.5rem;">Stage: {{ selectedHistory?.stageName }}</p>
-        <div class="modal-canvas-wrapper" style="display: inline-block; padding: 10px; background-color: #ffffff; border-radius: 8px;">
+        <div class="modal-canvas-wrapper" style="width: 320px; max-width: 100%; aspect-ratio: 1; margin: 0 auto; background-color: #0f172a; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: center; align-items: center; position: relative;">
           <NonogramCanvas :board="modalBoard" :readOnly="true" :initialAngle="0" />
         </div>
         <div style="margin-top: 1.5rem;">
@@ -214,7 +208,7 @@
 
     <!-- Modal for Help / Instructions (Auto-shown to first-time visitors) -->
     <div v-if="isHelpModalOpen" class="help-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 10000;" @click.self="isHelpModalOpen = false">
-      <div class="modal-content" style="background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55); animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+      <div class="modal-content" style="max-width: 420px;">
         <h3 class="modal-title" style="margin-top: 0; color: #38bdf8; font-weight: 700; font-size: 1.4rem;">🎮 How to Play</h3>
         <div class="help-content-body" style="text-align: left; color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin: 1.5rem 0; display: flex; flex-direction: column; gap: 0.75rem;">
           <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
@@ -236,6 +230,19 @@
         </div>
         <div>
           <button class="modal-close-btn" @click="isHelpModalOpen = false" style="padding: 0.6rem 2rem; background: linear-gradient(135deg, #38bdf8, #818cf8); border: none; border-radius: 8px; color: #ffffff; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">Start Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Puzzle Replay Guide (First-time My Page view) -->
+    <div v-if="isMypageTipOpen" class="help-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 10000;" @click.self="closeMypageTip">
+      <div class="modal-content" style="max-width: 380px;">
+        <h3 class="modal-title" style="margin-top: 0; color: #38bdf8; font-weight: 700; font-size: 1.2rem;">💡 Puzzle Replay</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin: 1.5rem 0;">
+          Click any history card on My Page to review your solved puzzle solutions in read-only mode.
+        </p>
+        <div>
+          <button class="modal-close-btn" @click="closeMypageTip" style="padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #38bdf8, #818cf8); border: none; border-radius: 8px; color: #ffffff; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">Got it!</button>
         </div>
       </div>
     </div>
@@ -413,6 +420,7 @@ const selectedAiStageId = ref<number | null>(null);
 const isAiStageActive = ref(false);
 const selectedCategory = ref<'normal' | 'ai'>('normal');
 const isHelpModalOpen = ref(false);
+const isMypageTipOpen = ref(false);
 
 const isStageListOpen = ref(false);
 const isLeaderboardOpen = ref(false);
@@ -575,7 +583,16 @@ async function onTabChange(tab: 'play' | 'mypage') {
   currentTab.value = tab;
   if (tab === 'mypage') {
     await loadUserHistory();
+    const tipShown = localStorage.getItem('rogic_mypage_tip_shown');
+    if (!tipShown) {
+      isMypageTipOpen.value = true;
+    }
   }
+}
+
+function closeMypageTip() {
+  isMypageTipOpen.value = false;
+  localStorage.setItem('rogic_mypage_tip_shown', 'true');
 }
 
 async function openHistoryModal(item: any) {
@@ -741,10 +758,11 @@ body {
   flex-direction: column;
   justify-content: center;
   gap: 2px;
+  margin-top: -3px; /* Shift text slightly upwards for better optical alignment with the logo icon */
 }
 
 .app-title {
-  font-size: 1.8rem;
+  font-size: 2.1rem;
   font-weight: 800;
   background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
   -webkit-background-clip: text;
@@ -762,9 +780,11 @@ body {
   font-size: 0.52rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   color: #94a3b8;
   line-height: 1.1;
+  text-align: justify;
+  text-align-last: justify;
 }
 
 .app-nav button {
@@ -926,7 +946,29 @@ body {
   }
   .mypage-dashboard {
     width: 100%;
-    box-sizing: border-box;
+    max-width: 540px;
+    padding: 0;
+  }
+  .modal-content {
+    padding: 1.25rem 1rem;
+    width: 88%;
+  }
+  .mypage-user-profile {
+    gap: 1rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+  .profile-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 2.2rem;
+  }
+  .profile-username {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+  }
+  .mypage-dashboard .stage-card-list {
+    max-height: calc(100vh - 250px) !important;
   }
   .active-stage-badge {
     width: 85vw;
@@ -1490,22 +1532,25 @@ body {
 
 /* My Page Dashboard styling */
 .mypage-dashboard {
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 16px;
-  padding: 2rem;
-  max-width: 450px;
-  width: 90%;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-sizing: border-box;
 }
 
 .mypage-user-profile {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  border-bottom: 1px solid #334155;
-  padding-bottom: 1.5rem;
-  margin-bottom: 1.5rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .profile-avatar {
@@ -1548,32 +1593,12 @@ body {
   align-items: center;
 }
 
-.mypage-instruction-box {
-  background-color: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  padding: 1rem;
-}
-
-.mypage-instruction-box h3 {
-  margin-top: 0;
-  color: #38bdf8;
-  font-size: 1rem;
-}
-
-.mypage-instruction-box p {
-  margin: 0;
-  color: #94a3b8;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
 /* History Card */
 .history-item {
-  background-color: #0f172a;
-  border: 1px solid #1e293b;
+  background-color: #1e293b;
+  border: 1px solid #334155;
   border-radius: 10px;
-  padding: 0.6rem 0.8rem;
+  padding: 0.8rem 1rem;
   transition: all 0.2s;
 }
 
@@ -1598,6 +1623,18 @@ body {
 .right-click {
   background-color: #f43f5e;
   color: #ffffff;
+}
+
+.modal-content {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.55);
+  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-sizing: border-box;
 }
 
 @keyframes pop-in {
