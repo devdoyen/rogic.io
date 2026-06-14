@@ -3,7 +3,12 @@
     <!-- Slim Header -->
     <header class="app-header">
       <div class="logo-wrapper">
-        <div class="logo-icon"></div>
+        <div class="logo-icon">
+          <div class="logo-cell filled"></div>
+          <div class="logo-cell"></div>
+          <div class="logo-cell"></div>
+          <div class="logo-cell filled"></div>
+        </div>
         <div>
           <h1 class="app-title">Rotagic</h1>
           <p class="app-subtitle" style="margin: 0; font-size: 0.75rem; letter-spacing: 1px;">Rotate Logic Puzzle</p>
@@ -705,12 +710,25 @@ body {
 .logo-icon {
   width: 2.2rem;
   height: 2.2rem;
-  border: 4px solid transparent;
-  border-top-color: #38bdf8;
-  border-bottom-color: #818cf8;
-  border-radius: 50%;
-  animation: spin 3s linear infinite;
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2px;
+  animation: spin 4s linear infinite;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+}
+
+.logo-cell {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: #1e293b;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.logo-cell.filled {
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 5px rgba(56, 189, 248, 0.4);
 }
 
 @keyframes spin {
