@@ -283,6 +283,8 @@
       - **레이아웃 비정렬 및 Baseline 치우침 오류 수정**: 스위치 내부 패딩 구조를 4px로 통일하고 가로 너비를 80px로 매핑하여 슬라이더와 개별 아이콘의 중심점 좌표를 완벽히 일치(`translateX(36px)`)시켰으며, 아이콘들의 display 속성을 `block`으로 정의하여 브라우저의 폰트 baseline 텍스트 정렬 기준에 의해 아이콘이 아래/좌측으로 미세하게 쏠리던 오프셋 편차 차단 완료.
       - **입력 전용 터치 이벤트 리스너 통합**: 마우스 클릭 에뮬레이션 딜레이를 유발하지 않도록 `touchstart`, `touchmove`, `touchend` 윈도우 스팬 드래깅 리스너를 결합하고, PC 환경 마우스 우클릭 시에는 기존 X 마킹 동작이 투명하게 보장되도록 폴백 연동 완료.
       - **테마 로고 리디자인**: 기존의 단순 원형 `.logo-icon` 마크업 및 스타일을 탈피하고, 퍼즐 보드를 연상시키는 2x2 그리드 셀 구조의 대각선 그라데이션 채우기 형태(`logo-cell`)로 전면 설계하여 회전 애니메이션과 함께 브랜드 아이덴티티 및 직관성을 고도화 완료.
+      - **도메인 브랜딩 동기화**: 운영 도메인인 `rotagic.com`과의 결합을 위해 헤더 로고 타이틀 `<h1 class="app-title">`과 브라우저 `<title>` 메타 태그의 제목을 일괄 `rotagic.com`으로 변경 완료.
+      - **브라우저 파비콘(Favicon) 갱신**: 신설된 2x2 격자 로고의 디자인을 정밀 재현한 경량 SVG 파비콘([favicon.svg](file:///c:/Users/82107/dev/project/nemologic/frontend/public/favicon.svg))을 신규 작성 및 대체 적용 완료.
       - **TDD 그린 페이즈 검증**: `NonogramCanvas.test.ts` 내에 HUD 모드 컴포넌트 렌더링, X-mode left click 시 cell state 2(Mark) 맵핑 검증, touchstart/touchmove 드래그 로직 검증 등 신규 테스트 3개를 구성하여 Red Phase 검출 후, 프로덕션 보완을 거쳐 프론트엔드 전체 55개 테스트 100% 성공(Pass) 확보 완료.
 
 ---

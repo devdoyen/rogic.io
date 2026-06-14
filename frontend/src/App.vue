@@ -10,7 +10,7 @@
           <div class="logo-cell filled"></div>
         </div>
         <div>
-          <h1 class="app-title">Rotagic</h1>
+          <h1 class="app-title">rotagic.com</h1>
           <p class="app-subtitle" style="margin: 0; font-size: 0.75rem; letter-spacing: 1px;">Rotate Logic Puzzle</p>
         </div>
       </div>
