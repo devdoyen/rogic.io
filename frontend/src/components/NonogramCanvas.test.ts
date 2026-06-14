@@ -185,4 +185,91 @@ describe('NonogramCanvas TDD Red Phase', () => {
       expect(board.currentGrid[0][0]).toBe(0); // Should remain 0
     });
   });
+
+  describe('Draw mode selection and mobile touch support', () => {
+    it('should render draw mode selection buttons', () => {
+      const board = new PuzzleBoard([
+        [0, 0],
+        [0, 0]
+      ]);
+      const wrapper = mount(NonogramCanvas, {
+        props: { board }
+      });
+      const fillBtn = wrapper.find('.draw-mode-btn[title="Fill Mode"]');
+      const xBtn = wrapper.find('.draw-mode-btn[title="X Mark Mode"]');
+      expect(fillBtn.exists()).toBe(true);
+      expect(xBtn.exists()).toBe(true);
+    });
+
+    it('should draw X marks on left click when drawMode is set to x', async () => {
+      const board = new PuzzleBoard([
+        [0, 0],
+        [0, 0]
+      ]);
+      const wrapper = mount(NonogramCanvas, {
+        props: { board, initialAngle: 0 }
+      });
+      const canvas = wrapper.find('[data-testid="nonogram-canvas"]');
+      canvas.element.getBoundingClientRect = () => ({
+        width: 400,
+        height: 400,
+        top: 0,
+        left: 0,
+        right: 400,
+        bottom: 400,
+        x: 0,
+        y: 0,
+        toJSON: () => {}
+      });
+
+      // Toggle to X mode
+      const xBtn = wrapper.find('.draw-mode-btn[title="X Mark Mode"]');
+      await xBtn.trigger('click');
+
+      // Click on cell (0, 0)
+      await canvas.trigger('mousedown', {
+        button: 0,
+        clientX: 85,
+        clientY: 85
+      });
+      expect(board.currentGrid[0][0]).toBe(2); // Should be marked as X (2)
+    });
+
+    it('should handle touch drag to draw based on active mode', async () => {
+      const board = new PuzzleBoard([
+        [0, 0],
+        [0, 0]
+      ]);
+      const wrapper = mount(NonogramCanvas, {
+        props: { board, initialAngle: 0 }
+      });
+      const canvas = wrapper.find('[data-testid="nonogram-canvas"]');
+      canvas.element.getBoundingClientRect = () => ({
+        width: 400,
+        height: 400,
+        top: 0,
+        left: 0,
+        right: 400,
+        bottom: 400,
+        x: 0,
+        y: 0,
+        toJSON: () => {}
+      });
+
+      // Dispatch touchstart on (0, 0)
+      await canvas.trigger('touchstart', {
+        touches: [{ clientX: 85, clientY: 85 }]
+      });
+      expect(board.currentGrid[0][0]).toBe(1); // Default is Fill Mode (1)
+
+      // Touch drag to (1, 1)
+      window.dispatchEvent(new TouchEvent('touchmove', {
+        touches: [{ clientX: 115, clientY: 115 } as any]
+      }));
+      expect(board.currentGrid[1][1]).toBe(1);
+
+      // Touch end
+      window.dispatchEvent(new TouchEvent('touchend'));
+    });
+  });
 });

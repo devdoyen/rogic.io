@@ -6,9 +6,35 @@
         data-testid="nonogram-canvas" 
         :style="canvasStyle"
         @mousedown="handleMouseDown"
+        @touchstart="handleTouchStart"
         @wheel="handleWheel"
         @contextmenu.prevent
       ></canvas>
+    </div>
+
+    <!-- Floating Draw Mode Toggle -->
+    <div class="draw-mode-hud" @click="toggleDrawMode" title="Toggle Draw Mode" style="cursor: pointer;">
+      <div class="draw-mode-slider" :class="drawMode"></div>
+      <button 
+        class="draw-mode-btn" 
+        :class="{ active: drawMode === 'fill' }" 
+        @click.stop="toggleDrawMode"
+        title="Fill Mode"
+        type="button"
+      >
+        <span class="mode-icon fill-icon"></span>
+      </button>
+      <button 
+        class="draw-mode-btn" 
+        :class="{ active: drawMode === 'x' }" 
+        @click.stop="toggleDrawMode"
+        title="X Mark Mode"
+        type="button"
+      >
+        <svg class="mode-icon x-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M18 6L6 18M6 6l12 12" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
     
     <!-- Floating Zoom HUD -->
@@ -37,6 +63,11 @@ const emit = defineEmits<{
 }>();
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+const drawMode = ref<'fill' | 'x'>('fill');
+
+function toggleDrawMode() {
+  drawMode.value = drawMode.value === 'fill' ? 'x' : 'fill';
+}
 
 // Standard grid layout dimensions
 const getCellSize = (maxCount: number) => {
@@ -285,29 +316,34 @@ let dragValue = 0; // 0: empty, 1: filled, 2: marked
 let lastRow = -1;
 let lastCol = -1;
 
-function handleMouseDown(event: MouseEvent) {
-  if (props.readOnly) return;
+function getCoordinatesFromEvent(clientX: number, clientY: number) {
   const canvas = canvasRef.value;
-  if (!canvas) return;
-
+  if (!canvas) return null;
   const rect = canvas.getBoundingClientRect();
   const currentScale = isTestEnv ? 1.0 : (rect.width / canvas.width);
+  const clickX = (clientX - rect.left) / currentScale;
+  const clickY = (clientY - rect.top) / currentScale;
+  return getGridCoordinates(clickX, clickY, config);
+}
 
-  const clickX = (event.clientX - rect.left) / currentScale;
-  const clickY = (event.clientY - rect.top) / currentScale;
-
-  const coords = getGridCoordinates(clickX, clickY, config);
+function handleMouseDown(event: MouseEvent) {
+  if (props.readOnly) return;
+  const coords = getCoordinatesFromEvent(event.clientX, event.clientY);
   if (!coords) return;
 
   const { row, col } = coords;
   const currentValue = props.board.currentGrid[row][col];
 
-  if (event.button === 0) {
-    // Left Click
-    dragValue = currentValue === 1 ? 0 : 1;
-  } else if (event.button === 2) {
-    // Right Click
+  if (event.button === 2) {
+    // Right click always acts as Mark toggle
     dragValue = currentValue === 2 ? 0 : 2;
+  } else if (event.button === 0) {
+    // Left click respects current drawMode
+    if (drawMode.value === 'fill') {
+      dragValue = currentValue === 1 ? 0 : 1;
+    } else {
+      dragValue = currentValue === 2 ? 0 : 2;
+    }
   } else {
     return;
   }
@@ -327,16 +363,7 @@ function handleMouseDown(event: MouseEvent) {
 function handleWindowMouseMove(event: MouseEvent) {
   if (!isDragging.value) return;
 
-  const canvas = canvasRef.value;
-  if (!canvas) return;
-
-  const rect = canvas.getBoundingClientRect();
-  const currentScale = isTestEnv ? 1.0 : (rect.width / canvas.width);
-
-  const clickX = (event.clientX - rect.left) / currentScale;
-  const clickY = (event.clientY - rect.top) / currentScale;
-
-  const coords = getGridCoordinates(clickX, clickY, config);
+  const coords = getCoordinatesFromEvent(event.clientX, event.clientY);
   if (!coords) return;
 
   const { row, col } = coords;
@@ -354,6 +381,64 @@ function handleWindowMouseUp() {
     isDragging.value = false;
     window.removeEventListener('mousemove', handleWindowMouseMove);
     window.removeEventListener('mouseup', handleWindowMouseUp);
+  }
+}
+
+function handleTouchStart(event: TouchEvent) {
+  if (props.readOnly) return;
+  if (event.touches.length !== 1) return;
+  event.preventDefault(); // Prevent page scroll/zoom gestures during drawing
+
+  const touch = event.touches[0];
+  const coords = getCoordinatesFromEvent(touch.clientX, touch.clientY);
+  if (!coords) return;
+
+  const { row, col } = coords;
+  const currentValue = props.board.currentGrid[row][col];
+
+  if (drawMode.value === 'fill') {
+    dragValue = currentValue === 1 ? 0 : 1;
+  } else {
+    dragValue = currentValue === 2 ? 0 : 2;
+  }
+
+  isDragging.value = true;
+  props.board.setCell(row, col, dragValue);
+  lastRow = row;
+  lastCol = col;
+
+  drawBoard();
+  emit('cell-click');
+
+  window.addEventListener('touchmove', handleWindowTouchMove, { passive: false });
+  window.addEventListener('touchend', handleWindowTouchEnd);
+  window.addEventListener('touchcancel', handleWindowTouchEnd);
+}
+
+function handleWindowTouchMove(event: TouchEvent) {
+  if (!isDragging.value || event.touches.length !== 1) return;
+  event.preventDefault();
+
+  const touch = event.touches[0];
+  const coords = getCoordinatesFromEvent(touch.clientX, touch.clientY);
+  if (!coords) return;
+
+  const { row, col } = coords;
+  if (row !== lastRow || col !== lastCol) {
+    props.board.setCell(row, col, dragValue);
+    lastRow = row;
+    lastCol = col;
+    drawBoard();
+    emit('cell-click');
+  }
+}
+
+function handleWindowTouchEnd() {
+  if (isDragging.value) {
+    isDragging.value = false;
+    window.removeEventListener('touchmove', handleWindowTouchMove);
+    window.removeEventListener('touchend', handleWindowTouchEnd);
+    window.removeEventListener('touchcancel', handleWindowTouchEnd);
   }
 }
 
@@ -402,6 +487,9 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleWindowMouseMove);
   window.removeEventListener('mouseup', handleWindowMouseUp);
+  window.removeEventListener('touchmove', handleWindowTouchMove);
+  window.removeEventListener('touchend', handleWindowTouchEnd);
+  window.removeEventListener('touchcancel', handleWindowTouchEnd);
   if (resizeObserver) {
     resizeObserver.disconnect();
   }
@@ -463,6 +551,96 @@ canvas {
   display: block;
   cursor: pointer;
   position: absolute;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Floating Draw Mode HUD */
+.draw-mode-hud {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  width: 80px;
+  height: 36px;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.draw-mode-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 36px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  transition: transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.draw-mode-slider.x {
+  transform: translateX(36px);
+}
+
+.draw-mode-btn {
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  width: 36px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+.mode-icon {
+  transition: transform 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.draw-mode-btn:hover .mode-icon {
+  transform: scale(1.15);
+}
+
+.fill-icon {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  border-radius: 3px;
+  display: block;
+  box-shadow: 0 1px 3px rgba(56, 189, 248, 0.3);
+}
+
+.x-icon {
+  width: 14px;
+  height: 14px;
+  stroke: #f43f5e;
+  display: block;
 }
 
 /* Floating Zoom HUD */

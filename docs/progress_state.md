@@ -276,6 +276,14 @@
         - 백엔드 JUnit 5 및 Mockito 기반의 `VisitorServiceTest` 및 `VisitorControllerTest`(MeterRegistry 검증 포함) 테스트 작성 및 42개 전체 테스트 100% 통과 완료.
         - 프론트엔드 Vitest 기반 `userApi.test.ts` 및 `App.test.ts`에 방문 로직 연동 통합 테스트 추가 및 52개 전체 테스트 100% 통과 완료.
 
+    - **모바일 사용자 경험 고도화 (Step 26) - TDD Green Phase 완료**:
+      - **모바일 터치 깜빡임 해결**: 캔버스, HUD 스위치 프레임, 개별 버튼 영역 전체에 `-webkit-tap-highlight-color: transparent` 및 `touch-action: none`, `user-select: none` 속성을 지정하여 모바일 웹 브라우저의 기본 탭 하이라이트 깜빡임 오버레이 현상을 완전히 차단 및 격리 완료.
+      - **그리기 모드 UI (Draw Mode Toggle) 도입 및 디자인 고도화**: 캔버스 좌측 하단에 글래스모피즘(Glassmorphism) 기반의 그리기 선택기 HUD를 배치 완료. 텍스트 라벨을 전면 제거하고 보드 상태를 정밀 묘사하는 gradient square(채우기 🟦/■) 및 SVG Rose Cross(X 마킹 ❌) 커스텀 아이콘을 도입 완료.
+      - **스위치 방식 토글 개선**: HUD 내 특정 버튼만 클릭해야 했던 기존 방식에서, 스위치 프레임 및 활성화된 아이콘을 포함한 HUD 영역 전체 클릭 시 자동으로 `drawMode`가 전환(토글)되도록 변경하고, 활성 모드 상태에 따라 부드러운 위치 전환(translate) 슬라이딩 인디케이터 트랜지션 애니메이션 적용 완료.
+      - **레이아웃 비정렬 및 Baseline 치우침 오류 수정**: 스위치 내부 패딩 구조를 4px로 통일하고 가로 너비를 80px로 매핑하여 슬라이더와 개별 아이콘의 중심점 좌표를 완벽히 일치(`translateX(36px)`)시켰으며, 아이콘들의 display 속성을 `block`으로 정의하여 브라우저의 폰트 baseline 텍스트 정렬 기준에 의해 아이콘이 아래/좌측으로 미세하게 쏠리던 오프셋 편차 차단 완료.
+      - **입력 전용 터치 이벤트 리스너 통합**: 마우스 클릭 에뮬레이션 딜레이를 유발하지 않도록 `touchstart`, `touchmove`, `touchend` 윈도우 스팬 드래깅 리스너를 결합하고, PC 환경 마우스 우클릭 시에는 기존 X 마킹 동작이 투명하게 보장되도록 폴백 연동 완료.
+      - **TDD 그린 페이즈 검증**: `NonogramCanvas.test.ts` 내에 HUD 모드 컴포넌트 렌더링, X-mode left click 시 cell state 2(Mark) 맵핑 검증, touchstart/touchmove 드래그 로직 검증 등 신규 테스트 3개를 구성하여 Red Phase 검출 후, 프로덕션 보완을 거쳐 프론트엔드 전체 55개 테스트 100% 성공(Pass) 확보 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
