@@ -261,6 +261,21 @@
       - `docker-compose.prod.yml`에 Alloy 서비스 컨테이너 정의를 추가하고, GitHub Secrets를 통해 주입받은 인증 변수(`GRAFANA_CLOUD_PROM_URL`, `GRAFANA_CLOUD_PROM_USER`, `GRAFANA_CLOUD_PROM_TOKEN`)를 매핑함.
       - Ansible playbook 및 GitHub Actions 워크플로우를 보완하여 배포 시 모니터링 에이전트 가동을 자동화함.
 
+    - **DB 기반 방문자 로그 저장 및 Grafana 연동 모니터링 (Step 25) - 완료**:
+      - **비즈니스 로직 및 DB 영속화 구현**:
+        - `com.devdoyen.nemologic.model.VisitorLog`에 방문자 UUID, SHA-256 IP 해시값, 방문 일시를 관리하는 JPA 엔티티 설계.
+        - `com.devdoyen.nemologic.repository.VisitorLogRepository`에 일자별 중복 제거된 고유 방문자 수(Daily Unique Visitors) 및 총 방문 횟수를 카운트하는 JPQL 쿼리 구현.
+        - `com.devdoyen.nemologic.service.VisitorService`에 SHA-256 IP 해싱 함수 및 당일 동일 유저/IP 해시 방문 중복 로깅 방지 로직 적용.
+        - `com.devdoyen.nemologic.controller.VisitorController`에 `POST /api/analytics/visit` API 엔드포인트를 구현하여 프록시 환경(X-Forwarded-For 등)에서도 원격 클라이언트 IP를 탐지하도록 매핑.
+      - **Actuator 프로메테우스 메트릭 노출**:
+        - `com.devdoyen.nemologic.config.VisitorMetricsConfig` 클래스에서 Micrometer `MeterBinder`를 구현하여 `visitor.total.visits`, `visitor.unique.visitors`, `visitor.daily.unique.visitors` 게이지(Gauge) 지표를 바인딩함으로써 Grafana Alloy가 수집할 수 있도록 Prometheus 엔드포인트 연동 완료.
+      - **프론트엔드 연동 및 페이지 로드 이벤트 매핑**:
+        - `frontend/src/api/userApi.ts`에 `logVisit(uuid)` API 호출 함수 추가.
+        - `frontend/src/App.vue` 마운트 시(`onMounted`), 로컬 스토리지에 보존된 익명 세션의 UUID를 백엔드로 발송하여 방문이 자동으로 카운트되도록 흐름 설계.
+      - **TDD 기반 단위 및 통합 테스트 전원 통과**:
+        - 백엔드 JUnit 5 및 Mockito 기반의 `VisitorServiceTest` 및 `VisitorControllerTest`(MeterRegistry 검증 포함) 테스트 작성 및 42개 전체 테스트 100% 통과 완료.
+        - 프론트엔드 Vitest 기반 `userApi.test.ts` 및 `App.test.ts`에 방문 로직 연동 통합 테스트 추가 및 52개 전체 테스트 100% 통과 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
@@ -272,10 +287,29 @@
 
 ---
 
-## 3. 개발 규칙 및 제약사항 준수 확인
+## 3. 인프라 아키텍처 비용 최적화 및 타협 설계 (Self-Funded Infra Trade-offs)
+
+### 설계 철학 및 목표
+* **비용 최소화 및 실무 역량 입증**: 개인 포트폴리오 장기 운영에 따른 사비 충당 부담을 낮추면서, 현업 수준의 고가용성 설계와 실제 타협점(Trade-offs)을 명확히 분석하고 아키텍처적 대체안을 직접 설계·구현하여 역량을 증명함.
+
+### 상세 타협 사항 및 대체 기술 전략
+* **SPOF 극복 및 고가용성 타협 (ALB 배제)**:
+  * AWS ALB(Application Load Balancer) 기동 시 발생하는 상시 기본 비용(월 약 $20)을 제거하기 위해 Route 53 및 단일 EC2 호스트 구조로 타협.
+  * 단일 인스턴스 장애 시 CloudWatch 경보와 연동해 자동 재시작(Auto Recovery)을 수행하거나, Terraform 및 Ansible로 정의된 IaC 코드를 활용해 5분 이내에 인프라와 애플리케이션 컨테이너를 신속 복구(Recovery-Oriented Architecture)하도록 설정해 이중화를 대체함.
+* **데이터베이스 영속성 레이어 타협 (RDS 대체)**:
+  * AWS RDS 상시 구동 비용(월 약 $15~20 이상)을 방지하기 위해 단일 EC2 내 Docker Compose 기반 PostgreSQL 컨테이너를 구동.
+  * RDS의 관리형 자동 백업 기능을 대체하기 위해, 매일 지정된 시간에 DB 백업 덤프파일을 생성하여 AWS S3 버킷으로 자동 전송하는 쉘 스크립트와 Cron 작업을 Ansible 플레이북으로 자동 구축함으로써 인프라 제어 및 데이터 보호 역량을 증명함.
+* **자원 제약 최적화 (Memory Optimization)**:
+  * 512MB RAM 수준의 극단적인 저비용 인스턴스(`t4g.nano`/`t3.nano`) 환경에서의 구동을 장기적 목표로 설정.
+  * JVM Metaspace 메모리 제약 및 GC 최적화 설정을 적용하고, GraalVM 기반 Native Image 컴파일 빌드를 도입해 메모리 점유율을 50MB 이하로 낮추는 파이프라인 구성을 검증.
+
+---
+
+## 4. 개발 규칙 및 제약사항 준수 확인
 - **TDD 필수 준수**: 코어 모듈 및 비즈니스 로직 작성 시 반드시 테스트 코드가 선행되어 통과 여부를 검증해야 합니다.
 - **디렉토리 격리**: 단일 작업 단위에서는 메인 디렉토리(`frontend/` 또는 `backend/`)를 독립적으로만 수정하며, 여러 메인 디렉토리의 파일들을 동시에 혼재해 수정하지 않도록 통제합니다.
 - **반응성 디커플링**: 코어 비즈니스 로직 모듈 내에는 Vue 프레임워크나 반응성 종속성(Ref, Reactive)을 절대 사용하지 않습니다.
+- **지표 및 데이터 기반 인프라 의사결정**: 인프라 변경, 신규 클라우드 리소스 도입, 실행 환경 최적화(예: GraalVM Native Image 전환) 등을 제안하거나 구현할 때는 반드시 부하 테스트 결과(TPS, Latency 분포) 또는 시스템 자원 사용량 지표(Disk I/O Wait, RAM/OOM 이력 등)를 사전/사후 실측한 정량적 데이터를 근거로 제시해야 합니다.
 
 
 

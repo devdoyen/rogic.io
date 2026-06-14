@@ -105,6 +105,24 @@ describe('App.vue Leaderboard Integration TDD', () => {
     expect(registerSpy).not.toHaveBeenCalled();
   });
 
+  it('should call logVisit on mount with the user session UUID', async () => {
+    localStorage.clear();
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+    
+    const logVisitSpy = vi.spyOn(userApi, 'logVisit').mockResolvedValue(undefined as any);
+
+    mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(logVisitSpy).toHaveBeenCalledWith('temp-uuid');
+  });
+
   it('should switch to My Page tab and fetch/render user history', async () => {
     const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
     const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[0, 1, 0], [1, 1, 1], [0, 1, 0]] };

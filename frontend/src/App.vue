@@ -247,7 +247,7 @@ import { PuzzleBoard } from './engine/puzzleBoard';
 import { rotateGrid } from './engine/gridRotator';
 import { fetchStages, fetchStageById, fetchAiStages, startStage } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
-import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory } from './api/userApi';
+import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory, logVisit } from './api/userApi';
 import type { User } from './api/userApi';
 import { hasUserSession, getUserSession, setUserSession } from './api/auth';
 import type { UserSession } from './api/auth';
@@ -625,6 +625,13 @@ function preventPinchZoom(e: TouchEvent) {
 
 onMounted(async () => {
   await initializeUserSession();
+  if (currentUser.value && currentUser.value.uuid) {
+    try {
+      await logVisit(currentUser.value.uuid);
+    } catch (error) {
+      console.warn('Failed to log visitor access:', error);
+    }
+  }
   await Promise.all([
     loadStagesList(),
     loadAiStagesList(),

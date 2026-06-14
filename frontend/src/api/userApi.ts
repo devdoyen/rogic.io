@@ -51,3 +51,13 @@ export async function registerAnonymousUser(): Promise<User> {
   return response.data;
 }
 
+export async function logVisit(uuid: string): Promise<void> {
+  const ANALYTICS_BASE_URL = import.meta.env.VITE_API_BASE_URL
+    ? `${import.meta.env.VITE_API_BASE_URL}/api/analytics`
+    : (import.meta.env.PROD ? '/api/analytics' : 'http://localhost:8080/api/analytics');
+
+  await axios.post(`${ANALYTICS_BASE_URL}/visit`, null, {
+    params: { uuid }
+  });
+}
+
