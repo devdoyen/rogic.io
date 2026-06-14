@@ -4,6 +4,7 @@ import NonogramCanvas from './NonogramCanvas.vue';
 import { PuzzleBoard } from '../engine/puzzleBoard';
 import { getGridCoordinates } from '../engine/coordinateMapper';
 import type { CanvasConfig } from '../engine/coordinateMapper';
+import { calculateLineHints } from '../engine/hintCalculator';
 
 describe('NonogramCanvas TDD Red Phase', () => {
   describe('NonogramCanvas Vue Component mounting', () => {
@@ -270,6 +271,17 @@ describe('NonogramCanvas TDD Red Phase', () => {
 
       // Touch end
       window.dispatchEvent(new TouchEvent('touchend'));
+    });
+  });
+
+  describe('Completed row and column hints detection', () => {
+    it('should correctly extract line hints for comparison matching grid state', () => {
+      const line1 = [0, 1, 1, 0, 1];
+      const lineHints = calculateLineHints(line1);
+      expect(lineHints).toEqual([2, 1]);
+
+      const emptyLine = [0, 0, 0];
+      expect(calculateLineHints(emptyLine)).toEqual([0]);
     });
   });
 });

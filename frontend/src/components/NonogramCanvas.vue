@@ -50,6 +50,7 @@
 import { ref, onMounted, watch, onUnmounted, computed } from 'vue';
 import { PuzzleBoard } from '../engine/puzzleBoard';
 import { getGridCoordinates } from '../engine/coordinateMapper';
+import { calculateLineHints } from '../engine/hintCalculator';
 
 const props = defineProps<{
   board: PuzzleBoard;
@@ -67,6 +68,14 @@ const drawMode = ref<'fill' | 'x'>('fill');
 
 function toggleDrawMode() {
   drawMode.value = drawMode.value === 'fill' ? 'x' : 'fill';
+}
+
+function isArrayEqual(a: number[], b: number[]) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 // Standard grid layout dimensions
@@ -269,7 +278,6 @@ function drawBoard() {
   // Draw hints ONLY if not solved
   if (!props.board.isSolved()) {
     // Draw row hints (on the left side)
-    ctx.fillStyle = '#94a3b8'; // slate-400
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -277,6 +285,15 @@ function drawBoard() {
     for (let r = 0; r < props.board.rowCount; r++) {
       const hints = props.board.rowHints[r] || [0];
       const y = -halfH + r * cellSizeVal + cellSizeVal / 2;
+
+      // Check if row hints are matched by player's current cells
+      const rowCells = props.board.currentGrid[r];
+      const rowLine = rowCells.map(val => val === 1 ? 1 : 0);
+      const rowCurrentHints = calculateLineHints(rowLine);
+      const isRowMatching = isArrayEqual(rowCurrentHints, hints);
+
+      ctx.fillStyle = isRowMatching ? '#475569' : '#94a3b8'; // Fade to slate-600 if completed correctly
+
       for (let h = 0; h < hints.length; h++) {
         const hintVal = hints[hints.length - 1 - h];
         const hx = -halfW - 8 - h * 16;
@@ -296,6 +313,18 @@ function drawBoard() {
     for (let c = 0; c < props.board.colCount; c++) {
       const hints = props.board.colHints[c] || [0];
       const x = -halfW + c * cellSizeVal + cellSizeVal / 2;
+
+      // Check if column hints are matched by player's current cells
+      const colCells: number[] = [];
+      for (let r = 0; r < props.board.rowCount; r++) {
+        colCells.push(props.board.currentGrid[r][c]);
+      }
+      const colLine = colCells.map(val => val === 1 ? 1 : 0);
+      const colCurrentHints = calculateLineHints(colLine);
+      const isColMatching = isArrayEqual(colCurrentHints, hints);
+
+      ctx.fillStyle = isColMatching ? '#475569' : '#94a3b8'; // Fade to slate-600 if completed correctly
+
       for (let h = 0; h < hints.length; h++) {
         const hintVal = hints[hints.length - 1 - h];
         const hy = -halfH - 8 - h * 16;
