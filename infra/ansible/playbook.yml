@@ -177,7 +177,7 @@
     - name: Generate SSL certificate via Certbot (standalone)
       command: >
         certbot certonly --standalone
-        -d rotagic.com -d www.rotagic.com
+        -d rotagic.com -d www.rotagic.com -d rogic.io -d www.rogic.io
         --email "{{ lookup('env', 'ALERT_EMAIL') | default('admin@rotagic.com', true) }}"
         --agree-tos
         --non-interactive

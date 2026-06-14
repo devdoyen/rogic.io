@@ -285,6 +285,9 @@
       - **테마 로고 리디자인**: 기존의 단순 원형 `.logo-icon` 마크업 및 스타일을 탈피하고, 퍼즐 보드를 연상시키는 2x2 그리드 셀 구조의 대각선 그라데이션 채우기 형태(`logo-cell`)로 전면 설계하여 회전 애니메이션과 함께 브랜드 아이덴티티 및 직관성을 고도화 완료.
       - **도메인 브랜딩 동기화**: 운영 도메인인 `rotagic.com`과의 결합을 위해 헤더 로고 타이틀 `<h1 class="app-title">`과 브라우저 `<title>` 메타 태그의 제목을 일괄 `rotagic.com`으로 변경 완료.
       - **브라우저 파비콘(Favicon) 갱신**: 신설된 2x2 격자 로고의 디자인을 정밀 재현한 경량 SVG 파비콘([favicon.svg](file:///c:/Users/82107/dev/project/nemologic/frontend/public/favicon.svg))을 신규 작성 및 대체 적용 완료.
+      - **임시 로고 타이틀 프리뷰 적용 (rogic.io)**: 신규 도메인 검토를 위해 헤더 및 브라우저 `<title>` 영역을 임시로 `rogic.io`로 수동 변경 완료 (사용자 요청에 따라 커밋 배제 및 작업 이력만 업데이트).
+      - **로고 텍스트 타이포그래피 비율 및 가독성 보정**: 제목 글자인 `rogic.io` 하단의 알파벳 descender(`g` 등)와 서브타이틀(`Rotate Logic Puzzle`) 간의 겹침 간섭을 해결하기 위해 상위 텍스트 래퍼를 flex 갭 구조(`.logo-title-wrapper`)로 변경하고 `line-height: 1.2`로 보정 완료. 서브타이틀은 대문자 자간 분산 배치(uppercase spacing)와 회색조(slate-400) 톤다운을 부여하여 가독성 및 세련미 강화 완료.
+      - **크롬 렌더링 잘림 현상 보정 및 자간 너비 정렬**: `background-clip: text` 그래디언트 적용 시 크롬 브라우저에서 소문자 `g` 하단의 descender 곡선이 직선 형태로 잘려 보이던 현상을 해결하기 위해 `app-title`에 `padding-bottom: 4px` 및 `margin-bottom: -4px` 여유 영역을 보정 완료. 서브타이틀(`ROTATE LOGIC PUZZLE`)의 물리적 가로 길이를 `rogic.io` 너비에 비례하게 동기화하기 위해 폰트 크기를 `0.52rem`, 자간을 `0.08em`로 균형 조절 완료.
       - **TDD 그린 페이즈 검증**: `NonogramCanvas.test.ts` 내에 HUD 모드 컴포넌트 렌더링, X-mode left click 시 cell state 2(Mark) 맵핑 검증, touchstart/touchmove 드래그 로직 검증 등 신규 테스트 3개를 구성하여 Red Phase 검출 후, 프로덕션 보완을 거쳐 프론트엔드 전체 55개 테스트 100% 성공(Pass) 확보 완료.
 
 ---

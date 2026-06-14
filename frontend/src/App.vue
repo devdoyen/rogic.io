@@ -9,9 +9,9 @@
           <div class="logo-cell"></div>
           <div class="logo-cell filled"></div>
         </div>
-        <div>
-          <h1 class="app-title">rotagic.com</h1>
-          <p class="app-subtitle" style="margin: 0; font-size: 0.75rem; letter-spacing: 1px;">Rotate Logic Puzzle</p>
+        <div class="logo-title-wrapper">
+          <h1 class="app-title">rogic.io</h1>
+          <p class="app-subtitle">Rotate Logic Puzzle</p>
         </div>
       </div>
       
@@ -736,8 +736,15 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+.logo-title-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
 .app-title {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 800;
   background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
   -webkit-background-clip: text;
@@ -745,6 +752,18 @@ body {
   -webkit-text-fill-color: transparent;
   margin: 0;
   letter-spacing: -0.5px;
+  line-height: 1.2;
+  padding-bottom: 4px;
+  margin-bottom: -4px;
+}
+
+.app-subtitle {
+  margin: 0;
+  font-size: 0.52rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
   line-height: 1.1;
 }
 
