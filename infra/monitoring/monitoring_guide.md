@@ -88,7 +88,7 @@ Terraform을 사용하지 않는 경우, 레포지토리에 사전 패키징된 
 * **Title**: `Mean Time To Recovery (MTTR)`
 * **PromQL Query**:
   ```promql
-  (sum_over_time((1 - probe_success{job="nemologic-api-health"})[30d]) * 60) 
+  ((count_over_time(probe_success{job="nemologic-api-health"}[30d]) - sum_over_time(probe_success{job="nemologic-api-health"}[30d])) * 60) 
   / 
   clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)
   ```
@@ -98,7 +98,7 @@ Terraform을 사용하지 않는 경우, 레포지토리에 사전 패키징된 
 * **Title**: `Mean Time Between Failures (MTBF)`
 * **PromQL Query**:
   ```promql
-  ((count_over_time(probe_success{job="nemologic-api-health"}[30d]) * 60) - (sum_over_time((1 - probe_success{job="nemologic-api-health"})[30d]) * 60)) 
+  (sum_over_time(probe_success{job="nemologic-api-health"}[30d]) * 60) 
   / 
   clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)
   ```

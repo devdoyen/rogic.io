@@ -5432,7 +5432,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "(sum_over_time((1 - probe_success{job=\"nemologic-api-health\"})[30d]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\"}[30d]) / 2, 1)",
+                        "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\"}[30d]) - sum_over_time(probe_success{job=\"nemologic-api-health\"}[30d])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\"}[30d]) / 2, 1)",
                         "format": "time_series",
                         "legendFormat": "__auto",
                         "instant": true,
@@ -5513,7 +5513,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\"}[30d]) * 60) - (sum_over_time((1 - probe_success{job=\"nemologic-api-health\"})[30d]) * 60)) / clamp_min(changes(probe_success{job=\"nemologic-api-health\"}[30d]) / 2, 1)",
+                        "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\"}[30d]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\"}[30d]) / 2, 1)",
                         "format": "time_series",
                         "legendFormat": "__auto",
                         "instant": true,
