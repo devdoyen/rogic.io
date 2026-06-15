@@ -3,12 +3,16 @@ version: '3.8'
 services:
   # Disable legacy db and backend services from base docker-compose.yml
   db:
+    profiles:
+      - disabled
     entrypoint: ["echo", "database service disabled"]
     restart: "no"
     ports: []
     volumes: []
 
   backend:
+    profiles:
+      - disabled
     entrypoint: ["echo", "backend service disabled"]
     restart: "no"
     ports: []
