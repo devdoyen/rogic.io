@@ -1,7 +1,25 @@
 ---
+- name: Wait for Cloud-Init and SSH connection
+  hosts: nemologic_servers
+  gather_facts: false
+  tasks:
+    - name: Wait for connection
+      wait_for_connection:
+        timeout: 300
+        delay: 5
+
+    - name: Wait for cloud-init to finish
+      raw: test -f /var/lib/cloud/instance/boot-finished
+      register: cmd_res
+      until: cmd_res is success
+      retries: 60
+      delay: 5
+      changed_when: false
+
 - name: Deploy Nemologic App to AWS EC2
   hosts: nemologic_servers
   become: true
+  become_timeout: 60
   tasks:
     - name: Update apt package cache
       apt:
