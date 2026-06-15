@@ -347,6 +347,11 @@
         - 모니터링 시스템의 IaC 기반 자동 배포 완비에 따라 불필요해진 수동 설정 가이드(`monitoring_guide.md`)를 제거하고, 핵심 아키텍처 및 SLA PromQL 수식 설명 데이터를 `docs/portfolio.md` 내부의 가시성 섹션으로 일괄 통합 정리 완료.
         - 헬스체크 타겟 전환에 따라 시계열 데이터베이스(Prometheus)에 누적되어 있던 이전 타겟(`/api/stages`)의 지표가 대시보드상에 중복 노출(6개 게이지 및 지표 이중화)되는 문제를 해결하기 위해, 모든 PromQL 쿼리 및 경보 규칙에 타겟 호스트 필터(`instance="https://rogic.io/actuator/health"`)를 추가하여 활성화된 지표만 선별 노출되도록 격리 처리 완료.
 
+    - **AWS RDS 마이그레이션 중단 및 로컬 DB 아키텍처 원복 (Step 34 - 완료)**:
+      - AWS RDS PostgreSQL 마이그레이션이 검토 및 일부 진행되었으나, 유저 요청에 따라 기존 로컬 Docker Compose 기반 PostgreSQL 컨테이너 및 단일 백엔드 구성(Option 1)으로 완전히 롤백함.
+      - Nginx 로드 밸런서(blue-green) 및 Grafana Alloy 멀티 인스턴스 메트릭 수집 설정을 이전의 단일 백엔드 구성으로 원복 완료.
+      - H2/PostgreSQL 기반 로컬 및 빌드 환경 단위 테스트 68개 및 JUnit 60개 테스트 전원 100% 통과 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
