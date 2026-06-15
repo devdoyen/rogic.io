@@ -139,6 +139,9 @@
           GRAFANA_CLOUD_PROM_URL={{ lookup('env', 'GRAFANA_CLOUD_PROM_URL') }}
           GRAFANA_CLOUD_PROM_USER={{ lookup('env', 'GRAFANA_CLOUD_PROM_USER') }}
           GRAFANA_CLOUD_PROM_TOKEN={{ lookup('env', 'GRAFANA_CLOUD_PROM_TOKEN') }}
+          RDS_ENDPOINT={{ lookup('env', 'RDS_ENDPOINT') }}
+          RDS_USERNAME={{ lookup('env', 'RDS_USERNAME') }}
+          RDS_PASSWORD={{ lookup('env', 'RDS_PASSWORD') }}
         dest: /opt/nemologic/.env
         owner: ubuntu
         group: ubuntu

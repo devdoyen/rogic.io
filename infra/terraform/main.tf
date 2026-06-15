@@ -47,6 +47,27 @@ resource "aws_subnet" "nemologic_subnet" {
   }
 }
 
+resource "aws_subnet" "nemologic_private_db_a" {
+  vpc_id            = aws_vpc.nemologic_vpc.id
+  cidr_block        = "10.0.20.0/24"
+  availability_zone = "${var.aws_region}a"
+
+  tags = {
+    Name = "nemologic-private-db-a"
+  }
+}
+
+resource "aws_subnet" "nemologic_private_db_c" {
+  vpc_id            = aws_vpc.nemologic_vpc.id
+  cidr_block        = "10.0.21.0/24"
+  availability_zone = "${var.aws_region}c"
+
+  tags = {
+    Name = "nemologic-private-db-c"
+  }
+}
+
+
 # Internet Gateway
 resource "aws_internet_gateway" "nemologic_igw" {
   vpc_id = aws_vpc.nemologic_vpc.id
@@ -75,6 +96,85 @@ resource "aws_route_table_association" "nemologic_rta" {
   subnet_id      = aws_subnet.nemologic_subnet.id
   route_table_id = aws_route_table.nemologic_rt.id
 }
+
+# Private DB Route Table (No internet route, local routing only)
+resource "aws_route_table" "nemologic_private_db_rt" {
+  vpc_id = aws_vpc.nemologic_vpc.id
+
+  tags = {
+    Name = "nemologic-private-db-rt"
+  }
+}
+
+# Private DB Route Table Associations
+resource "aws_route_table_association" "nemologic_private_db_rta_a" {
+  subnet_id      = aws_subnet.nemologic_private_db_a.id
+  route_table_id = aws_route_table.nemologic_private_db_rt.id
+}
+
+resource "aws_route_table_association" "nemologic_private_db_rta_c" {
+  subnet_id      = aws_subnet.nemologic_private_db_c.id
+  route_table_id = aws_route_table.nemologic_private_db_rt.id
+}
+
+# RDS Security Group
+resource "aws_security_group" "nemologic_rds_sg" {
+  name        = "nemologic-rds-sg"
+  description = "Allow DB access from EC2 instances"
+  vpc_id      = aws_vpc.nemologic_vpc.id
+
+  ingress {
+    description     = "PostgreSQL from EC2"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.nemologic_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "nemologic-rds-sg"
+  }
+}
+
+# RDS Subnet Group
+resource "aws_db_subnet_group" "nemologic_db_subnet_group" {
+  name       = "nemologic-db-subnet-group"
+  subnet_ids = [aws_subnet.nemologic_private_db_a.id, aws_subnet.nemologic_private_db_c.id]
+
+  tags = {
+    Name = "nemologic-db-subnet-group"
+  }
+}
+
+# RDS PostgreSQL Instance
+resource "aws_db_instance" "nemologic_rds" {
+  identifier             = "nemologic-rds"
+  allocated_storage      = 20
+  max_allocated_storage  = 40
+  storage_type           = "gp3"
+  engine                 = "postgres"
+  engine_version         = "16"
+  instance_class         = "db.t4g.micro"
+  db_name                = "nemologic"
+  username               = var.db_username
+  password               = var.db_password
+  db_subnet_group_name   = aws_db_subnet_group.nemologic_db_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.nemologic_rds_sg.id]
+  skip_final_snapshot    = true
+  publicly_accessible    = false
+
+  tags = {
+    Name = "nemologic-rds"
+  }
+}
+
 
 # Security Group Configuration
 resource "aws_security_group" "nemologic_sg" {
