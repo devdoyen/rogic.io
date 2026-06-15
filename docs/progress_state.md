@@ -333,7 +333,7 @@
     - **서비스 가용성 및 SLA 모니터링 체계 구축 (Step 33 - 완료)**:
       - **무료 가동률 모니터링 설계**: AWS Route 53 및 CloudWatch Alarm의 상시 지출 비용을 차단하기 위해 Grafana Cloud의 Synthetic Monitoring(월 50만회 체크 무료)을 채택함.
       - **이메일 경보 연동 및 통합**: API 엔드포인트(`https://rogic.io/api/stages`) 대상 전 세계 멀티프로브 60초 체크 주기를 설정하고, Grafana Alerting 및 Alertmanager를 매핑하여 이메일 수신처로 실시간 긴급 경보(Severity: Critical)가 전송되도록 구축함.
-      - **IaC 기반 선언적 관리 구현**: Grafana Terraform 프로바이더(`grafana/grafana`)를 새로 도입하고, HTTP 헬스체크 리소스(`grafana_synthetic_monitoring_check`) 및 장애 알림 경보 규칙(`grafana_rule_group`)을 `infra/terraform/grafana.tf` 코드로 작성하여 선언적으로 형상관리함.
+      - **IaC 기반 선언적 관리 구현**: Grafana Terraform 프로바이더(`grafana/grafana`)를 새로 도입하고, HTTP 헬스체크 리소스(`grafana_synthetic_monitoring_check`), 알림 수신용 이메일 연락처(`grafana_contact_point`), 그리고 장애 알림 경보 규칙(`grafana_rule_group`)을 `infra/terraform/grafana.tf` 코드로 작성하여 선언적으로 형상관리함.
       - **SLA 대시보드 PromQL 설계**: 다운타임 복구 및 품질 지표 산출용 PromQL 식(Uptime SLA %, Incident Count, MTTR, MTBF) 설계 수식을 완성하고, 관리 가이드를 [monitoring_guide.md](file:///c:/Users/82107/dev/project/nemologic/docs/monitoring_guide.md) 문서로 구축하여 저장소 내 보관을 완료함.
 
 ---

@@ -28,38 +28,20 @@ Grafana Cloud 웹 콘솔에서 외부 검증용 헬스체크 프로브를 생성
 
 서버 다운 시 지정된 이메일 주소로 긴급 장애 보고를 받기 위한 알림 채널을 설정합니다.
 
-### ① 연락처(Contact Point) 정의
-1. Grafana 메뉴에서 **Alerting > Contact points**로 이동합니다.
-2. **Add contact point** 버튼을 클릭합니다.
-3. **Name**: `Developer-Email-Alerts`
-4. **Integration**: **Email** 선택
-5. **Addresses**: 알림을 수신할 이메일 주소 기입 (여러 개일 경우 `,` 또는 `줄바꿈`으로 구분)
-6. **Test**: **Test** 버튼을 클릭하여 테스트 이메일이 수신함으로 도착하는지 확인 후 **Save contact point**를 클릭합니다.
+### ① 연락처 및 경보 규칙 (Terraform 자동 생성)
+* [grafana.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/grafana.tf) 코드에 의해 연락처(`Developer-Email-Alerts`) 및 경보 규칙(`Nemologic-Service-Down-Alert`, `severity=critical` 레이블 포함)이 **Terraform Apply 시점에 자동으로 생성**되므로 UI에서 별도로 입력하지 않으셔도 됩니다.
 
-### ② 경보 규칙(Alert Rule) 작성
-1. **Alerting > Alert rules**로 이동하여 **Create alert rule** 버튼을 클릭합니다.
-2. **Rule name**: `Nemologic-Service-Down-Alert`
-3. **Query & Expression**:
-   * **Query (A)**: Prometheus 데이터 소스를 선택하고 아래 PromQL을 입력합니다.
-     ```promql
-     sum(sm_check_status{job="nemologic-api-health"})
-     ```
-     *(설명: 활성화된 프로브들 중 정상인 개수의 합. 모두 다운되면 0이 됨)*
-   * **Expression (B) - Threshold**:
-     * **Input**: `A`
-     * **Condition**: **IS BELOW** `1` (프로브 성공 개수가 1 미만, 즉 전체 실패 시)
-4. **Set Alert State**:
-   * 일시적인 네트워크 순전(Network blip)에 의한 오경보를 막기 위해 **For** 기간을 `2m` (2분)으로 설정합니다. (2분 연속 실패 시 실제 Alert 상태 돌입)
-5. **Configure notifications**:
-   * 알림 식별을 위한 레이블 추가: `severity=critical`
-6. **Save**: 우측 상단의 **Save rule and exit**를 클릭합니다.
+### ② 알림 라우팅 정책(Notification Policy) 매핑 (수동 연결)
+다른 모니터링 프로젝트와의 알림 간섭을 피하기 위해, 테라폼으로 생성된 연락처와 경보 규칙을 그라파나 UI상에서 안전하게 상호 연결해 줍니다.
+1. Grafana 콘솔 메뉴에서 **Alerting > Notification policies**로 이동합니다.
+2. **Specific routing policies** 섹션 아래에 있는 **New policy** 버튼을 클릭합니다.
+3. **Matching labels**:
+   * Label: `severity`
+   * Operator: `=`
+   * Value: `critical` (테라폼 규칙에 정의된 레이블과 매핑됩니다)
+4. **Contact point**: 테라폼이 자동 생성한 **`Developer-Email-Alerts`** 연락처를 선택합니다.
+5. **Save policy**를 클릭하여 설정을 저장합니다.
 
-### ③ 알림 라우팅 정책(Notification Policy) 매핑
-1. **Alerting > Notification policies**로 이동합니다.
-2. **Specific routing policies** 아래에 있는 **New policy** 버튼을 클릭합니다.
-3. **Matching labels**: `severity` = `critical` 입력
-4. **Contact point**: 앞서 생성한 `Developer-Email-Alerts` 선택
-5. **Save policy**를 클릭하여 경보 발생 시 이메일로 알림이 라우트되도록 설정을 완료합니다.
 
 ---
 

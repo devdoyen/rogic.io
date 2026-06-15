@@ -150,3 +150,14 @@ resource "grafana_rule_group" "nemologic_alerts" {
     }
   }
 }
+
+# Create the developer email contact point dynamically
+resource "grafana_contact_point" "email_alerts" {
+  count = var.grafana_url != "" && var.grafana_auth != "" ? 1 : 0
+
+  name = "Developer-Email-Alerts"
+  email {
+    addresses = [var.alert_email]
+  }
+}
+
