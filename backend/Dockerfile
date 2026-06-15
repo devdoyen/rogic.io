@@ -13,5 +13,5 @@ EXPOSE 8080
 
 # Run with local profile active
 ENV SPRING_PROFILES_ACTIVE=local
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
