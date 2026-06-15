@@ -330,7 +330,10 @@
         - `t3a.nano` (512MB RAM) 환경의 인프라 특성상 컨테이너 내부의 Gradle compilation 멀티스테이지 빌드는 과도한 메모리/CPU 사용으로 인한 SSHD 프로세스 킬 및 접속 끊김(Ansible Unreachable Error)을 유발함.
         - 이에 대응하여 `backend/Dockerfile`을 pre-built JAR 복사 방식(Single-stage)으로 롤백 처리함. 로컬 환경 빌드(`deploy.bat`, `deploy.sh`) 및 GitHub Actions CI/CD workflow의 runner(7GB RAM)에서 Gradle 빌드를 선행 수행한 뒤, 최종 `.jar`를 EC2 인스턴스로 동기화하여 서비스 가동하도록 보장함.
 
-
+    - **서비스 가용성 및 SLA 모니터링 체계 구축 (Step 33 - 완료)**:
+      - **무료 가동률 모니터링 설계**: AWS Route 53 및 CloudWatch Alarm의 상시 지출 비용을 차단하기 위해 Grafana Cloud의 Synthetic Monitoring(월 50만회 체크 무료)을 채택함.
+      - **이메일 경보 연동 및 통합**: API 엔드포인트(`https://rogic.io/api/stages`) 대상 전 세계 멀티프로브 60초 체크 주기를 설정하고, Grafana Alerting 및 Alertmanager를 매핑하여 이메일 수신처로 실시간 긴급 경보(Severity: Critical)가 전송되도록 구축함.
+      - **SLA 대시보드 PromQL 설계**: 다운타임 복구 및 품질 지표 산출용 PromQL 식(Uptime SLA %, Incident Count, MTTR, MTBF) 설계 수식을 완성하고, 관리 가이드를 [monitoring_guide.md](file:///c:/Users/82107/dev/project/nemologic/docs/monitoring_guide.md) 문서로 구축하여 저장소 내 보관을 완료함.
 
 ---
 
