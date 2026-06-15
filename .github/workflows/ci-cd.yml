@@ -46,6 +46,16 @@ jobs:
           npm ci
           npm run test -- --run
 
+      - name: Setup Ansible for Syntax Check
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Validate Ansible Playbook Syntax (CI)
+        run: |
+          cd infra/ansible
+          ansible-playbook playbook.yml --syntax-check -i localhost,
+
   # 2. Infra Plan Phase: Dry-run Terraform changes to see impact
   infra-plan:
     name: Terraform Dry-Run (Plan)

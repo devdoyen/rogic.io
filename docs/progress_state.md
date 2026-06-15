@@ -365,6 +365,7 @@
       - `t3a.nano` 인스턴스의 자원 제약(512MB RAM)으로 인해 첫 부팅 시 `cloud-init` 및 시스템 초기 작업으로 인한 CPU/RAM 100% 병목 및 이로 인한 Ansible `sudo` 권한 상승 대기 시간 초과(Timeout) 현상 식별.
       - 플레이북에 `gather_facts: false` 기반의 대기 스테이지(`Wait for Cloud-Init and SSH connection`)를 추가하여 `/var/lib/cloud/instance/boot-finished` 생성 여부를 폴링 검증하도록 구조를 분리함.
       - 권한 상승 타임아웃(`become_timeout`)을 60초로 확장하여 저사양 VM 환경에서의 프로비저닝 안정성을 확보함.
+      - CI 단계(`ci` 잡) 내에 `ansible-playbook --syntax-check` 단계를 이식하여, 플레이북 구문 에러가 존재할 경우 후속 배포 잡(Deploy Job) 실행을 사전에 차단하도록 자동 가드를 완성함.
 
 ---
 
