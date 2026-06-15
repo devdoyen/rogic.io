@@ -341,6 +341,7 @@
         - 대시보드 내 모든 Prometheus 데이터소스 참조(`grafanacloud-prom`)를 `"${DS_PROMETHEUS}"` 변수 형식으로 일괄 치환 및 매핑하여, Terraform 배포 시점에 target Prometheus 데이터소스의 실제 UID(`data.grafana_data_source.prometheus[0].uid`)로 자동 주입 및 동적 치환되도록 통합 IaC 환경 구축 완료.
         - `infra/monitoring/current_dashboard.json`에 최종 병합본을 오버라이트 저장하고, 로컬 `terraform validate` 구문 정합성 검증 통과 완료.
         - Grafana API 409 Conflict(동일 UID 및 Title 중복 오류)를 회피하기 위해 `metadata.uid`를 신규 고유 식별자(`nemologic-unified-dashboard`)로 교체하고, `spec.title`을 `"Rotagic Unified Monitor"`로 변경함. 또한 `resourceVersion`, `generation`, `creationTimestamp` 및 UI 기본 저장용 annotations(`grafana.app/folder: ""`) 등의 읽기전용/메타데이터 속성을 완전히 소거하여 테라폼 배포 정합성을 확보함.
+        - Grafana Cloud의 Synthetic Monitoring 표준 메트릭 규격에 맞춰, 존재하지 않는 임시 메트릭명인 `sm_check_status`를 표준 프로브 성공 메트릭인 `probe_success`로 일괄 치환(대시보드 패널 5종, 경보 조건식 및 가이드 문서)하여 지표 유실 및 No Data 에러 해결 완료.
 
 ---
 
