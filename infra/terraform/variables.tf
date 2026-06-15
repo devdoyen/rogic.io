@@ -53,19 +53,5 @@ variable "grafana_prometheus_datasource_name" {
   default     = "grafanacloud-grandwalrus3189-prom"
 }
 
-variable "db_username" {
-  description = "Database master username"
-  type        = string
-  default     = "postgres"
-}
-
-variable "db_password" {
-  description = "Database master password"
-  type        = string
-  sensitive   = true
-  default     = "password"
-}
-
-
 
 

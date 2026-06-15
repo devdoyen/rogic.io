@@ -193,13 +193,6 @@ jobs:
           cd infra/ansible
           # Generate inventory hosts.ini dynamically using secrets if available
           if [ -n "${{ secrets.EC2_IP }}" ]; then
-            # Query RDS Endpoint dynamically
-            RDS_ENDPOINT_ADDR=$(aws rds describe-db-instances --db-instance-identifier nemologic-rds --query "DBInstances[0].Endpoint.Address" --output text)
-            RDS_PORT=$(aws rds describe-db-instances --db-instance-identifier nemologic-rds --query "DBInstances[0].Endpoint.Port" --output text)
-            export RDS_ENDPOINT="$RDS_ENDPOINT_ADDR:$RDS_PORT"
-            export RDS_USERNAME="${{ secrets.RDS_USERNAME || 'postgres' }}"
-            export RDS_PASSWORD="${{ secrets.RDS_PASSWORD || 'password' }}"
-            
             echo "[nemologic_servers]" > hosts.ini
             echo "nemologic-app-server ansible_host=${{ secrets.EC2_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem" >> hosts.ini
             ansible-playbook -i hosts.ini playbook.yml

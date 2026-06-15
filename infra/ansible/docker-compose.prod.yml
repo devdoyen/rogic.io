@@ -1,26 +1,6 @@
 version: '3.8'
 
 services:
-  # Mock legacy db and backend services to satisfy base docker-compose.yml dependencies
-  db:
-    image: alpine:latest
-    entrypoint: ["tail", "-f", "/dev/null"]
-    restart: "always"
-    ports: []
-    volumes: []
-    healthcheck:
-      test: ["CMD-SHELL", "true"]
-      interval: 1s
-      timeout: 1s
-      retries: 1
-
-  backend:
-    image: alpine:latest
-    entrypoint: ["tail", "-f", "/dev/null"]
-    restart: "always"
-    ports: []
-    depends_on: []
-
   frontend:
     ports:
       - "80:80"
@@ -28,47 +8,6 @@ services:
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on: [] # Break dependency on legacy backend
-
-  backend-blue:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: nemologic-backend-blue
-    ports:
-      - "8081:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${RDS_ENDPOINT}/nemologic
-      SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
-      AI_API_KEY: ${AI_API_KEY}
-      JAVA_OPTS: "-Xms128m -Xmx200m"
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    restart: always
-
-  backend-green:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: nemologic-backend-green
-    ports:
-      - "8082:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${RDS_ENDPOINT}/nemologic
-      SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
-      AI_API_KEY: ${AI_API_KEY}
-      JAVA_OPTS: "-Xms128m -Xmx200m"
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    restart: always
 
   alloy:
     image: grafana/alloy:latest
@@ -80,4 +19,5 @@ services:
       - GRAFANA_CLOUD_PROM_USER=${GRAFANA_CLOUD_PROM_USER}
       - GRAFANA_CLOUD_PROM_TOKEN=${GRAFANA_CLOUD_PROM_TOKEN}
     command: [ "run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data" ]
-    depends_on: [] # Break dependency on legacy backend
+    depends_on:
+      - backend

@@ -22,9 +22,3 @@ output "tfstate_lock_table" {
   description = "Name of the DynamoDB table created for state locking"
   value       = aws_dynamodb_table.tfstate_lock.name
 }
-
-output "rds_endpoint" {
-  description = "Connection endpoint for the RDS PostgreSQL database"
-  value       = aws_db_instance.nemologic_rds.endpoint
-}
-
