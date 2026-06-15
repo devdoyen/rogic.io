@@ -22,11 +22,6 @@
   vars:
     ansible_become_timeout: 60
   tasks:
-    - name: Update apt package cache
-      apt:
-        update_cache: yes
-        force_apt_get: yes
-
     - name: Check if swap file exists
       stat:
         path: /swapfile
@@ -59,6 +54,11 @@
         fstype: swap
         opts: sw
         state: present
+
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+        force_apt_get: yes
 
     - name: Install prerequisite packages
       apt:
