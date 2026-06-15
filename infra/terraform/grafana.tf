@@ -16,7 +16,7 @@ resource "grafana_synthetic_monitoring_check" "nemologic_http" {
   count = var.grafana_sm_url != "" && var.grafana_sm_token != "" ? 1 : 0
 
   job       = "nemologic-api-health"
-  target    = "https://rogic.io/api/stages"
+  target    = "https://rogic.io/actuator/health"
   enabled   = true
   frequency = 60000
   timeout   = 5000
@@ -142,7 +142,7 @@ resource "grafana_rule_group" "nemologic_alerts" {
 
     annotations = {
       summary     = "Nemologic service is down"
-      description = "The HTTP health check for https://rogic.io/api/stages has failed across all probes for more than 2 minutes."
+      description = "The HTTP health check for https://rogic.io/actuator/health has failed across all probes for more than 2 minutes."
     }
 
     labels = {

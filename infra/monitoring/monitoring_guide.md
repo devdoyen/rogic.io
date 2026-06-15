@@ -15,7 +15,7 @@ Grafana Cloud 웹 콘솔에서 외부 검증용 헬스체크 프로브를 생성
    * **Checks** 탭에서 **Add check** 버튼을 클릭하고 **HTTP** 타입을 선택합니다.
 4. **Check 세부 정보 설정**:
    * **Job name**: `nemologic-api-health`
-   * **Target URL**: `https://rogic.io/api/stages`
+   * **Target URL**: `https://rogic.io/actuator/health`
    * **Frequency**: `60s` (무료 쿼터 내 가동을 위해 60초 주기 권장)
    * **Timeout**: `5s`
 5. **프로브 위치(Probes) 선택**:
