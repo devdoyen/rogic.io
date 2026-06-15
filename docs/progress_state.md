@@ -344,6 +344,7 @@
         - Grafana Cloud의 Synthetic Monitoring 표준 메트릭 규격에 맞춰, 존재하지 않는 임시 메트릭명인 `sm_check_status`를 표준 프로브 성공 메트릭인 `probe_success`로 일괄 치환(대시보드 패널 5종, 경보 조건식 및 가이드 문서)하여 지표 유실 및 No Data 에러 해결 완료.
         - PromQL 문법상 수식 연산(예: `1 - probe_success`)에 범위 선택자(`[30d]`)를 직접 적용할 수 없는 파싱 에러(parse error: ranges only allowed for vector selectors)를 해결하기 위해, MTTR 및 MTBF 산출 공식을 벡터 선택자 단위로 분해 및 수리적으로 간소화하여 쿼리 작동 정상화 완료.
         - 비즈니스 API 호출 부하 및 네트워크 대역폭 낭비를 차단하기 위해, 기존의 전체 스테이지 목록 API(`/api/stages`) 대상 헬스체크를 Spring Boot Actuator 전용 경량 헬스체크 엔드포인트(`/actuator/health`)로 대체하고, Nginx 리버시 프록시(`nginx.prod.conf`)에 해당 엔드포인트 경로 개방 및 테라폼 배포 타겟(`grafana.tf`) 갱신 완료.
+        - 모니터링 시스템의 IaC 기반 자동 배포 완비에 따라 불필요해진 수동 설정 가이드(`monitoring_guide.md`)를 제거하고, 핵심 아키텍처 및 SLA PromQL 수식 설명 데이터를 `docs/portfolio.md` 내부의 가시성 섹션으로 일괄 통합 정리 완료.
 
 ---
 

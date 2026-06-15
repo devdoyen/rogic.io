@@ -63,7 +63,30 @@ graph TD
 * **Grafana Cloud 및 Grafana Alloy 연동**: t3a.nano의 자원 제약(512MB RAM)을 해소하기 위해 로컬에 무거운 프로메테우스 서버를 구동하지 않고, 초경량 전송 에이전트인 **Grafana Alloy**를 배포하여 메모리 점유율을 50MB 미만으로 고착화.
 * **실시간 비즈니스 및 JVM 지표 관제**: 스프링 부트 Actuator/Micrometer를 통해 `/actuator/prometheus` 엔드포인트를 개방하고, Grafana Cloud의 원격 Prometheus 저장소(Mimir)로 15초 주기로 전송(remote-write). Grafana 대시보드(ID: 11378)를 연동하여 JVM 힙 메모리, CPU/메모리 추이, API별 TPS 및 Latency p95/p99 지표를 실시간 모니터링으로 구현 완료.
 * **DB 기반 방문자 수 집계 및 Grafana 연동**: 어드민 화면 개발 공수 없이 대시보드를 구축하기 위해, 백엔드 DB(PostgreSQL)에 암호화된 방문 로그(`visitor_logs`)를 적재하고 Micrometer `MeterBinder` 구현체(`VisitorMetricsConfig`)를 작성하여 `visitor_total_visits`, `visitor_unique_visitors`, `visitor_daily_unique_visitors` 게이지(Gauge) 지표를 Prometheus 엔드포인트에 실시간 노출하도록 연동 완료.
-* **Synthetic Monitoring 및 SLA 가시화 (IaC 선언)**: Grafana Terraform 프로바이더(`grafana/grafana`)를 도입하여 외부 독립 Probes(Tokyo, Singapore, Sydney)를 통한 엔드포인트(`https://rogic.io/api/stages`) 헬스체크, 장애 알림 경보 규칙(Alert Rule Group), 그리고 **SLA 분석 대시보드(Uptime SLA %, MTTR, MTBF, Incident Count)를 템플릿 JSON과 연동하여 선언적으로 일괄 구축 및 자동 배포**함.
+* **IaC 기반 Synthetic Monitoring 및 SLA 대시보드 자동화**:
+  * **경량 헬스체크 엔드포인트**: 기존 전체 스테이지 목록 API(`/api/stages`) 대신 데이터베이스 쿼리 부하가 없고 크기가 매우 미니멀한 Spring Boot Actuator 전용 경량 헬스체크 API `/actuator/health`를 헬스체크 타겟으로 지정. 보안을 위해 Nginx 리버스 프록시(`nginx.prod.conf`)에서 외부에는 해당 엔드포인트 경로만 선별적으로 노출.
+  * **멀티프로브 검사**: 도쿄, 싱가포르, 시드니 등 전 세계 3개 리전의 Probes를 지정하여 60초 주기(`frequency = 60000`)로 HTTP GET 요청 검사(`grafana_synthetic_monitoring_check`) 자동 구축.
+  * **경보 규칙 및 알림 채널**: 3개 프로브 전체 실패 감지 시 긴급 장애 알림을 전송하는 경보 규칙(`grafana_rule_group`의 `Nemologic-Service-Down-Alert`) 및 개발자 이메일 연락처(`grafana_contact_point`)를 테라폼으로 일괄 자동 생성. (수동 설정인 Grafana UI 상의 Notification Policy를 통해 레이블 `severity=critical`과 `Developer-Email-Alerts` 연락처를 연결해 작동).
+  * **통합 SLA 및 통계 대시보드 (IaC 병합)**: JVM 메트릭, 방문자 지표 및 SLA 메트릭을 단일 화면에서 조회하도록 병합한 최신 대시보드 스키마(`current_dashboard.json`)를 `grafana_dashboard` 리소스로 선언하여 자동 배포. 대시보드 내 모든 Prometheus 데이터소스 참조를 `"${DS_PROMETHEUS}"` 변수 형식으로 파라미터화하고, 테라폼의 `replace()` 함수를 통해 실제 프로바이더 데이터소스 UID로 동적 변환 주입하여 배포 이식성 극대화.
+
+#### [부록] 통합 대시보드 탑재 SLA & 신뢰성 PromQL 수식 정의
+실시간 가동률 분석 및 복구 품질 정량 측정을 위해 통합 대시보드 최상단 행(Nemologic Service SLA Metrics)에 탑재된 핵심 PromQL 공식입니다.
+
+1. **실시간 가동 여부 (API Health Status)**
+   * **수식**: `sum(probe_success{job="nemologic-api-health"})`
+   * **설명**: 도쿄, 싱가포르, 시드니 프로브의 가동 성공 여부(성공 1, 실패 0)를 합산하여 정상 가동 상태(3), 부분 장애(1~2), 전체 중단(0/NA)을 실시간 체크.
+2. **30일 평균 가용성 가동률 (30-Day Service Availability)**
+   * **수식**: `avg_over_time(probe_success{job="nemologic-api-health"}[30d]) * 100`
+   * **설명**: 최근 30일 동안 수집된 전체 검사 샘플의 평균 성공률을 백분율(SLA %)로 계산.
+3. **30일 누적 장애 발생 건수 (30-Day Incident Count)**
+   * **수식**: `changes(probe_success{job="nemologic-api-health"}[30d]) / 2`
+   * **설명**: 30일 동안 헬스체크 성공 상태(0과 1 사이)의 상태 전환 변화량을 2로 나눠, 서비스가 중단되었다가 정상 복구된 누적 장애 사이클 횟수를 산출.
+4. **평균 복구 시간 (MTTR, Mean Time To Recovery)**
+   * **수식**: `((count_over_time(probe_success{job="nemologic-api-health"}[30d]) - sum_over_time(probe_success{job="nemologic-api-health"}[30d])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)`
+   * **설명**: 30일 동안 기록된 총 다운타임 시간(총 수집 건수 - 성공 건수 $\times$ 60초)을 누적 장애 건수로 나누어 1회 장애 발생 시 평균 서비스 정상화 소요 시간을 초 단위로 계산.
+5. **평균 고장 간격 (MTBF, Mean Time Between Failures)**
+   * **수식**: `(sum_over_time(probe_success{job="nemologic-api-health"}[30d]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)`
+   * **설명**: 30일 동안 누적된 총 정상 가동 시간(성공 건수 $\times$ 60초)을 누적 장애 건수로 나누어 시스템이 1회 고장난 후 다음 고장까지 평균적으로 안정 작동하는 무장애 가동 주기를 계산.
 
 ### ⑤ 파이프라인 보안 및 CI/CD (GitHub Actions)
 * **GitHub Secrets 기반 변수 은닉화**:
