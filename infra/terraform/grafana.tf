@@ -165,7 +165,7 @@ resource "grafana_contact_point" "email_alerts" {
 resource "grafana_dashboard" "sla_dashboard" {
   count = var.grafana_url != "" && var.grafana_auth != "" ? 1 : 0
 
-  folder      = grafana_folder.nemologic_folder[0].uid
+  folder = grafana_folder.nemologic_folder[0].uid
   config_json = replace(
     file("${path.module}/../monitoring/current_dashboard.json"),
     "\"$${DS_PROMETHEUS}\"",
