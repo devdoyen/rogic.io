@@ -326,6 +326,10 @@
       - **셀 단위 백트래킹 도입**: 논리적 분석 후 미해결 상태인 셀에 대해서만 부분 검증이 수반된 셀 단위 DFS 백트래킹(`solveDFSCell`)을 수행하도록 개선하여, 기존 30x30 수준에서 발생하던 OOM 및 타임아웃 문제를 해결하고 1ms 이하 수준의 초고속 검증 완료.
       - **TDD 기반 대용량 퍼즐 검증 완료**:
         - `NonogramSolverTest.java`에 10x10 Smile Face, 15x15 Ascending Star, 30x30 Solid Grid 등의 고난도 고해상도 고정 퍼즐에 대한 유일 해 검증과 30x30 Giant Cross 비유일 해 판정 테스트(TDD Red/Green Phase)를 추가하여 백엔드 60개 전체 테스트 빌드 및 Vitest 프론트엔드 68개 전체 테스트 통과 완료.
+      - **배포 인프라 자원 제한 OOM 대응 (추가)**:
+        - `t3a.nano` (512MB RAM) 환경의 인프라 특성상 컨테이너 내부의 Gradle compilation 멀티스테이지 빌드는 과도한 메모리/CPU 사용으로 인한 SSHD 프로세스 킬 및 접속 끊김(Ansible Unreachable Error)을 유발함.
+        - 이에 대응하여 `backend/Dockerfile`을 pre-built JAR 복사 방식(Single-stage)으로 롤백 처리함. 로컬 환경 빌드(`deploy.bat`, `deploy.sh`) 및 GitHub Actions CI/CD workflow의 runner(7GB RAM)에서 Gradle 빌드를 선행 수행한 뒤, 최종 `.jar`를 EC2 인스턴스로 동기화하여 서비스 가동하도록 보장함.
+
 
 
 ---
