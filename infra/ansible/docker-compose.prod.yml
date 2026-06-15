@@ -12,6 +12,7 @@ services:
     entrypoint: ["echo", "backend service disabled"]
     restart: "no"
     ports: []
+    depends_on: []
 
   frontend:
     ports:
