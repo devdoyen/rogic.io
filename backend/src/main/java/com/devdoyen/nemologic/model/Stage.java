@@ -32,6 +32,9 @@ public class Stage {
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean active = true;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean approved = true;
+
     public Stage() {
     }
 
@@ -146,5 +149,17 @@ public class Stage {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isApproved() {
+        return approved;
+    }
+
+    public void setApproved(boolean approved) {
+        this.approved = approved;
+    }
+
+    public boolean approved() {
+        return approved;
     }
 }

@@ -17,7 +17,7 @@ public class NonogramSolver {
 
     public boolean isUnique(int[][] solutionGrid) {
         if (solutionGrid == null || solutionGrid.length == 0 || solutionGrid[0].length == 0) {
-            return true; 
+            return true;
         }
 
         int rowCount = solutionGrid.length;
@@ -27,191 +27,310 @@ public class NonogramSolver {
         List<Integer>[] rowHints = calculateRowHints(solutionGrid);
         List<Integer>[] colHints = calculateColHints(solutionGrid);
 
-        // 2. Generate all possible row patterns for each row matching rowHints
-        List<int[]>[] possibleRowPatterns = new List[rowCount];
+        // State grid: -1 = unknown, 0 = empty, 1 = filled
+        int[][] state = new int[rowCount][colCount];
         for (int r = 0; r < rowCount; r++) {
-            List<int[]> patterns = new ArrayList<>();
-            generatePatterns(0, colCount, rowHints[r], new int[colCount], 0, 0, patterns);
-            possibleRowPatterns[r] = patterns;
-            // If any row has no valid pattern, then no solution is possible (though grid itself is a solution, so this shouldn't happen)
-            if (patterns.isEmpty()) {
-                return false;
+            for (int c = 0; c < colCount; c++) {
+                state[r][c] = -1;
             }
         }
 
-        // 3. Backtracking row by row to count solutions
-        long startTime = System.currentTimeMillis();
-        int[] solutionCounter = new int[1]; // array wrapper to modify within recursive context
-        int[][] tempGrid = new int[rowCount][colCount];
+        // 2. Run logical line solver
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            // Solve rows
+            for (int r = 0; r < rowCount; r++) {
+                if (solveLine(state[r], rowHints[r])) {
+                    changed = true;
+                }
+            }
+            // Solve columns
+            for (int c = 0; c < colCount; c++) {
+                int[] colLine = new int[rowCount];
+                for (int r = 0; r < rowCount; r++) {
+                    colLine[r] = state[r][c];
+                }
+                if (solveLine(colLine, colHints[c])) {
+                    changed = true;
+                    for (int r = 0; r < rowCount; r++) {
+                        state[r][c] = colLine[r];
+                    }
+                }
+            }
+        }
 
+        // Check if there is any contradiction or if fully solved
+        boolean fullySolved = true;
+        for (int r = 0; r < rowCount; r++) {
+            for (int c = 0; c < colCount; c++) {
+                if (state[r][c] == -1) {
+                    fullySolved = false;
+                    break;
+                }
+            }
+        }
+
+        if (fullySolved) {
+            // Since logical solver only fills cells that MUST have that value,
+            // if it is fully solved, it matches solutionGrid and is unique!
+            return true;
+        }
+
+        long startTime = System.currentTimeMillis();
+        int[] solutionsCount = new int[1];
         try {
-            solveDFS(0, rowCount, colCount, possibleRowPatterns, colHints, tempGrid, solutionCounter, startTime);
+            solveDFSCell(0, 0, state, rowHints, colHints, solutionsCount, startTime);
         } catch (SolverTimeoutException e) {
             // If search timeout occurs, safely assume it is not a uniquely verifiable puzzle within threshold
             return false;
         }
 
-        return solutionCounter[0] == 1;
+        return solutionsCount[0] == 1;
     }
 
-    private void solveDFS(int r, int rowCount, int colCount, List<int[]>[] possibleRowPatterns, 
-                          List<Integer>[] colHints, int[][] tempGrid, int[] solutionCounter, long startTime) {
-        
-        // Timeout check
+    private void solveDFSCell(int r, int c, int[][] state, List<Integer>[] rowHints, List<Integer>[] colHints,
+                              int[] solutionsCount, long startTime) {
         if (System.currentTimeMillis() - startTime > TIMEOUT_MS) {
             throw new SolverTimeoutException("Solver timed out after " + TIMEOUT_MS + " ms");
         }
-
-        // Early exit if 2 or more solutions are found
-        if (solutionCounter[0] >= 2) {
+        if (solutionsCount[0] >= 2) {
             return;
         }
+
+        int rowCount = state.length;
+        int colCount = state[0].length;
 
         if (r == rowCount) {
-            // Final check on columns
-            if (validateAllColumns(tempGrid, colHints)) {
-                solutionCounter[0]++;
-            }
+            solutionsCount[0]++;
             return;
         }
 
-        for (int[] pattern : possibleRowPatterns[r]) {
-            tempGrid[r] = pattern;
-            if (isValidColumnPrefix(r, rowCount, colCount, tempGrid, colHints)) {
-                solveDFS(r + 1, rowCount, colCount, possibleRowPatterns, colHints, tempGrid, solutionCounter, startTime);
-                if (solutionCounter[0] >= 2) {
-                    return; // Early exit propagation
-                }
-            }
+        int nextR = (c == colCount - 1) ? r + 1 : r;
+        int nextC = (c == colCount - 1) ? 0 : c + 1;
+
+        if (state[r][c] != -1) {
+            solveDFSCell(nextR, nextC, state, rowHints, colHints, solutionsCount, startTime);
+            return;
         }
+
+        // Try placing 0
+        state[r][c] = 0;
+        if (isAssignmentValid(r, c, state, rowHints, colHints)) {
+            solveDFSCell(nextR, nextC, state, rowHints, colHints, solutionsCount, startTime);
+        }
+
+        if (solutionsCount[0] >= 2) {
+            state[r][c] = -1;
+            return;
+        }
+
+        // Try placing 1
+        state[r][c] = 1;
+        if (isAssignmentValid(r, c, state, rowHints, colHints)) {
+            solveDFSCell(nextR, nextC, state, rowHints, colHints, solutionsCount, startTime);
+        }
+
+        state[r][c] = -1; // backtrack
     }
 
-    private boolean isValidColumnPrefix(int r, int rowCount, int colCount, int[][] tempGrid, List<Integer>[] colHints) {
-        for (int c = 0; c < colCount; c++) {
-            List<Integer> colHint = colHints[c];
-            int hintSize = colHint.size();
+    private boolean isAssignmentValid(int r, int c, int[][] state, List<Integer>[] rowHints, List<Integer>[] colHints) {
+        // Check row compatibility
+        if (!isPartialLineCompatible(state[r], rowHints[r])) {
+            return false;
+        }
 
-            int segmentIndex = 0;
-            int runningLength = 0;
+        // Check column compatibility
+        int rowCount = state.length;
+        int[] colLine = new int[rowCount];
+        for (int i = 0; i < rowCount; i++) {
+            colLine[i] = state[i][c];
+        }
+        if (!isPartialLineCompatible(colLine, colHints[c])) {
+            return false;
+        }
 
-            for (int i = 0; i <= r; i++) {
-                if (tempGrid[i][c] == 1) {
-                    runningLength++;
-                } else {
-                    if (runningLength > 0) {
-                        if (segmentIndex >= hintSize || colHint.get(segmentIndex) != runningLength) {
-                            return false; // Completed segment does not match hint
+        return true;
+    }
+
+    private boolean isPartialLineCompatible(int[] line, List<Integer> hints) {
+        int L = line.length;
+        int K = hints.size();
+        boolean[][] dp = new boolean[L + 1][K + 1];
+        dp[0][0] = true;
+
+        for (int i = 1; i <= L; i++) {
+            dp[i][0] = dp[i-1][0] && (line[i-1] != 1);
+        }
+
+        for (int j = 1; j <= K; j++) {
+            int len = hints.get(j-1);
+            for (int i = 1; i <= L; i++) {
+                if (line[i-1] != 1) {
+                    dp[i][j] = dp[i-1][j];
+                }
+                int start = i - len;
+                if (start >= 0) {
+                    boolean canPlace = true;
+                    for (int x = start; x < i; x++) {
+                        if (line[x] == 0) {
+                            canPlace = false;
+                            break;
                         }
-                        segmentIndex++;
-                        runningLength = 0;
                     }
-                }
-            }
-
-            // Check the current incomplete running segment
-            if (runningLength > 0) {
-                if (segmentIndex >= hintSize || runningLength > colHint.get(segmentIndex)) {
-                    return false; // Current segment exceeds the expected hint length
-                }
-            }
-
-            // If it is the last row, the columns must match perfectly
-            if (r == rowCount - 1) {
-                int finalSegmentIndex = segmentIndex;
-                if (runningLength > 0) {
-                    if (finalSegmentIndex >= hintSize || colHint.get(finalSegmentIndex) != runningLength) {
-                        return false;
+                    if (canPlace) {
+                        if (start > 0) {
+                            if (line[start - 1] != 1) {
+                                dp[i][j] = dp[i][j] || dp[start - 1][j-1];
+                            }
+                        } else {
+                            if (j == 1) {
+                                dp[i][j] = dp[i][j] || dp[0][0];
+                            }
+                        }
                     }
-                    finalSegmentIndex++;
-                }
-                if (finalSegmentIndex != hintSize) {
-                    return false; // Total number of segments doesn't match
-                }
-            } else {
-                // Feasibility check: Can the remaining space satisfy the rest of the hints?
-                int remainingRows = rowCount - 1 - r;
-                int minRequiredSpace = 0;
-                int startIdx = segmentIndex;
-                if (runningLength > 0) {
-                    minRequiredSpace += (colHint.get(segmentIndex) - runningLength);
-                    startIdx++;
-                }
-                for (int j = startIdx; j < hintSize; j++) {
-                    if (minRequiredSpace > 0) {
-                        minRequiredSpace += 1; // at least one 0 separator
-                    }
-                    minRequiredSpace += colHint.get(j);
-                }
-                if (minRequiredSpace > remainingRows) {
-                    return false; // Not enough rows left to complete the hints
                 }
             }
         }
-        return true;
+        return dp[L][K];
     }
 
-    private boolean validateAllColumns(int[][] tempGrid, List<Integer>[] colHints) {
-        int rowCount = tempGrid.length;
-        int colCount = tempGrid[0].length;
+    private boolean solveLine(int[] line, List<Integer> hints) {
+        int L = line.length;
+        int K = hints.size();
 
-        for (int c = 0; c < colCount; c++) {
-            List<Integer> colHint = colHints[c];
-            List<Integer> actual = new ArrayList<>();
-            int count = 0;
-            for (int r = 0; r < rowCount; r++) {
-                if (tempGrid[r][c] == 1) {
-                    count++;
+        boolean[][] prefixDP = computePrefixDP(line, hints);
+
+        int[] revLine = new int[L];
+        for (int i = 0; i < L; i++) {
+            revLine[i] = line[L - 1 - i];
+        }
+        List<Integer> revHints = new ArrayList<>(hints);
+        java.util.Collections.reverse(revHints);
+        boolean[][] revDP = computePrefixDP(revLine, revHints);
+
+        boolean[][] suffixDP = new boolean[L + 1][K + 1];
+        for (int x = 0; x <= L; x++) {
+            for (int y = 0; y <= K; y++) {
+                suffixDP[x][y] = revDP[L - x][y];
+            }
+        }
+
+        boolean changed = false;
+        for (int c = 0; c < L; c++) {
+            if (line[c] == -1) {
+                boolean c1 = canBe1(c, line, hints, prefixDP, suffixDP);
+                boolean c0 = canBe0(c, line, hints, prefixDP, suffixDP);
+                if (c1 && !c0) {
+                    line[c] = 1;
+                    changed = true;
+                } else if (c0 && !c1) {
+                    line[c] = 0;
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+    }
+
+    private boolean[][] computePrefixDP(int[] line, List<Integer> hints) {
+        int L = line.length;
+        int K = hints.size();
+        boolean[][] dp = new boolean[L + 1][K + 1];
+        dp[0][0] = true;
+
+        for (int i = 1; i <= L; i++) {
+            dp[i][0] = dp[i-1][0] && (line[i-1] != 1);
+        }
+
+        for (int j = 1; j <= K; j++) {
+            int len = hints.get(j-1);
+            for (int i = 1; i <= L; i++) {
+                if (line[i-1] != 1) {
+                    dp[i][j] = dp[i-1][j];
+                }
+                int start = i - len;
+                if (start >= 0) {
+                    boolean canPlace = true;
+                    for (int x = start; x < i; x++) {
+                        if (line[x] == 0) {
+                            canPlace = false;
+                            break;
+                        }
+                    }
+                    if (canPlace) {
+                        if (start > 0) {
+                            if (line[start - 1] != 1) {
+                                dp[i][j] = dp[i][j] || dp[start - 1][j-1];
+                            }
+                        } else {
+                            if (j == 1) {
+                                dp[i][j] = dp[i][j] || dp[0][0];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return dp;
+    }
+
+    private boolean canBe1(int c, int[] line, List<Integer> hints, boolean[][] prefixDP, boolean[][] suffixDP) {
+        if (line[c] == 0) return false;
+        int L = line.length;
+        int K = hints.size();
+        for (int j = 0; j < K; j++) {
+            int len = hints.get(j);
+            int minStart = Math.max(0, c - len + 1);
+            int maxStart = Math.min(c, L - len);
+            for (int start = minStart; start <= maxStart; start++) {
+                boolean ok = true;
+                for (int x = start; x < start + len; x++) {
+                    if (line[x] == 0) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (!ok) continue;
+
+                if (start > 0 && line[start - 1] == 1) continue;
+                if (start + len < L && line[start + len] == 1) continue;
+
+                boolean prefixOk = false;
+                if (start > 0) {
+                    prefixOk = prefixDP[start - 1][j];
                 } else {
-                    if (count > 0) {
-                        actual.add(count);
-                        count = 0;
-                    }
+                    prefixOk = (j == 0);
+                }
+                if (!prefixOk) continue;
+
+                boolean suffixOk = false;
+                if (start + len < L) {
+                    suffixOk = suffixDP[start + len + 1][K - 1 - j];
+                } else {
+                    suffixOk = (K - 1 - j == 0);
+                }
+
+                if (suffixOk) {
+                    return true;
                 }
             }
-            if (count > 0) {
-                actual.add(count);
-            }
-
-            if (!actual.equals(colHint)) {
-                return false;
-            }
         }
-        return true;
+        return false;
     }
 
-    private void generatePatterns(int colIdx, int colCount, List<Integer> hints, int[] currentPattern, 
-                                  int hintIdx, int runLength, List<int[]> results) {
-        
-        // Base case: processed all cells in the row
-        if (colIdx == colCount) {
-            // Verify hints are satisfied
-            if (hintIdx == hints.size() && runLength == 0) {
-                results.add(currentPattern.clone());
-            } else if (hintIdx == hints.size() - 1 && runLength > 0 && runLength == hints.get(hintIdx)) {
-                results.add(currentPattern.clone());
-            }
-            return;
-        }
-
-        // Option 1: Place 0
-        if (runLength == 0) {
-            currentPattern[colIdx] = 0;
-            generatePatterns(colIdx + 1, colCount, hints, currentPattern, hintIdx, 0, results);
-        } else {
-            // A run is active, we can only place 0 if the current run length matches the hint
-            if (hintIdx < hints.size() && runLength == hints.get(hintIdx)) {
-                currentPattern[colIdx] = 0;
-                generatePatterns(colIdx + 1, colCount, hints, currentPattern, hintIdx + 1, 0, results);
+    private boolean canBe0(int c, int[] line, List<Integer> hints, boolean[][] prefixDP, boolean[][] suffixDP) {
+        if (line[c] == 1) return false;
+        int L = line.length;
+        int K = hints.size();
+        for (int j = 0; j <= K; j++) {
+            boolean prefixOk = prefixDP[c][j];
+            boolean suffixOk = (c + 1 < L) ? suffixDP[c + 1][K - j] : (K - j == 0);
+            if (prefixOk && suffixOk) {
+                return true;
             }
         }
-
-        // Option 2: Place 1
-        if (hintIdx < hints.size()) {
-            if (runLength < hints.get(hintIdx)) {
-                currentPattern[colIdx] = 1;
-                generatePatterns(colIdx + 1, colCount, hints, currentPattern, hintIdx, runLength + 1, results);
-            }
-        }
+        return false;
     }
 
     private List<Integer>[] calculateRowHints(int[][] grid) {

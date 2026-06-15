@@ -29,7 +29,7 @@ public class AiStageGeneratorTest {
     @Test
     public void testParseJsonAndSaveStage() {
         String mockJsonResponse = "{\"name\": \"AI Puzzle\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
-        when(aiClient.generateDailyPuzzleJson()).thenReturn(mockJsonResponse);
+        when(aiClient.generatePuzzleJson(anyInt(), anyInt())).thenReturn(mockJsonResponse);
         when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Stage stage = aiStageGenerator.generateAndSaveStage();
@@ -66,35 +66,62 @@ public class AiStageGeneratorTest {
 
     @Test
     public void testGenerateAndSaveStageRetriesOnFailureAndEventuallyThrows() {
-        when(aiClient.generateDailyPuzzleJson()).thenReturn("invalid json");
+        when(aiClient.generatePuzzleJson(anyInt(), anyInt())).thenReturn("invalid json");
 
         assertThrows(IllegalArgumentException.class, () -> {
             aiStageGenerator.generateAndSaveStage();
         });
 
-        verify(aiClient, times(3)).generateDailyPuzzleJson();
+        verify(aiClient, times(3)).generatePuzzleJson(5, 5);
     }
 
     @Test
     public void testGenerateAndSaveStageRetriesOnNonUniqueSolution() {
         String mockNonUniqueJsonResponse = "{\"name\": \"Invalid AI Puzzle\", \"width\": 2, \"height\": 2, \"grid\": \"[[1,0],[0,1]]\"}";
-        when(aiClient.generateDailyPuzzleJson()).thenReturn(mockNonUniqueJsonResponse);
+        when(aiClient.generatePuzzleJson(anyInt(), anyInt())).thenReturn(mockNonUniqueJsonResponse);
 
         assertThrows(IllegalArgumentException.class, () -> {
             aiStageGenerator.generateAndSaveStage();
         });
 
-        verify(aiClient, times(3)).generateDailyPuzzleJson();
+        verify(aiClient, times(3)).generatePuzzleJson(5, 5);
     }
 
     @Test
     public void testGenerateAndSaveStageRetriesWhenClientThrowsException() {
-        when(aiClient.generateDailyPuzzleJson()).thenThrow(new RuntimeException("API error"));
+        when(aiClient.generatePuzzleJson(anyInt(), anyInt())).thenThrow(new RuntimeException("API error"));
 
         assertThrows(IllegalArgumentException.class, () -> {
             aiStageGenerator.generateAndSaveStage();
         });
 
-        verify(aiClient, times(3)).generateDailyPuzzleJson();
+        verify(aiClient, times(3)).generatePuzzleJson(5, 5);
+    }
+
+    @Test
+    public void testTitleCleaning() {
+        String mockJsonResponse = "{\"name\": \"AI Puzzle: Fantastic Tree\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        when(aiClient.generatePuzzleJson(5, 5)).thenReturn(mockJsonResponse);
+        when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Stage stage = aiStageGenerator.generateAndSaveStage(5, 5, true);
+
+        assertNotNull(stage);
+        assertEquals("Fantastic Tree", stage.getName());
+    }
+
+    @Test
+    public void testCustomSizeGeneration() {
+        // 3x3 grid (unique solution: all 1s)
+        String mockJsonResponse = "{\"name\": \"Custom 3x3\", \"width\": 3, \"height\": 3, \"grid\": \"[[1,1,1],[1,1,1],[1,1,1]]\"}";
+        when(aiClient.generatePuzzleJson(3, 3)).thenReturn(mockJsonResponse);
+        when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Stage stage = aiStageGenerator.generateAndSaveStage(3, 3, true);
+
+        assertNotNull(stage);
+        assertEquals("Custom 3x3", stage.getName());
+        assertEquals(3, stage.getWidth());
+        assertEquals(3, stage.getHeight());
     }
 }

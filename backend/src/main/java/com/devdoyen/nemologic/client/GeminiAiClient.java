@@ -26,6 +26,11 @@ public class GeminiAiClient implements AiClient {
 
     @Override
     public String generateDailyPuzzleJson() {
+        return generatePuzzleJson(5, 5);
+    }
+
+    @Override
+    public String generatePuzzleJson(int width, int height) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalStateException("[AI] API Key is missing. Cannot generate AI puzzle.");
         }
@@ -42,7 +47,18 @@ public class GeminiAiClient implements AiClient {
                 Map<String, Object> requestBody = new HashMap<>();
                 Map<String, Object> contents = new HashMap<>();
                 Map<String, Object> parts = new HashMap<>();
-                parts.put("text", "Generate a valid, creative, and unique nonogram puzzle in JSON format (do NOT generate a heart shape, create a different recognizable shape like a tree, a letter, a face, a cup, an arrow, etc.). The response must follow this exact JSON schema: { \"name\": \"AI Puzzle: ObjectName\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,0,1,0,0],[0,1,1,1,0],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\" } (this example is a diamond, do not copy it exactly, design your own unique pattern). Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). Grid string must be a valid serialized JSON array representing width x height cells containing only 0 and 1.");
+                
+                String prompt = String.format(
+                    "Generate a valid, creative, and unique nonogram puzzle of size %dx%d in JSON format. " +
+                    "Do NOT generate a simple heart shape. Create a different recognizable shape (like a tree, a letter, a face, a cup, an arrow, etc.). " +
+                    "The response must follow this exact JSON schema: { \"name\": \"ObjectName\", \"width\": %d, \"height\": %d, \"grid\": \"...\" }. " +
+                    "Do NOT prefix the name with 'AI Puzzle:' or 'Daily Puzzle:'. Just output the pure name of the object. " +
+                    "Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). " +
+                    "Grid string must be a valid serialized JSON array representing %dx%d cells containing only 0 and 1.",
+                    width, height, width, height, width, height
+                );
+
+                parts.put("text", prompt);
                 contents.put("parts", Collections.singletonList(parts));
                 requestBody.put("contents", Collections.singletonList(contents));
 

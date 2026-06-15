@@ -65,4 +65,64 @@ public class NonogramSolverTest {
         // Let's verify it counts it as unique.
         assertTrue(solver.isUnique(emptyGrid), "Empty grid should have a unique solution of all 0s");
     }
+
+    @Test
+    public void testUniqueSolutionSmileFace10x10() {
+        int[][] smileGrid = {
+            {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
+            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 1, 1, 1, 1, 0, 0, 1},
+            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
+            {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        };
+        assertTrue(solver.isUnique(smileGrid), "Smile face 10x10 should have a unique solution");
+    }
+
+    @Test
+    public void testUniqueSolutionAscendingStar15x15() {
+        int[][] starGrid = {
+            {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},
+            {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0},
+            {0,0,0,0,0,1,1,1,1,1,0,0,0,0,0},
+            {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+            {0,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
+            {0,0,1,1,1,1,1,1,1,1,1,1,1,0,0},
+            {0,0,0,1,1,1,1,1,1,1,1,1,0,0,0},
+            {0,0,0,0,1,1,1,1,1,1,1,0,0,0,0},
+            {0,0,0,0,1,1,1,1,1,1,1,0,0,0,0},
+            {0,0,0,1,1,1,1,0,1,1,1,1,0,0,0},
+            {0,0,1,1,1,1,0,0,0,1,1,1,1,0,0},
+            {0,1,1,1,0,0,0,0,0,0,0,1,1,1,0},
+            {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
+            {1,1,0,0,0,0,0,0,0,0,0,0,0,1,1},
+            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+        };
+        assertTrue(solver.isUnique(starGrid), "Ascending Star 15x15 should have a unique solution");
+    }
+
+    @Test
+    public void testNonUniqueSolutionGiantCross30x30() {
+        int[][] grid30 = new int[30][30];
+        for (int i = 0; i < 30; i++) {
+            grid30[i][i] = 1;
+            grid30[i][29 - i] = 1;
+        }
+        assertFalse(solver.isUnique(grid30), "Giant Cross 30x30 should be recognized as non-unique");
+    }
+
+    @Test
+    public void testUniqueSolutionSolid30x30() {
+        int[][] solidGrid = new int[30][30];
+        for (int i = 0; i < 30; i++) {
+            for (int j = 0; j < 30; j++) {
+                solidGrid[i][j] = 1;
+            }
+        }
+        assertTrue(solver.isUnique(solidGrid), "Solid 30x30 grid should have a unique solution");
+    }
 }

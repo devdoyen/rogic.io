@@ -13,10 +13,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.annotation.DirtiesContext;
 
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 public class StageControllerTest {
 
     @Autowired
@@ -66,7 +68,7 @@ public class StageControllerTest {
     public void triggerAiGenerationShouldCreateStageAndReturnOk() throws Exception {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/stages/ai-generate"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("AI Puzzle")))
+                .andExpect(jsonPath("$.name", is("Custom Shape")))
                 .andExpect(jsonPath("$.width", is(5)))
                 .andExpect(jsonPath("$.height", is(5)));
     }

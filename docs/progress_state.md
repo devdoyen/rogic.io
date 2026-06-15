@@ -305,6 +305,29 @@
       - **완성된 행/열 힌트 시각적 흐림(Dim) 처리**: 퍼즐 플레이 도중 특정 행이나 열의 채워진 셀 구성이 해당 행/열의 힌트 수치와 정확히 일치(완성)할 경우, 캔버스 좌측 및 상단에 노출되는 숫자 힌트를 자동으로 흐리게(기존 `#94a3b8` -> `#475569`) 드로잉하여 유저가 완성 여부를 한눈에 식별할 수 있도록 사용성을 대폭 고도화 완료.
       - **TDD 검증**: 스타일 수정 및 힌트 상태 판별 로직 적용 이후 Vitest의 전체 56개 단위 및 통합 테스트 케이스가 아무런 부작용(Side-effect) 없이 전원 100% 통과(Pass)함을 확인 완료.
 
+    - **퍼즐 퀄리티 관리자 페이지 구축 및 AI 퍼즐 승인 프로세스 (Step 28) - 완료**:
+      - **도메인 엔티티 수정**: `Stage.java`에 `approved` 필드(기본값 true)를 추가하고, 기존 퍼즐은 자동 승인되도록 설정 완료.
+      - **조회/수정 비즈니스 로직 고도화**: `StageRepository`에 `findByActiveAndApproved(true, true)` 쿼리를 추가하여 미승인 또는 소프트 딜리트된 스테이지를 조회 대상에서 원천 배제 처리 완료.
+      - **관리자 REST API 컨트롤러 설계 및 JUnit 통합 테스트 완료**: `AdminStageController.java`를 신설하여 CRUD 관리 API 매핑 및 NonogramSolver를 통한 해의 유일성 검증 연동 완료.
+    - **백오피스 보안 인증(Spring Security) 및 로그인/로그아웃 연동 (Step 29) - 완료**:
+      - **Spring Security 연동**: `/api/admin/**` 호출 시 `ROLE_ADMIN` 권한을 강제하는 Security 및 stateless 세션 설정을 적용 완료.
+      - **인메모리 세션/토큰 관리 및 UI 연동**: `AdminSessionManager`를 통해 UUID Bearer 토큰 방식을 구현하고, 프론트엔드 `adminApi.ts`에서 Axios Request Interceptor를 통해 Authorization 헤더를 자동 전송하도록 바인딩 완료.
+    - **어드민 퍼즐 관리 필터링 및 정렬 기능 구현 (Step 30) - 완료**:
+      - **반응형 필터링 및 컬럼 정렬**: `App.vue`에 이름 검색, 격자 크기별 검색, 활성/대기/비활성 상태 검색 조건 필터와 컬럼 클릭에 따른 다이나믹 정렬(`toggleAdminSort`) 기능 연동 완료.
+    - **AI 퍼즐 생성 크기 커스텀 및 타이틀 클리닝 적용 (Step 31 - 완료)**:
+      - **AI 클라이언트 및 백엔드 확장**: `AiClient.java` 인터페이스에 `generatePuzzleJson(int width, int height)`을 추가하고, `MockAiClient.java`와 `GeminiAiClient.java`에 dynamic size 연동 구현. `AiStageGenerator.java` 내에 정규식 `^(?i)(AI\s+Puzzle|Daily\s+Puzzle)[:\\s-]*`을 사용한 타이틀 접두사 청소 로직을 적용하여 순수 명칭만 저장되도록 보장 완료. `AdminStageController.java`에서 `width`와 `height` 파라미터를 추가 수집하도록 연동 완료.
+      - **프론트엔드 API 및 어드민 UI 연동**: `adminApi.ts` 내 `generateAiStage(width, height)`가 쿼리 파라미터를 백엔드로 넘기도록 확장. 어드민 네비게이션 바에 AI Size 선택을 위한 가로/세로 셀렉터(`adminAiWidth`, `adminAiHeight` ref 바인딩)를 추가 배치하고, 생성 버튼 클릭 시 이를 형변환하여 안전하게 파라미터로 송출하도록 `App.vue` 연동 완료.
+      - **TDD 기반 양방향 테스트 검증**:
+        - **백엔드**: JUnit `AiStageGeneratorTest`, `AdminStageControllerTest` 에 dynamic size 검증과 접두사 클리닝 테스트를 추가하고, `StageControllerTest`를 보정하여 전체 56개 JUnit 테스트 100% 통과 완료.
+        - **프론트엔드**: Vitest `adminApi.test.ts` 및 `App.test.ts`에 커스텀 크기 전달 통합 테스트를 작성하고, JSDOM 호환 select value 바인딩을 매핑하여 전체 68개 Vitest 테스트 100% 통과 완료.
+
+    - **AI 퍼즐 생성 크기 30x30 확장 및 NonogramSolver 최적화 (Step 32 - 완료)**:
+      - **Solver 성능 병목 해결**: 기존 `NonogramSolver.isUnique`가 모든 행 패턴을 사전 생성하던 방식을 개선하여, 동적 계획법(DP) 기반의 행/열 논리 라인 해결기(`solveLine`) 및 `isPartialLineCompatible` 유효성 검사를 구현 완료.
+      - **셀 단위 백트래킹 도입**: 논리적 분석 후 미해결 상태인 셀에 대해서만 부분 검증이 수반된 셀 단위 DFS 백트래킹(`solveDFSCell`)을 수행하도록 개선하여, 기존 30x30 수준에서 발생하던 OOM 및 타임아웃 문제를 해결하고 1ms 이하 수준의 초고속 검증 완료.
+      - **TDD 기반 대용량 퍼즐 검증 완료**:
+        - `NonogramSolverTest.java`에 10x10 Smile Face, 15x15 Ascending Star, 30x30 Solid Grid 등의 고난도 고해상도 고정 퍼즐에 대한 유일 해 검증과 30x30 Giant Cross 비유일 해 판정 테스트(TDD Red/Green Phase)를 추가하여 백엔드 60개 전체 테스트 빌드 및 Vitest 프론트엔드 68개 전체 테스트 통과 완료.
+
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

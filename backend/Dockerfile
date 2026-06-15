@@ -1,9 +1,13 @@
-# Single-stage runtime Dockerfile for pre-built Spring Boot jar
+# Stage 1: Build stage
+FROM gradle:8.7-jdk17 AS builder
+WORKDIR /app
+COPY . .
+RUN ./gradlew bootJar -x test
+
+# Stage 2: Runtime stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-
-# Copy the pre-built jar from local build directory
-COPY build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/*.jar app.jar
 
 # Expose backend port
 EXPOSE 8080

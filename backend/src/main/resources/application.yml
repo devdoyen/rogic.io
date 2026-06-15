@@ -10,3 +10,7 @@ management:
   metrics:
     tags:
       application: nemologic
+
+admin:
+  username: admin
+  password: admin123!

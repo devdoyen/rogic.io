@@ -21,7 +21,7 @@ public class DailyPuzzleScheduler {
         aiStageGenerator.generateAndSaveStage(false);
     }
 
-    @Scheduled(cron = "0 0 0 * * ?")
+    // Automatic release is disabled to require manual admin approval
     public void releaseDailyPuzzle() {
         stageService.activateAllInactiveStages();
     }

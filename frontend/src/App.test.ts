@@ -3,9 +3,11 @@ import { mount } from '@vue/test-utils';
 import App from './App.vue';
 import * as stageApi from './api/stageApi';
 import * as userApi from './api/userApi';
+import * as adminApi from './api/adminApi';
 
 vi.mock('./api/stageApi');
 vi.mock('./api/userApi');
+vi.mock('./api/adminApi');
 
 describe('App.vue Leaderboard Integration TDD', () => {
   beforeEach(() => {
@@ -18,6 +20,10 @@ describe('App.vue Leaderboard Integration TDD', () => {
       xp: 200,
       level: 2
     });
+    vi.mocked(adminApi.fetchAdminStages).mockResolvedValue([
+      { id: 1, name: 'Seeded Stage 1', width: 5, height: 5, active: true, approved: true, solutionGrid: [[1]] },
+      { id: 9, name: 'AI Pending Stage', width: 5, height: 5, active: false, approved: false, solutionGrid: [[1]] }
+    ]);
   });
 
   it('should call fetchStages and fetchRanking on mount, and render rankings list', async () => {
@@ -343,6 +349,200 @@ describe('App.vue Leaderboard Integration TDD', () => {
     // Verify modal is NOT open automatically
     expect((wrapper.vm as any).isHelpModalOpen).toBe(false);
     expect(wrapper.find('.help-modal-overlay').exists()).toBe(false);
+  });
+
+  it('should switch to Admin Console tab, render list of admin stages, and trigger approval/actions', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    const approveSpy = vi.spyOn(adminApi, 'approveStage').mockResolvedValue(undefined);
+    const deleteSpy = vi.spyOn(adminApi, 'deleteStage').mockResolvedValue(undefined);
+    const aiGenSpy = vi.spyOn(adminApi, 'generateAiStage').mockResolvedValue({ id: 10, name: 'Generated AI', width: 5, height: 5, solutionGrid: [[1]], active: false, approved: false } as any);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Enable admin mode programmatically
+    (wrapper.vm as any).isAdminMode = true;
+    (wrapper.vm as any).isAdminLogged = true;
+    await (wrapper.vm as any).onTabChange('admin');
+    await wrapper.vm.$nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Verify admin dashboard elements are rendered
+    expect(wrapper.find('.admin-backoffice-view').exists()).toBe(true);
+    const stageItems = wrapper.findAll('.admin-stage-item');
+    expect(stageItems.length).toBe(2);
+    expect(stageItems[0].text()).toContain('Seeded Stage 1');
+    expect(stageItems[1].text()).toContain('AI Pending Stage');
+
+    // Click Approve on the pending stage (second item)
+    const approveBtn = stageItems[1].find('.btn-approve');
+    expect(approveBtn.exists()).toBe(true);
+    await approveBtn.trigger('click');
+    expect(approveSpy).toHaveBeenCalledWith(9);
+
+    // Click Delete on the active stage (first item)
+    // Setup window.confirm mock
+    const originalConfirm = window.confirm;
+    window.confirm = vi.fn().mockReturnValue(true);
+    const deleteBtn = stageItems[0].find('.btn-delete');
+    expect(deleteBtn.exists()).toBe(true);
+    await deleteBtn.trigger('click');
+    expect(deleteSpy).toHaveBeenCalledWith(1);
+    expect(window.confirm).toHaveBeenCalled();
+    window.confirm = originalConfirm;
+
+    // Click AI Gen button
+    const aiGenBtn = wrapper.find('.admin-ai-gen-btn');
+    expect(aiGenBtn.exists()).toBe(true);
+    const widthSelect = wrapper.find('.admin-ai-width-select');
+    const heightSelect = wrapper.find('.admin-ai-height-select');
+    expect(widthSelect.exists()).toBe(true);
+    expect(heightSelect.exists()).toBe(true);
+    await widthSelect.setValue('10');
+    await heightSelect.setValue('15');
+    // Mock window.alert to prevent blocking
+    const originalAlert = window.alert;
+    window.alert = vi.fn();
+    await aiGenBtn.trigger('click');
+    expect(aiGenSpy).toHaveBeenCalledWith(10, 15);
+    expect(window.alert).toHaveBeenCalled();
+    window.alert = originalAlert;
+  });
+
+  it('should render admin login card if not logged in, and handle successful login', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    const loginSpy = vi.spyOn(adminApi, 'loginAdmin').mockResolvedValue('fake-token');
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Enable admin mode programmatically, but keep logged = false
+    (wrapper.vm as any).isAdminMode = true;
+    (wrapper.vm as any).isAdminLogged = false;
+    await wrapper.vm.$nextTick();
+
+    // Verify login card exists
+    expect(wrapper.find('.admin-login-card').exists()).toBe(true);
+
+    // Input credentials
+    await wrapper.find('.admin-username-input').setValue('admin');
+    await wrapper.find('.admin-password-input').setValue('admin123!');
+
+    // Submit form
+    await wrapper.find('.admin-login-form').trigger('submit.prevent');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(loginSpy).toHaveBeenCalledWith('admin', 'admin123!');
+    expect((wrapper.vm as any).isAdminLogged).toBe(true);
+    expect(wrapper.find('.admin-login-card').exists()).toBe(false);
+    expect(wrapper.find('.admin-console-content').exists()).toBe(true);
+  });
+
+  it('should filter and sort admin stages list in the back office', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    // Mock admin stages list with 3 stages of different attributes
+    vi.mocked(adminApi.fetchAdminStages).mockResolvedValue([
+      { id: 2, name: 'B Stage', width: 10, height: 10, active: true, approved: true, solutionGrid: [] },
+      { id: 1, name: 'A Stage', width: 5, height: 5, active: false, approved: false, solutionGrid: [] },
+      { id: 3, name: 'C Stage', width: 15, height: 15, active: true, approved: true, solutionGrid: [] }
+    ]);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Enable admin mode and set authenticated
+    (wrapper.vm as any).isAdminMode = true;
+    (wrapper.vm as any).isAdminLogged = true;
+    await (wrapper.vm as any).onTabChange('admin');
+    await wrapper.vm.$nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Initially, verify all 3 stages are rendered
+    let stageItems = wrapper.findAll('.admin-stage-item');
+    expect(stageItems.length).toBe(3);
+
+    // 1. Filter by search query "B"
+    const searchInput = wrapper.find('.admin-search-input');
+    expect(searchInput.exists()).toBe(true);
+    await searchInput.setValue('B');
+    await wrapper.vm.$nextTick();
+
+    stageItems = wrapper.findAll('.admin-stage-item');
+    expect(stageItems.length).toBe(1);
+    expect(stageItems[0].text()).toContain('B Stage');
+
+    // Reset search query
+    await searchInput.setValue('');
+    await wrapper.vm.$nextTick();
+
+    // 2. Filter by status: Pending Approval
+    const statusSelect = wrapper.find('.admin-status-filter');
+    expect(statusSelect.exists()).toBe(true);
+    await statusSelect.setValue('Pending');
+    await wrapper.vm.$nextTick();
+
+    stageItems = wrapper.findAll('.admin-stage-item');
+    expect(stageItems.length).toBe(1);
+    expect(stageItems[0].text()).toContain('A Stage');
+
+    // Reset status filter
+    await statusSelect.setValue('All');
+    await wrapper.vm.$nextTick();
+
+    // 3. Filter by size: 10x10
+    const sizeSelect = wrapper.find('.admin-size-filter');
+    expect(sizeSelect.exists()).toBe(true);
+    await sizeSelect.setValue('10');
+    await wrapper.vm.$nextTick();
+
+    stageItems = wrapper.findAll('.admin-stage-item');
+    expect(stageItems.length).toBe(1);
+    expect(stageItems[0].text()).toContain('B Stage');
+
+    // Reset size filter
+    await sizeSelect.setValue('All');
+    await wrapper.vm.$nextTick();
+
+    // 4. Sort by Name (click Name header)
+    const nameHeader = wrapper.find('.admin-th-name');
+    expect(nameHeader.exists()).toBe(true);
+
+    // First click: Sorts Name Ascending (A Stage -> B Stage -> C Stage)
+    await nameHeader.trigger('click');
+    await wrapper.vm.$nextTick();
+    stageItems = wrapper.findAll('.admin-stage-item');
+    expect(stageItems[0].text()).toContain('A Stage');
+    expect(stageItems[1].text()).toContain('B Stage');
+    expect(stageItems[2].text()).toContain('C Stage');
+
+    // Second click: Sorts Name Descending (C Stage -> B Stage -> A Stage)
+    await nameHeader.trigger('click');
+    await wrapper.vm.$nextTick();
+    stageItems = wrapper.findAll('.admin-stage-item');
+    expect(stageItems[0].text()).toContain('C Stage');
+    expect(stageItems[1].text()).toContain('B Stage');
+    expect(stageItems[2].text()).toContain('A Stage');
   });
 });
 

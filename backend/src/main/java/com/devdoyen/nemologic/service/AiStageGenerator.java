@@ -26,17 +26,22 @@ public class AiStageGenerator {
 
     @Transactional
     public Stage generateAndSaveStage() {
-        return generateAndSaveStage(true);
+        return generateAndSaveStage(5, 5, true);
+    }
+ 
+    @Transactional
+    public Stage generateAndSaveStage(boolean active) {
+        return generateAndSaveStage(5, 5, active);
     }
 
     @Transactional
-    public Stage generateAndSaveStage(boolean active) {
+    public Stage generateAndSaveStage(int width, int height, boolean active) {
         int maxAttempts = 3;
         Exception lastException = null;
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                String json = aiClient.generateDailyPuzzleJson();
+                String json = aiClient.generatePuzzleJson(width, height);
                 if (json == null || json.isEmpty()) {
                     throw new IllegalArgumentException("AI response is empty");
                 }
@@ -46,12 +51,23 @@ public class AiStageGenerator {
 
                 validateGrid(grid, dto.getWidth(), dto.getHeight());
 
+                if (dto.getWidth() != width || dto.getHeight() != height) {
+                    throw new IllegalArgumentException("Generated puzzle size mismatch. Expected: " + width + "x" + height + ", Actual: " + dto.getWidth() + "x" + dto.getHeight());
+                }
+
                 if (!nonogramSolver.isUnique(grid)) {
                     throw new IllegalArgumentException("Generated puzzle does not have a unique solution");
                 }
 
-                Stage newStage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), grid);
+                String rawName = dto.getName();
+                String cleanName = rawName != null ? rawName.replaceAll("^(?i)(AI\\s+Puzzle|Daily\\s+Puzzle)[:\\s-]*", "").trim() : "AI Puzzle";
+                if (cleanName.isEmpty()) {
+                    cleanName = "AI Puzzle";
+                }
+
+                Stage newStage = new Stage(null, cleanName, dto.getWidth(), dto.getHeight(), grid);
                 newStage.setActive(active);
+                newStage.setApproved(active);
                 return stageRepository.save(newStage);
             } catch (Exception e) {
                 lastException = e;

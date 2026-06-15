@@ -19,7 +19,43 @@ public class StageService {
 
     @Transactional(readOnly = true)
     public List<Stage> getAllStages() {
-        return stageRepository.findByActive(true);
+        return stageRepository.findByActiveAndApproved(true, true);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Stage> getAllStagesForAdmin() {
+        return stageRepository.findAll();
+    }
+
+    @Transactional
+    public void approveStage(Long id) {
+        Stage stage = stageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
+        stage.setApproved(true);
+        stage.setActive(true);
+        stageRepository.save(stage);
+    }
+
+    @Transactional
+    public void deleteStageSoft(Long id) {
+        Stage stage = stageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
+        stage.setActive(false);
+        stageRepository.save(stage);
+    }
+
+    @Transactional
+    public void restoreStage(Long id) {
+        Stage stage = stageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
+        stage.setActive(true);
+        stage.setApproved(true);
+        stageRepository.save(stage);
+    }
+
+    @Transactional
+    public Stage saveStage(Stage stage) {
+        return stageRepository.save(stage);
     }
 
     @Transactional

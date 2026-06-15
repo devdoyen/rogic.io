@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface StageRepository extends JpaRepository<Stage, Long> {
     java.util.Optional<Stage> findByName(String name);
     java.util.List<Stage> findByActive(boolean active);
+    java.util.List<Stage> findByActiveAndApproved(boolean active, boolean approved);
 }
