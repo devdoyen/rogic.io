@@ -112,3 +112,44 @@ Grafana Cloud 웹 콘솔에서 외부 검증용 헬스체크 프로브를 생성
   clamp_min(changes(sm_check_status{job="nemologic-api-health"}[30d]) / 2, 1)
   ```
 * **Options**: Unit 단위를 `Duration (seconds)`으로 지정.
+
+---
+
+## 4. Terraform 연동 환경 변수 수집 가이드
+
+IaC(`infra/terraform/grafana.tf`)를 통해 모니터링 체크 및 경보 규칙을 관리하기 위해 필요한 4가지 인증 변수값의 수집 경로입니다.
+
+### ① `grafana_url`
+* **의미**: Grafana Cloud 인스턴스 접속용 루트 도메인 주소.
+* **수집 경로**:
+  1. Grafana Cloud에 로그인한 후, 메인 대시보드 화면으로 이동합니다.
+  2. 브라우저 주소창의 URL을 확인합니다.
+  3. `https://<your-org-name>.grafana.net` 형식의 주소를 그대로 복사합니다.
+
+### ② `grafana_auth` (Service Account Token)
+* **의미**: Terraform이 Grafana 내부에 폴더를 만들고 알림 규칙(Rule Group)을 등록할 수 있게 해주는 API 인증 키.
+* **수집 경로**:
+  1. Grafana 콘솔 좌측 메뉴에서 **Administration > Users and access > Service accounts**로 이동합니다.
+  2. **Add service account** 버튼을 클릭합니다.
+  3. **Display name**: `terraform-monitoring-sa` 기입
+  4. **Role**: **Editor** 또는 **Admin** 지정 후 **Create** 클릭
+  5. 생성된 SA 상세 페이지에서 **Add service account token**을 클릭합니다.
+  6. 토큰 이름을 입력하고 **Generate token**을 클릭합니다.
+  7. **최초 1회만 화면에 노출되는 토큰 문자열(예: `glsa_...`)을 복사하여 안전한 곳에 보관합니다.**
+
+### ③ `grafana_sm_url` (Synthetic Monitoring API URL)
+* **의미**: Grafana Cloud의 전 세계 프로브 체크 엔진을 관리하는 별도의 API 엔드포인트 주소.
+* **수집 경로**:
+  1. Grafana 콘솔 좌측 메뉴에서 **Testing & synthetics > Synthetics**로 이동합니다.
+  2. Synthetics 화면 우측 상단의 **Config** 또는 **Access** 탭을 클릭합니다.
+  3. **Synthetic Monitoring API URL** 항목에 명시된 URL 주소를 복사합니다.
+     * 예시 (아시아 리전 기준): `https://synthetic-monitoring-api-ap-northeast-1.grafana.net`
+
+### ④ `grafana_sm_token` (Synthetic Monitoring Access Token)
+* **의미**: Synthetic Monitoring API에 직접 명령을 내려 HTTP Check 리소스를 생성하고 활성화할 수 있는 전용 액세스 토큰.
+* **수집 경로**:
+  1. **Testing & synthetics > Synthetics > Config/Access** 화면으로 이동합니다 (위 ③번과 동일 경로).
+  2. **API Keys** 또는 **Access Tokens** 항목을 찾습니다.
+  3. **Generate Token** 또는 **Create API Key** 버튼을 클릭합니다.
+  4. 토큰을 생성한 뒤 화면에 노출되는 **긴 Access Token 값**을 복사합니다.
+
