@@ -340,6 +340,7 @@
         - 구버전 스키마 패널들을 신버전 `dashboard.grafana.app/v2` 스키마(`spec.elements` 및 `GridLayoutItem`을 가진 `RowsLayoutRow`)로 동적 변환하는 Python 병합 파이프라인을 작성 및 수행하여 최상위 행으로 삽입 완료.
         - 대시보드 내 모든 Prometheus 데이터소스 참조(`grafanacloud-prom`)를 `"${DS_PROMETHEUS}"` 변수 형식으로 일괄 치환 및 매핑하여, Terraform 배포 시점에 target Prometheus 데이터소스의 실제 UID(`data.grafana_data_source.prometheus[0].uid`)로 자동 주입 및 동적 치환되도록 통합 IaC 환경 구축 완료.
         - `infra/monitoring/current_dashboard.json`에 최종 병합본을 오버라이트 저장하고, 로컬 `terraform validate` 구문 정합성 검증 통과 완료.
+        - Grafana API 409 Conflict(동일 UID 중복 오류)를 회피하기 위해 `metadata.uid`를 신규 고유 식별자(`nemologic-unified-dashboard`)로 교체하고, `resourceVersion`, `generation`, `creationTimestamp` 등 read-only 메타데이터 필드를 소거하여 배포 안정성 확보.
 
 ---
 
