@@ -888,7 +888,7 @@
                       },
                       "spec": {
                         "editorMode": "code",
-                        "expr": "visitor_daily_unique_visitors",
+                        "expr": "visitor_daily_unique_visitors{instance=\"$instance\"}",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -973,7 +973,7 @@
                       },
                       "spec": {
                         "editorMode": "code",
-                        "expr": "visitor_unique_visitors",
+                        "expr": "visitor_unique_visitors{instance=\"$instance\"}",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -1057,7 +1057,7 @@
                       },
                       "spec": {
                         "editorMode": "code",
-                        "expr": "visitor_total_visits",
+                        "expr": "visitor_total_visits{instance=\"$instance\"}",
                         "legendFormat": "__auto",
                         "range": true
                       }
@@ -1141,7 +1141,7 @@
                       },
                       "spec": {
                         "editorMode": "code",
-                        "expr": "visitor_daily_unique_visitors ",
+                        "expr": "visitor_daily_unique_visitors{instance=\"$instance\"}",
                         "legendFormat": "__auto",
                         "range": true
                       }

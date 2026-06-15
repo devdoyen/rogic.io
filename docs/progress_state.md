@@ -351,6 +351,7 @@
       - AWS RDS PostgreSQL 마이그레이션이 검토 및 일부 진행되었으나, 유저 요청에 따라 기존 로컬 Docker Compose 기반 PostgreSQL 컨테이너 및 단일 백엔드 구성(Option 1)으로 완전히 롤백함.
       - Nginx 로드 밸런서(blue-green) 및 Grafana Alloy 멀티 인스턴스 메트릭 수집 설정을 이전의 단일 백엔드 구성으로 원복 완료.
       - H2/PostgreSQL 기반 로컬 및 빌드 환경 단위 테스트 68개 및 JUnit 60개 테스트 전원 100% 통과 완료.
+      - Grafana 대시보드 내 방문자 지표(Daily Unique Visitors, Total Unique Visitors, Total Page Views, Time Series) 패널 4종의 PromQL 쿼리에 `{instance="$instance"}` 필터를 추가하여, 데이터베이스에 수집된 구버전 blue/green 인스턴스들의 이력이 혼선 및 중복 노출되지 않고 선택된 인스턴스 지표만 단일 노출되도록 수정 완료.
 
 ---
 
