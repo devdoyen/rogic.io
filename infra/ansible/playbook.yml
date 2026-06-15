@@ -19,7 +19,8 @@
 - name: Deploy Nemologic App to AWS EC2
   hosts: nemologic_servers
   become: true
-  become_timeout: 60
+  vars:
+    ansible_become_timeout: 60
   tasks:
     - name: Update apt package cache
       apt:
