@@ -41,7 +41,7 @@ resource "grafana_synthetic_monitoring_check" "nemologic_http" {
 # Look up the default Grafana Cloud Prometheus data source
 data "grafana_data_source" "prometheus" {
   count = var.grafana_url != "" && var.grafana_auth != "" ? 1 : 0
-  name  = "grafanacloud-prom"
+  name  = var.grafana_prometheus_datasource_name
 }
 
 # Create a folder for Nemologic Alerts if auth is configured

@@ -47,4 +47,11 @@ variable "grafana_sm_token" {
   default     = ""
 }
 
+variable "grafana_prometheus_datasource_name" {
+  description = "The name of the Prometheus datasource in Grafana Cloud"
+  type        = string
+  default     = "grafanacloud-grandwalrus3189-prom"
+}
+
+
 
