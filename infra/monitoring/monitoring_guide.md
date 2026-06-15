@@ -65,7 +65,7 @@ Terraform을 사용하지 않는 경우, 레포지토리에 사전 패키징된 
 * **Title**: `API Health Status`
 * **PromQL Query**:
   ```promql
-  sum(sm_check_status{job="nemologic-api-health"})
+  sum(probe_success{job="nemologic-api-health"})
   ```
 * **Options**: Stat 패널 선택, Thresholds 지정 (0: Red, 1 이상: Green).
 
@@ -73,7 +73,7 @@ Terraform을 사용하지 않는 경우, 레포지토리에 사전 패키징된 
 * **Title**: `30-Day Service Availability`
 * **PromQL Query**:
   ```promql
-  avg_over_time(sm_check_status{job="nemologic-api-health"}[30d]) * 100
+  avg_over_time(probe_success{job="nemologic-api-health"}[30d]) * 100
   ```
 * **Options**: Unit 단위를 `Percent (0-100)`로 지정하고 Min: 0, Max: 100 설정.
 
@@ -81,16 +81,16 @@ Terraform을 사용하지 않는 경우, 레포지토리에 사전 패키징된 
 * **Title**: `30-Day Incident Count`
 * **PromQL Query**:
   ```promql
-  changes(sm_check_status{job="nemologic-api-health"}[30d]) / 2
+  changes(probe_success{job="nemologic-api-health"}[30d]) / 2
   ```
 
 ### 패널 4: 평균 복구 시간 (MTTR - Stat Panel)
 * **Title**: `Mean Time To Recovery (MTTR)`
 * **PromQL Query**:
   ```promql
-  (sum_over_time((1 - sm_check_status{job="nemologic-api-health"})[30d]) * 60) 
+  (sum_over_time((1 - probe_success{job="nemologic-api-health"})[30d]) * 60) 
   / 
-  clamp_min(changes(sm_check_status{job="nemologic-api-health"}[30d]) / 2, 1)
+  clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)
   ```
 * **Options**: Unit 단위를 `Duration (seconds)` 또는 `Time > Seconds (s)`로 설정.
 
@@ -98,9 +98,9 @@ Terraform을 사용하지 않는 경우, 레포지토리에 사전 패키징된 
 * **Title**: `Mean Time Between Failures (MTBF)`
 * **PromQL Query**:
   ```promql
-  ((count_over_time(sm_check_status{job="nemologic-api-health"}[30d]) * 60) - (sum_over_time((1 - sm_check_status{job="nemologic-api-health"})[30d]) * 60)) 
+  ((count_over_time(probe_success{job="nemologic-api-health"}[30d]) * 60) - (sum_over_time((1 - probe_success{job="nemologic-api-health"})[30d]) * 60)) 
   / 
-  clamp_min(changes(sm_check_status{job="nemologic-api-health"}[30d]) / 2, 1)
+  clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)
   ```
 * **Options**: Unit 단위를 `Duration (seconds)`으로 지정.
 
