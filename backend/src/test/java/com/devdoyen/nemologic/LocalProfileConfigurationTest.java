@@ -25,7 +25,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import com.devdoyen.nemologic.repository.UserRepository;
 import com.devdoyen.nemologic.repository.StageRepository;
 
-@SpringBootTest
+@SpringBootTest(properties = { "spring.flyway.enabled=false", "spring.jpa.hibernate.ddl-auto=none" })
 @ActiveProfiles("local")
 public class LocalProfileConfigurationTest {
 

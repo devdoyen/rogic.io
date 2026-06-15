@@ -353,6 +353,14 @@
       - H2/PostgreSQL 기반 로컬 및 빌드 환경 단위 테스트 68개 및 JUnit 60개 테스트 전원 100% 통과 완료.
       - Grafana 대시보드 내 방문자 지표(Daily Unique Visitors, Total Unique Visitors, Total Page Views, Time Series) 패널 4종의 PromQL 쿼리에 `{instance="$instance"}` 필터를 추가하여, 데이터베이스에 수집된 구버전 blue/green 인스턴스들의 이력이 혼선 및 중복 노출되지 않고 선택된 인스턴스 지표만 단일 노출되도록 수정 완료.
 
+
+    - **데이터베이스 버전 관리 도구 Flyway 도입 및 검증 (Step 35 - 완료)**:
+      - **Flyway 의존성 추가**: `backend/build.gradle`에 `flyway-core` 및 `flyway-database-postgresql` 의존성을 추가 완료.
+      - **초기 스키마 마이그레이션 구현**: 기존 테이블 구조(`users`, `stages`, `histories`, `visitor_logs`)를 복원하는 `V1__init.sql` 스크립트를 `backend/src/main/resources/db/migration/` 디렉토리에 정의 완료.
+      - **테스트 환경 격리 및 Linter 경고 해결**: `application-test.yml` 내 H2 인메모리 테스트 빌드 시 Flyway를 비활성화(`spring.flyway.enabled: false`)하고, YAML key lint warning 해결을 위해 `format_sql`을 `"[format_sql]"` 형태로 이스케이프 처리 완료.
+      - **LocalProfileConfigurationTest 정합성 확보**: Local profile 컨텍스트 로딩 시 Mock DataSource 메타데이터 부재로 `ddl-auto: validate` 검증이 실패하던 현상을 `@SpringBootTest(properties = { ... "spring.jpa.hibernate.ddl-auto=none" })` 프로퍼티 주입으로 해결 완료.
+      - **TDD 검증**: `gradle test` 실행 결과 전체 백엔드 JUnit 테스트가 100% 정상 통과(BUILD SUCCESSFUL)함을 확인 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
