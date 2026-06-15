@@ -63,7 +63,7 @@ graph TD
 * **Grafana Cloud 및 Grafana Alloy 연동**: t3a.nano의 자원 제약(512MB RAM)을 해소하기 위해 로컬에 무거운 프로메테우스 서버를 구동하지 않고, 초경량 전송 에이전트인 **Grafana Alloy**를 배포하여 메모리 점유율을 50MB 미만으로 고착화.
 * **실시간 비즈니스 및 JVM 지표 관제**: 스프링 부트 Actuator/Micrometer를 통해 `/actuator/prometheus` 엔드포인트를 개방하고, Grafana Cloud의 원격 Prometheus 저장소(Mimir)로 15초 주기로 전송(remote-write). Grafana 대시보드(ID: 11378)를 연동하여 JVM 힙 메모리, CPU/메모리 추이, API별 TPS 및 Latency p95/p99 지표를 실시간 모니터링으로 구현 완료.
 * **DB 기반 방문자 수 집계 및 Grafana 연동**: 어드민 화면 개발 공수 없이 대시보드를 구축하기 위해, 백엔드 DB(PostgreSQL)에 암호화된 방문 로그(`visitor_logs`)를 적재하고 Micrometer `MeterBinder` 구현체(`VisitorMetricsConfig`)를 작성하여 `visitor_total_visits`, `visitor_unique_visitors`, `visitor_daily_unique_visitors` 게이지(Gauge) 지표를 Prometheus 엔드포인트에 실시간 노출하도록 연동 완료.
-* **Synthetic Monitoring 및 SLA 가시화**: 외부 독립 Probes를 통해 엔드포인트(`https://rogic.io/api/stages`) 헬스체크를 상시 수행하고, PromQL 지표 식을 활용해 가용성 비율(Availability %) 및 평균 복구 시간(MTTR), 평균 고장 간격(MTBF) 분석 대시보드를 구축.
+* **Synthetic Monitoring 및 SLA 가시화 (IaC 선언)**: Grafana Terraform 프로바이더(`grafana/grafana`)를 도입하여 외부 독립 Probes(Tokyo, Singapore, Sydney)를 통한 엔드포인트(`https://rogic.io/api/stages`) 헬스체크와 장애 알림 경보 규칙(Alert Rule Group)을 선언적으로 구축. PromQL 지표 수식을 활용해 가용성(Availability %), 평균 복구 시간(MTTR), 평균 고장 간격(MTBF) 대시보드와 유기적으로 바인딩함.
 
 ### ⑤ 파이프라인 보안 및 CI/CD (GitHub Actions)
 * **GitHub Secrets 기반 변수 은닉화**:
@@ -171,4 +171,6 @@ graph TD
 
 ### ④ 서비스 가용성 및 SLA 모니터링 비용 제로화 (Synthetic Monitoring 도입)
 * **비용 절감**: AWS Route 53 Health Check와 CloudWatch Metric Alarm 등의 상시 지출 비용을 최소화하기 위해 Grafana Cloud의 무료 500,000회 헬스체크 쿼터(Synthetic Monitoring)를 도입했습니다.
-* **보완 대책**: 추가 요금 없이 60초 주기로 전 세계 멀티 프로브 기반 검증을 수행하고, Slack 및 이메일 연동으로 무제한 경보 알림 채널을 구축했습니다. 또한 대시보드에 MTTR, MTBF, Availability % 등을 시각화하여 정량 지표 기반의 인프라 개선 구조를 비용 $0에 구축했습니다.
+* **보완 대책**:
+  * **IaC 기반 선언적 관리**: Grafana Terraform 프로바이더를 결합하여 HTTP 헬스체크 리소스(`grafana_synthetic_monitoring_check`) 및 경보 임계치 규칙(`grafana_rule_group`)을 코드로 정의해 형상관리함.
+  * **SLA 가시화 및 알림**: 추가 요금 없이 60초 주기로 전 세계 멀티 프로브 기반 검증을 수행하고 이메일 연동으로 경보 채널을 구축했으며, 대시보드에 MTTR, MTBF, Availability % 등을 시각화하여 정량 지표 기반의 인프라 개선 구조를 비용 $0에 구축함.
