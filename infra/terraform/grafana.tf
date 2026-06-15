@@ -167,7 +167,7 @@ resource "grafana_dashboard" "sla_dashboard" {
 
   folder      = grafana_folder.nemologic_folder[0].uid
   config_json = replace(
-    file("${path.module}/../../docs/sla_dashboard.json"),
+    file("${path.module}/../monitoring/current_dashboard.json"),
     "\"$${DS_PROMETHEUS}\"",
     "\"${data.grafana_data_source.prometheus[0].uid}\""
   )

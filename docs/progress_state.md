@@ -334,7 +334,12 @@
       - **무료 가동률 모니터링 설계**: AWS Route 53 및 CloudWatch Alarm의 상시 지출 비용을 차단하기 위해 Grafana Cloud의 Synthetic Monitoring(월 50만회 체크 무료)을 채택함.
       - **이메일 경보 연동 및 통합**: API 엔드포인트(`https://rogic.io/api/stages`) 대상 전 세계 멀티프로브 60초 체크 주기를 설정하고, Grafana Alerting 및 Alertmanager를 매핑하여 이메일 수신처로 실시간 긴급 경보(Severity: Critical)가 전송되도록 구축함.
       - **IaC 기반 선언적 관리 구현**: Grafana Terraform 프로바이더(`grafana/grafana`)를 새로 도입하고, HTTP 헬스체크 리소스(`grafana_synthetic_monitoring_check`), 알림 수신용 이메일 연락처(`grafana_contact_point`), 그리고 장애 알림 경보 규칙(`grafana_rule_group`)을 `infra/terraform/grafana.tf` 코드로 작성하여 선언적으로 형상관리함.
-      - **SLA 대시보드 PromQL 설계**: 다운타임 복구 및 품질 지표 산출용 PromQL 식(Uptime SLA %, Incident Count, MTTR, MTBF) 설계 수식을 완성하고, 관리 가이드를 [monitoring_guide.md](file:///c:/Users/82107/dev/project/nemologic/docs/monitoring_guide.md) 문서로 구축하여 저장소 내 보관을 완료함.
+      - **SLA 대시보드 PromQL 설계**: 다운타임 복구 및 품질 지표 산출용 PromQL 식(Uptime SLA %, Incident Count, MTTR, MTBF) 설계 수식을 완성하고, 관리 가이드를 [monitoring_guide.md](file:///c:/Users/82107/dev/project/nemologic/infra/monitoring/monitoring_guide.md) 문서로 구축하여 저장소 내 보관을 완료함.
+      - **통합 모니터링 대시보드(SLA 및 JVM/방문자 통계) 코드화 및 병합**:
+        - 기존 Grafana Cloud의 실시간 대시보드 설정(`current_dashboard.json`)과 신규 설계한 SLA 및 가용성 패널 5종(API Health, 30-Day Service Availability, 30-Day Incident Count, MTTR, MTBF)을 단일 대시보드로 병합 완료.
+        - 구버전 스키마 패널들을 신버전 `dashboard.grafana.app/v2` 스키마(`spec.elements` 및 `GridLayoutItem`을 가진 `RowsLayoutRow`)로 동적 변환하는 Python 병합 파이프라인을 작성 및 수행하여 최상위 행으로 삽입 완료.
+        - 대시보드 내 모든 Prometheus 데이터소스 참조(`grafanacloud-prom`)를 `"${DS_PROMETHEUS}"` 변수 형식으로 일괄 치환 및 매핑하여, Terraform 배포 시점에 target Prometheus 데이터소스의 실제 UID(`data.grafana_data_source.prometheus[0].uid`)로 자동 주입 및 동적 치환되도록 통합 IaC 환경 구축 완료.
+        - `infra/monitoring/current_dashboard.json`에 최종 병합본을 오버라이트 저장하고, 로컬 `terraform validate` 구문 정합성 검증 통과 완료.
 
 ---
 
