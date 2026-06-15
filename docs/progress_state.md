@@ -343,6 +343,7 @@
         - Grafana API 409 Conflict(동일 UID 및 Title 중복 오류)를 회피하기 위해 `metadata.uid`를 신규 고유 식별자(`nemologic-unified-dashboard`)로 교체하고, `spec.title`을 `"Rotagic Unified Monitor"`로 변경함. 또한 `resourceVersion`, `generation`, `creationTimestamp` 및 UI 기본 저장용 annotations(`grafana.app/folder: ""`) 등의 읽기전용/메타데이터 속성을 완전히 소거하여 테라폼 배포 정합성을 확보함.
         - Grafana Cloud의 Synthetic Monitoring 표준 메트릭 규격에 맞춰, 존재하지 않는 임시 메트릭명인 `sm_check_status`를 표준 프로브 성공 메트릭인 `probe_success`로 일괄 치환(대시보드 패널 5종, 경보 조건식 및 가이드 문서)하여 지표 유실 및 No Data 에러 해결 완료.
         - PromQL 문법상 수식 연산(예: `1 - probe_success`)에 범위 선택자(`[30d]`)를 직접 적용할 수 없는 파싱 에러(parse error: ranges only allowed for vector selectors)를 해결하기 위해, MTTR 및 MTBF 산출 공식을 벡터 선택자 단위로 분해 및 수리적으로 간소화하여 쿼리 작동 정상화 완료.
+        - 비즈니스 API 호출 부하 및 네트워크 대역폭 낭비를 차단하기 위해, 기존의 전체 스테이지 목록 API(`/api/stages`) 대상 헬스체크를 Spring Boot Actuator 전용 경량 헬스체크 엔드포인트(`/actuator/health`)로 대체하고, Nginx 리버시 프록시(`nginx.prod.conf`)에 해당 엔드포인트 경로 개방 및 테라폼 배포 타겟(`grafana.tf`) 갱신 완료.
 
 ---
 
