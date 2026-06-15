@@ -73,19 +73,19 @@ graph TD
 실시간 가동률 분석 및 복구 품질 정량 측정을 위해 통합 대시보드 최상단 행(Nemologic Service SLA Metrics)에 탑재된 핵심 PromQL 공식입니다.
 
 1. **실시간 가동 여부 (API Health Status)**
-   * **수식**: `sum(probe_success{job="nemologic-api-health"})`
+   * **수식**: `sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})`
    * **설명**: 도쿄, 싱가포르, 시드니 프로브의 가동 성공 여부(성공 1, 실패 0)를 합산하여 정상 가동 상태(3), 부분 장애(1~2), 전체 중단(0/NA)을 실시간 체크.
 2. **30일 평균 가용성 가동률 (30-Day Service Availability)**
-   * **수식**: `avg_over_time(probe_success{job="nemologic-api-health"}[30d]) * 100`
+   * **수식**: `avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) * 100`
    * **설명**: 최근 30일 동안 수집된 전체 검사 샘플의 평균 성공률을 백분율(SLA %)로 계산.
 3. **30일 누적 장애 발생 건수 (30-Day Incident Count)**
-   * **수식**: `changes(probe_success{job="nemologic-api-health"}[30d]) / 2`
+   * **수식**: `changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2`
    * **설명**: 30일 동안 헬스체크 성공 상태(0과 1 사이)의 상태 전환 변화량을 2로 나눠, 서비스가 중단되었다가 정상 복구된 누적 장애 사이클 횟수를 산출.
 4. **평균 복구 시간 (MTTR, Mean Time To Recovery)**
-   * **수식**: `((count_over_time(probe_success{job="nemologic-api-health"}[30d]) - sum_over_time(probe_success{job="nemologic-api-health"}[30d])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)`
+   * **수식**: `((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2, 1)`
    * **설명**: 30일 동안 기록된 총 다운타임 시간(총 수집 건수 - 성공 건수 $\times$ 60초)을 누적 장애 건수로 나누어 1회 장애 발생 시 평균 서비스 정상화 소요 시간을 초 단위로 계산.
 5. **평균 고장 간격 (MTBF, Mean Time Between Failures)**
-   * **수식**: `(sum_over_time(probe_success{job="nemologic-api-health"}[30d]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health"}[30d]) / 2, 1)`
+   * **수식**: `(sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2, 1)`
    * **설명**: 30일 동안 누적된 총 정상 가동 시간(성공 건수 $\times$ 60초)을 누적 장애 건수로 나누어 시스템이 1회 고장난 후 다음 고장까지 평균적으로 안정 작동하는 무장애 가동 주기를 계산.
 
 ### ⑤ 파이프라인 보안 및 CI/CD (GitHub Actions)

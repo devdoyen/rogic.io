@@ -72,7 +72,7 @@ resource "grafana_rule_group" "nemologic_alerts" {
       }
       datasource_uid = data.grafana_data_source.prometheus[0].uid
       model = jsonencode({
-        expr          = "sum(probe_success{job=\"nemologic-api-health\"})"
+        expr          = "sum(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"})"
         intervalMs    = 15000
         maxDataPoints = 43200
         refId         = "A"
