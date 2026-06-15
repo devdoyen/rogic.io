@@ -4,10 +4,7 @@
   "metadata": {
     "name": "spring_boot_21",
     "namespace": "stacks-1689954",
-    "uid": "5aa1d499-cd75-4e7a-9a19-0385154ad30c",
-    "resourceVersion": "2066142578440405263",
-    "generation": 6,
-    "creationTimestamp": "2026-06-13T15:07:21Z",
+    "uid": "nemologic-unified-dashboard",
     "labels": {
       "grafana.app/deprecatedInternalID": "3164651686739968"
     },
