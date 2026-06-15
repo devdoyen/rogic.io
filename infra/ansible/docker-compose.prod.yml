@@ -1,20 +1,23 @@
 version: '3.8'
 
 services:
-  # Disable legacy db and backend services from base docker-compose.yml
+  # Mock legacy db and backend services to satisfy base docker-compose.yml dependencies
   db:
-    profiles:
-      - disabled
-    entrypoint: ["echo", "database service disabled"]
-    restart: "no"
+    image: alpine:latest
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: "always"
     ports: []
     volumes: []
+    healthcheck:
+      test: ["CMD-SHELL", "true"]
+      interval: 1s
+      timeout: 1s
+      retries: 1
 
   backend:
-    profiles:
-      - disabled
-    entrypoint: ["echo", "backend service disabled"]
-    restart: "no"
+    image: alpine:latest
+    entrypoint: ["tail", "-f", "/dev/null"]
+    restart: "always"
     ports: []
     depends_on: []
 
