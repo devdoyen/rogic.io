@@ -358,6 +358,10 @@
 * **자원 제약 최적화 (Memory Optimization)**:
   * 512MB RAM 수준의 극단적인 저비용 인스턴스(`t4g.nano`/`t3.nano`) 환경에서의 구동을 장기적 목표로 설정.
   * JVM Metaspace 메모리 제약 및 GC 최적화 설정을 적용하고, GraalVM 기반 Native Image 컴파일 빌드를 도입해 메모리 점유율을 50MB 이하로 낮추는 파이프라인 구성을 검증.
+* **서비스 가용성 및 수명 주기 모니터링 타협 (SaaS 모니터링 비용 제로화)**:
+  * AWS Route 53 Health Check(월 $0.50~$0.75) 및 CloudWatch Metric Alarm(월 $0.10)의 클라우드 상시 지출을 완전히 방지하기 위해, Grafana Cloud의 무료 티어 내에 포함된 Synthetic Monitoring(월 500,000회 무료 쿼터)을 도입.
+  * 전 세계 3개 이상의 멀티 리전 Probes에서 60초 간격으로 `https://rogic.io/api/stages` API 엔드포인트를 검증하며, Grafana Alertmanager를 통해 Slack 및 이메일로 무제한 경보 알림을 송출하도록 연동함.
+  * 시스템 다운타임 시 발생 빈도 및 유지 기간을 추적하는 PromQL 기반의 커스텀 대시보드(MTTR, MTBF, Availability %)를 수립하여, 운영 비용을 추가로 지출하지 않으면서도 정량적인 SLA 품질 지표 기반의 서비스 개선이 가능하도록 인프라 아키텍처를 영리하게 타협 및 고도화함.
 
 ---
 
