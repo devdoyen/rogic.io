@@ -378,6 +378,9 @@
         - 롤링 업데이트 도중 각 서비스 개별 기동 시 `--build` 옵션으로 인해 빌드가 여러 차례 수행되면서 저사양 VM의 자원 고갈로 SSH 접속이 끊기던 현상을 차단하기 위해, 플레이북 초기에 `docker compose build backend-blue frontend` 통합 빌드를 1회만 먼저 수행하고 개별 기동 시에는 `--build` 옵션을 제외하여 롤링 업데이트 부하를 최소화 완료.
       - **프론트엔드 빌드 오프로딩 (Build Offloading) 최적화**: 저사양 EC2 기동 부하 및 CPU 크레딧 고갈 문제를 해결하기 위해, 기존에 EC2 호스트 내부 Docker 컨테이너 안에서 수행되던 Vue 프론트엔드 컴파일(`npm run build`)을 GitHub Actions 빌드 주자(Runner)로 전면 이관(Offload) 완료. 빌드 결과물(`dist/` 폴더)만 동기화하여 서비스 가동하도록 `frontend/Dockerfile` 및 `.github/workflows/ci-cd.yml` 변경 완료.
       - **백엔드 지연 초기화 (Lazy Initialization) 활성화**: Spring Boot 구동 시 모든 Bean을 즉시 생성하지 않고 최초 요청 시점에 생성하도록 `application-local.yml`에 `spring.main.lazy-initialization: true` 설정을 적용 완료. 이를 통해 초기 기동 메모리 점유율과 CPU 오버헤드를 줄여 저사양 VM 환경에서의 기동 속도를 추가적으로 향상 완료.
+      - **JVM 메모리 최소화 및 헬스체크 타임아웃 방지 최적화**:
+        - 저사양 VM(512MB RAM)에서 두 개의 컨테이너가 동시에 부팅 및 기동될 때의 메모리 병목과 스왑 오버헤드를 차단하기 위해 `JAVA_TOOL_OPTIONS` 설정을 `-Xmx128m -Xms64m -Xss256k -XX:MaxMetaspaceSize=96m`으로 대폭 완화하여 JVM 최대 네이티브 메모리 점유율을 약 250MB 이하로 제어 완료.
+        - 부하 가중 시 `curl` 응답 대기 지연으로 인해 헬스체크 단계가 지연/중단되지 않도록 Ansible 플레이북 내 헬스체크용 curl 명령에 `--connect-timeout 3 --max-time 5` 가드를 추가 적용 완료.
       - **가상 메모리(Swap File) 2GB 증설**: 저사양 인스턴스(512MB RAM)의 OOM 위험을 완전히 방지하고 안정성을 확보하기 위해 스왑 파일을 기존 1.5GB에서 2GB로 증설 완료. 또한 기존 서버에 반영된 스왑 크기를 자동으로 감지하여 필요 시 안전하게 동적으로 해제 후 재배포하는 스크립트 분기를 `playbook.yml`에 완비함.
 
 ---
