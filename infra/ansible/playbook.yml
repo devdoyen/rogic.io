@@ -262,77 +262,96 @@
 
     - name: Build Docker images
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue frontend
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue backend-green frontend
         chdir: /opt/nemologic
       become: true
 
-    - name: Deploy backend-blue
+    # --- Sequential Rolling Replace Deployment ---
+    - name: Detect currently active backend slot
+      shell: |
+        if docker ps --filter "name=nemologic-backend-blue" --filter "status=running" -q | grep -q .; then
+          echo "blue"
+        elif docker ps --filter "name=nemologic-backend-green" --filter "status=running" -q | grep -q .; then
+          echo "green"
+        else
+          echo "none"
+        fi
+      register: active_slot
+      changed_when: false
+
+    - name: Set deployment targets
+      set_fact:
+        deploy_to: "{{ 'green' if active_slot.stdout | trim == 'blue' else 'blue' }}"
+        stop_from: "{{ active_slot.stdout | trim }}"
+
+    - name: Display deployment plan
+      debug:
+        msg: "Active slot: {{ active_slot.stdout | trim }} → Deploy new version to: {{ deploy_to }}, then stop: {{ stop_from }}"
+
+    - name: Deploy new version to target slot
       block:
-        - name: Restart backend-blue
+        - name: "Start backend-{{ deploy_to }}"
           shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate backend-blue
+            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate backend-{{ deploy_to }}"
             chdir: /opt/nemologic
           become: true
 
-        - name: Wait for backend-blue to be healthy
-          shell: curl -s --connect-timeout 3 --max-time 5 http://localhost:8081/actuator/health || true
-          register: result_blue
-          until: '"UP" in result_blue.stdout'
+        - name: "Wait for backend-{{ deploy_to }} to be healthy"
+          shell: "curl -s --connect-timeout 3 --max-time 5 http://localhost:{{ '8081' if deploy_to == 'blue' else '8082' }}/actuator/health || true"
+          register: result_new
+          until: '"UP" in result_new.stdout'
           retries: 60
           delay: 5
           changed_when: false
       rescue:
-        - name: Get backend-blue container logs on failure
+        - name: Get new slot container logs on failure
           shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-blue
+            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-{{ deploy_to }}"
             chdir: /opt/nemologic
-          register: container_logs_blue
+          register: container_logs_new
           become: true
 
-        - name: Display backend-blue container logs
+        - name: Display new slot container logs
           debug:
-            var: container_logs_blue.stdout_lines
+            var: container_logs_new.stdout_lines
 
-        - name: Fail deployment for backend-blue
-          fail:
-            msg: "backend-blue failed to start. Container logs displayed above."
-
-    - name: Deploy backend-green
-      block:
-        - name: Restart backend-green
+        - name: Stop failed new slot
           shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate backend-green
+            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-{{ deploy_to }}"
             chdir: /opt/nemologic
           become: true
+          ignore_errors: true
 
-        - name: Wait for backend-green to be healthy
-          shell: curl -s --connect-timeout 3 --max-time 5 http://localhost:8082/actuator/health || true
-          register: result_green
-          until: '"UP" in result_green.stdout'
-          retries: 60
-          delay: 5
-          changed_when: false
-      rescue:
-        - name: Get backend-green container logs on failure
-          shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-green
-            chdir: /opt/nemologic
-          register: container_logs_green
-          become: true
-
-        - name: Display backend-green container logs
-          debug:
-            var: container_logs_green.stdout_lines
-
-        - name: Fail deployment for backend-green
+        - name: Fail deployment
           fail:
-            msg: "backend-green failed to start. Container logs displayed above."
+            msg: "backend-{{ deploy_to }} failed to start. Previous version ({{ stop_from }}) is still running."
+
+    - name: "Stop old backend-{{ stop_from }}"
+      shell:
+        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-{{ stop_from }}"
+        chdir: /opt/nemologic
+      become: true
+      when: stop_from != 'none'
+
+    - name: "Remove old backend-{{ stop_from }} container"
+      shell:
+        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml rm -f backend-{{ stop_from }}"
+        chdir: /opt/nemologic
+      become: true
+      when: stop_from != 'none'
 
     - name: Start and rebuild frontend and alloy
       shell:
         cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d frontend alloy
         chdir: /opt/nemologic
       become: true
+
+    - name: Reload nginx to update upstream routing
+      shell:
+        cmd: docker exec nemologic-frontend nginx -s reload
+        chdir: /opt/nemologic
+      become: true
+      ignore_errors: true
 
     - name: Create backups directory
       file:
