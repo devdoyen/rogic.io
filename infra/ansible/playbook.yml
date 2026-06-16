@@ -245,11 +245,17 @@
         chdir: /opt/nemologic
       become: true
 
+    - name: Build Docker images
+      shell:
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue frontend
+        chdir: /opt/nemologic
+      become: true
+
     - name: Deploy backend-blue
       block:
         - name: Start and rebuild backend-blue
           shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend-blue
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend-blue
             chdir: /opt/nemologic
           become: true
 
@@ -280,7 +286,7 @@
       block:
         - name: Start and rebuild backend-green
           shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend-green
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend-green
             chdir: /opt/nemologic
           become: true
 
@@ -309,7 +315,7 @@
 
     - name: Start and rebuild frontend and alloy
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build frontend alloy
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d frontend alloy
         chdir: /opt/nemologic
       become: true
 
