@@ -374,8 +374,9 @@
       - **Nginx Upstream 로드 밸런싱 및 Failover 구성**: `infra/ansible/nginx.prod.conf` 파일에 `upstream backend_servers` 블록을 구성하여 `backend-blue:8080`과 `backend-green:8080`을 등록하고, 장애 감지 임계치(`max_fails=1 fail_timeout=5s`)를 적용 완료. `/api/` 및 `/actuator/health` 엔드포인트 요청을 `backend_servers` 업스트림으로 포워딩하도록 라우팅 완료.
       - **Grafana Alloy 메트릭 수집 고도화**: `infra/monitoring/config.alloy` 파일 내 prometheus scrape 대상을 `backend-blue:8080` 및 `backend-green:8080`으로 다중 확장하여 두 인스턴스의 개별 Actuator 메트릭을 실시간 수집 가능하도록 갱신 완료.
       - **Ansible 플레이북 무중단 롤링 업데이트 자동화 및 빌드 부하 최적화**:
-        - 기존의 전체 중단 방식의 컨테이너 기동 단계를 제거하고, 롤링 배포 구조(`db` -> `backend-blue` 기동 및 헬스체크 -> `backend-green` 기동 및 헬스체크 -> `frontend`/`alloy` 재시작) 구현 완료.
+        - 기존의 전체 중단 방식의 컨테이너 기동 단계를 제거하고, 롤링 배포 구조 구현 완료.
         - 롤링 업데이트 도중 각 서비스 개별 기동 시 `--build` 옵션으로 인해 빌드가 여러 차례 수행되면서 저사양 VM의 자원 고갈로 SSH 접속이 끊기던 현상을 차단하기 위해, 플레이북 초기에 `docker compose build backend-blue frontend` 통합 빌드를 1회만 먼저 수행하고 개별 기동 시에는 `--build` 옵션을 제외하여 롤링 업데이트 부하를 최소화 완료.
+        - 저사양 VM(512MB RAM)의 극단적인 가용 자원 확보를 위해, 평상시에는 1개의 백엔드만 단독 실행하고 배포 시점에만 신규 백엔드가 임시 교차 실행되도록 **액티브-패시브(Active-Passive) 무중단 블루-그린 스위칭 롤링 기법**을 도입 완료. 플레이북이 실행 중인 컨테이너(`blue`/`green`)를 자동 감지하고, **새 버전 기동 전 대기(Inactive) 컨테이너를 먼저 강제 중지(`docker compose stop`)하여 메모리를 완벽하게 확보**한 뒤 새 버전을 띄우고, 헬스체크 완료 후 구 버전의 액티브 컨테이너를 최종 중지하는 자원 자율 관리 체계를 완비함.
       - **프론트엔드 빌드 오프로딩 (Build Offloading) 최적화**: 저사양 EC2 기동 부하 및 CPU 크레딧 고갈 문제를 해결하기 위해, 기존에 EC2 호스트 내부 Docker 컨테이너 안에서 수행되던 Vue 프론트엔드 컴파일(`npm run build`)을 GitHub Actions 빌드 주자(Runner)로 전면 이관(Offload) 완료. 빌드 결과물(`dist/` 폴더)만 동기화하여 서비스 가동하도록 `frontend/Dockerfile` 및 `.github/workflows/ci-cd.yml` 변경 완료.
       - **백엔드 지연 초기화 (Lazy Initialization) 활성화**: Spring Boot 구동 시 모든 Bean을 즉시 생성하지 않고 최초 요청 시점에 생성하도록 `application-local.yml`에 `spring.main.lazy-initialization: true` 설정을 적용 완료. 이를 통해 초기 기동 메모리 점유율과 CPU 오버헤드를 줄여 저사양 VM 환경에서의 기동 속도를 추가적으로 향상 완료.
       - **JVM 및 데이터베이스 커넥션 풀 최소화 및 헬스체크 타임아웃 방지 최적화**:
