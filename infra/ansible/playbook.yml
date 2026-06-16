@@ -346,12 +346,8 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Reload nginx to update upstream routing
-      shell:
-        cmd: docker exec nemologic-frontend nginx -s reload
-        chdir: /opt/nemologic
-      become: true
-      ignore_errors: true
+
+
 
     - name: Create backups directory
       file:
