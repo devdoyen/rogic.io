@@ -19,7 +19,7 @@ echo ==================================================
 echo [2/2] Running Ansible Playbook via WSL...
 echo ==================================================
 
-wsl bash -c "cd /mnt/c/Users/82107/dev/project/nemologic/infra/ansible && ansible-playbook -i hosts.ini playbook.yml"
+wsl bash -c "cd /mnt/c/Users/82107/dev/project/nemologic/infra/ansible && ANSIBLE_TIMEOUT=60 ANSIBLE_BECOME_TIMEOUT=60 ansible-playbook -i hosts.ini playbook.yml"
 if !ERRORLEVEL! neq 0 (
     echo [ERROR] Ansible playbook execution failed.
     exit /b !ERRORLEVEL!

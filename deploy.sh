@@ -16,7 +16,7 @@ echo "[2/2] Running Ansible Playbook..."
 echo "=================================================="
 
 cd /mnt/c/Users/82107/dev/project/nemologic/infra/ansible
-ansible-playbook -i hosts.ini playbook.yml
+ANSIBLE_TIMEOUT=60 ANSIBLE_BECOME_TIMEOUT=60 ansible-playbook -i hosts.ini playbook.yml
 
 echo ""
 echo "=================================================="

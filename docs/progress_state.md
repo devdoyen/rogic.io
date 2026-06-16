@@ -366,6 +366,7 @@
       - 플레이북에 `gather_facts: false` 기반의 대기 스테이지(`Wait for Cloud-Init and SSH connection`)를 추가하여 `/var/lib/cloud/instance/boot-finished` 생성 여부를 폴링 검증하도록 구조를 분리함.
       - 권한 상승 타임아웃(`become_timeout`)을 60초로 확장하여 저사양 VM 환경에서의 프로비저닝 안정성을 확보함.
       - CI 단계(`ci` 잡) 내에 `ansible-playbook --syntax-check` 단계를 이식하여, 플레이북 구문 에러가 존재할 경우 후속 배포 잡(Deploy Job) 실행을 사전에 차단하도록 자동 가드를 완성함.
+      - Play-level `vars` block에 설정한 `ansible_become_timeout`이 `Gathering Facts` 단계에서 무시되는 문제를 방지하기 위해, `ci-cd.yml` 환경 변수(`ANSIBLE_TIMEOUT: 60`, `ANSIBLE_BECOME_TIMEOUT: 60`), `hosts.ini` 인벤토리 변수, 로컬 배포 스크립트(`deploy.sh`, `deploy.bat`)에 전역 타임아웃 설정을 명시적으로 이식하여 초기 팩트 수집 권한 상승 대기 문제를 최종 해결함.
 
 ---
 
