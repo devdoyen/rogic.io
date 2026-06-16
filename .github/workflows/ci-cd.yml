@@ -169,10 +169,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up GraalVM JDK 17
-        uses: actions/setup-java@v4
+        uses: graalvm/setup-graalvm@v1
         with:
           java-version: '17'
           distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'gradle'
 
       - name: Build Backend Native Image
