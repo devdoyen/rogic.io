@@ -27,9 +27,14 @@
         path: /swapfile
       register: swap_file_check
 
-    - name: Create swap file (1.5GB)
-      command: dd if=/dev/zero of=/swapfile bs=1M count=1536
-      when: not swap_file_check.stat.exists
+    - name: Disable swap if size needs change
+      command: swapoff /swapfile
+      when: swap_file_check.stat.exists and swap_file_check.stat.size != 2147483648
+      ignore_errors: true
+
+    - name: Create swap file (2GB)
+      command: dd if=/dev/zero of=/swapfile bs=1M count=2048
+      when: not swap_file_check.stat.exists or swap_file_check.stat.size != 2147483648
 
     - name: Set permissions on swap file
       file:
@@ -37,15 +42,15 @@
         owner: root
         group: root
         mode: '0600'
-      when: not swap_file_check.stat.exists
+      when: not swap_file_check.stat.exists or swap_file_check.stat.size != 2147483648
 
     - name: Make swap file
       command: mkswap /swapfile
-      when: not swap_file_check.stat.exists
+      when: not swap_file_check.stat.exists or swap_file_check.stat.size != 2147483648
 
     - name: Enable swap file
       command: swapon /swapfile
-      when: not swap_file_check.stat.exists
+      when: not swap_file_check.stat.exists or swap_file_check.stat.size != 2147483648
 
     - name: Add swap file to fstab
       mount:
