@@ -369,6 +369,12 @@
       - CI 단계(`ci` 잡) 내에 `ansible-playbook --syntax-check` 단계를 이식하여, 플레이북 구문 에러가 존재할 경우 후속 배포 잡(Deploy Job) 실행을 사전에 차단하도록 자동 가드를 완성함.
       - Play-level `vars` block에 설정한 `ansible_become_timeout`이 `Gathering Facts` 단계에서 무시되는 문제를 방지하기 위해, `ci-cd.yml` 환경 변수(`ANSIBLE_TIMEOUT: 60`, `ANSIBLE_BECOME_TIMEOUT: 60`), `hosts.ini` 인벤토리 변수, 로컬 배포 스크립트(`deploy.sh`, `deploy.bat`)에 전역 타임아웃 설정을 명시적으로 이식하여 초기 팩트 수집 권한 상승 대기 문제를 최종 해결함.
 
+    - **Blue-Green 무중단 배포 아키텍처 전환 (Step 36 - 완료)**:
+      - **Docker Compose 다중 백엔드 구성**: `infra/ansible/docker-compose.prod.yml` 파일에서 단일 `backend` 서비스 구동을 중지하고, `backend-blue` (포트 8081) 및 `backend-green` (포트 8082)의 두 개 백엔드 활성 컨테이너 서비스를 추가 정의 완료. 로컬 `db` (PostgreSQL) 컨테이너는 유지하여 두 백엔드 인스턴스 모두 동일 로컬 데이터베이스를 바라보도록 설정 완료.
+      - **Nginx Upstream 로드 밸런싱 및 Failover 구성**: `infra/ansible/nginx.prod.conf` 파일에 `upstream backend_servers` 블록을 구성하여 `backend-blue:8080`과 `backend-green:8080`을 등록하고, 장애 감지 임계치(`max_fails=1 fail_timeout=5s`)를 적용 완료. `/api/` 및 `/actuator/health` 엔드포인트 요청을 `backend_servers` 업스트림으로 포워딩하도록 라우팅 완료.
+      - **Grafana Alloy 메트릭 수집 고도화**: `infra/monitoring/config.alloy` 파일 내 prometheus scrape 대상을 `backend-blue:8080` 및 `backend-green:8080`으로 다중 확장하여 두 인스턴스의 개별 Actuator 메트릭을 실시간 수집 가능하도록 갱신 완료.
+      - **Ansible 플레이북 무중단 롤링 업데이트 자동화**: `infra/ansible/playbook.yml` 내 기존의 `down && up --build -d` 전체 중단 방식의 컨테이너 기동 단계를 제거하고, `db` -> `backend-blue` 순차 기동 -> `backend-blue` 헬스체크(`/actuator/health`의 `"status":"UP"` 응답 대기 폴링) -> `backend-green` 순차 기동 -> `backend-green` 헬스체크 -> `frontend` 및 `alloy` 재시작 순서로 점진적 빌드 및 롤링 배포하도록 태스크 체인 구현 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

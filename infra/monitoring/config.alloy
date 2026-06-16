@@ -1,6 +1,7 @@
 prometheus.scrape "nemologic" {
   targets = [
-    {"__address__" = "backend:8080"},
+    {"__address__" = "backend-blue:8080"},
+    {"__address__" = "backend-green:8080"},
   ]
   metrics_path = "/actuator/prometheus"
   scrape_interval = "15s"
