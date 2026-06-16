@@ -375,6 +375,7 @@
       - **Grafana Alloy 메트릭 수집 고도화**: `infra/monitoring/config.alloy` 파일 내 prometheus scrape 대상을 `backend-blue:8080` 및 `backend-green:8080`으로 다중 확장하여 두 인스턴스의 개별 Actuator 메트릭을 실시간 수집 가능하도록 갱신 완료.
       - **Ansible 플레이북 무중단 롤링 업데이트 자동화**: `infra/ansible/playbook.yml` 내 기존의 `down && up --build -d` 전체 중단 방식의 컨테이너 기동 단계를 제거하고, `db` -> `backend-blue` 순차 기동 -> `backend-blue` 헬스체크(`/actuator/health`의 `"status":"UP"` 응답 대기 폴링) -> `backend-green` 순차 기동 -> `backend-green` 헬스체크 -> `frontend` 및 `alloy` 재시작 순서로 점진적 빌드 및 롤링 배포하도록 태스크 체인 구현 완료.
       - **프론트엔드 빌드 오프로딩 (Build Offloading) 최적화**: 저사양 EC2 기동 부하 및 CPU 크레딧 고갈 문제를 해결하기 위해, 기존에 EC2 호스트 내부 Docker 컨테이너 안에서 수행되던 Vue 프론트엔드 컴파일(`npm run build`)을 GitHub Actions 빌드 주자(Runner)로 전면 이관(Offload) 완료. 빌드 결과물(`dist/` 폴더)만 동기화하여 서비스 가동하도록 `frontend/Dockerfile` 및 `.github/workflows/ci-cd.yml` 변경 완료.
+      - **백엔드 지연 초기화 (Lazy Initialization) 활성화**: Spring Boot 구동 시 모든 Bean을 즉시 생성하지 않고 최초 요청 시점에 생성하도록 `application-local.yml`에 `spring.main.lazy-initialization: true` 설정을 적용 완료. 이를 통해 초기 기동 메모리 점유율과 CPU 오버헤드를 줄여 저사양 VM 환경에서의 기동 속도를 추가적으로 향상 완료.
 
 ---
 
