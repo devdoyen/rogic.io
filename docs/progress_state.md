@@ -374,6 +374,7 @@
       - **Nginx Upstream 로드 밸런싱 및 Failover 구성**: `infra/ansible/nginx.prod.conf` 파일에 `upstream backend_servers` 블록을 구성하여 `backend-blue:8080`과 `backend-green:8080`을 등록하고, 장애 감지 임계치(`max_fails=1 fail_timeout=5s`)를 적용 완료. `/api/` 및 `/actuator/health` 엔드포인트 요청을 `backend_servers` 업스트림으로 포워딩하도록 라우팅 완료.
       - **Grafana Alloy 메트릭 수집 고도화**: `infra/monitoring/config.alloy` 파일 내 prometheus scrape 대상을 `backend-blue:8080` 및 `backend-green:8080`으로 다중 확장하여 두 인스턴스의 개별 Actuator 메트릭을 실시간 수집 가능하도록 갱신 완료.
       - **Ansible 플레이북 무중단 롤링 업데이트 자동화**: `infra/ansible/playbook.yml` 내 기존의 `down && up --build -d` 전체 중단 방식의 컨테이너 기동 단계를 제거하고, `db` -> `backend-blue` 순차 기동 -> `backend-blue` 헬스체크(`/actuator/health`의 `"status":"UP"` 응답 대기 폴링) -> `backend-green` 순차 기동 -> `backend-green` 헬스체크 -> `frontend` 및 `alloy` 재시작 순서로 점진적 빌드 및 롤링 배포하도록 태스크 체인 구현 완료.
+      - **프론트엔드 빌드 오프로딩 (Build Offloading) 최적화**: 저사양 EC2 기동 부하 및 CPU 크레딧 고갈 문제를 해결하기 위해, 기존에 EC2 호스트 내부 Docker 컨테이너 안에서 수행되던 Vue 프론트엔드 컴파일(`npm run build`)을 GitHub Actions 빌드 주자(Runner)로 전면 이관(Offload) 완료. 빌드 결과물(`dist/` 폴더)만 동기화하여 서비스 가동하도록 `frontend/Dockerfile` 및 `.github/workflows/ci-cd.yml` 변경 완료.
 
 ---
 
