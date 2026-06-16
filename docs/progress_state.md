@@ -360,6 +360,7 @@
       - **테스트 환경 격리 및 Linter 경고 해결**: `application-test.yml` 내 H2 인메모리 테스트 빌드 시 Flyway를 비활성화(`spring.flyway.enabled: false`)하고, YAML key lint warning 해결을 위해 `format_sql`을 `"[format_sql]"` 형태로 이스케이프 처리 완료.
       - **LocalProfileConfigurationTest 정합성 확보**: Local profile 컨텍스트 로딩 시 Mock DataSource 메타데이터 부재로 `ddl-auto: validate` 검증이 실패하던 현상을 `@SpringBootTest(properties = { ... "spring.jpa.hibernate.ddl-auto=none" })` 프로퍼티 주입으로 해결 완료.
       - **TDD 검증**: `gradle test` 실행 결과 전체 백엔드 JUnit 테스트가 100% 정상 통과(BUILD SUCCESSFUL)함을 확인 완료.
+      - **Flyway 비정형 DB 스키마 충돌 해결**: 기존 수동 테이블 적재 이력이 존재하는 상황에서 Flyway 히스토리 테이블 부재로 인한 `Found non-empty schema(s) "public" but no schema history table` 예외 발생을 방지하기 위해, `application-local.yml`에 `spring.flyway.baseline-on-migrate: true` 설정을 부여하여 정상 실행되도록 조치 완료.
 
     - **Ansible 배포 시 권한 상승 타임아웃 오류 해결 (완료)**:
       - `t3a.nano` 인스턴스의 자원 제약(512MB RAM)으로 인해 첫 부팅 시 `cloud-init` 및 시스템 초기 작업으로 인한 CPU/RAM 100% 병목 및 이로 인한 Ansible `sudo` 권한 상승 대기 시간 초과(Timeout) 현상 식별.
