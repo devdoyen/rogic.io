@@ -240,33 +240,65 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Start and rebuild backend-blue
-      shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend-blue
-        chdir: /opt/nemologic
-      become: true
+    - name: Deploy backend-blue
+      block:
+        - name: Start and rebuild backend-blue
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend-blue
+            chdir: /opt/nemologic
+          become: true
 
-    - name: Wait for backend-blue to be healthy
-      shell: curl -s http://localhost:8081/actuator/health || true
-      register: result_blue
-      until: '"UP" in result_blue.stdout'
-      retries: 60
-      delay: 5
-      changed_when: false
+        - name: Wait for backend-blue to be healthy
+          shell: curl -s http://localhost:8081/actuator/health || true
+          register: result_blue
+          until: '"UP" in result_blue.stdout'
+          retries: 60
+          delay: 5
+          changed_when: false
+      rescue:
+        - name: Get backend-blue container logs on failure
+          shell: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-blue
+          chdir: /opt/nemologic
+          register: container_logs_blue
+          become: true
 
-    - name: Start and rebuild backend-green
-      shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend-green
-        chdir: /opt/nemologic
-      become: true
+        - name: Display backend-blue container logs
+          debug:
+            var: container_logs_blue.stdout_lines
 
-    - name: Wait for backend-green to be healthy
-      shell: curl -s http://localhost:8082/actuator/health || true
-      register: result_green
-      until: '"UP" in result_green.stdout'
-      retries: 60
-      delay: 5
-      changed_when: false
+        - name: Fail deployment for backend-blue
+          fail:
+            msg: "backend-blue failed to start. Container logs displayed above."
+
+    - name: Deploy backend-green
+      block:
+        - name: Start and rebuild backend-green
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend-green
+            chdir: /opt/nemologic
+          become: true
+
+        - name: Wait for backend-green to be healthy
+          shell: curl -s http://localhost:8082/actuator/health || true
+          register: result_green
+          until: '"UP" in result_green.stdout'
+          retries: 60
+          delay: 5
+          changed_when: false
+      rescue:
+        - name: Get backend-green container logs on failure
+          shell: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-green
+          chdir: /opt/nemologic
+          register: container_logs_green
+          become: true
+
+        - name: Display backend-green container logs
+          debug:
+            var: container_logs_green.stdout_lines
+
+        - name: Fail deployment for backend-green
+          fail:
+            msg: "backend-green failed to start. Container logs displayed above."
 
     - name: Start and rebuild frontend and alloy
       shell:
