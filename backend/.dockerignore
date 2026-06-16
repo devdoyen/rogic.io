@@ -1,0 +1,8 @@
+.gradle/
+build/
+!build/libs/
+!build/libs/*.jar
+Dockerfile
+*~
+.git
+.gitignore

@@ -260,12 +260,6 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Build Docker images
-      shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue frontend
-        chdir: /opt/nemologic
-      become: true
-
     - name: Check if backend-blue is running
       shell:
         cmd: docker ps --filter "name=nemologic-backend-blue" --filter "status=running" -q
@@ -285,6 +279,26 @@
     - name: Set target backend flag
       set_fact:
         deploy_green: "{{ blue_running.stdout != '' }}"
+
+    - name: Stop target backend-green before build if deploying to green
+      shell:
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-green || true
+        chdir: /opt/nemologic
+      become: true
+      when: deploy_green | bool and green_running.stdout != ''
+
+    - name: Stop target backend-blue before build if deploying to blue
+      shell:
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-blue || true
+        chdir: /opt/nemologic
+      become: true
+      when: not (deploy_green | bool) and blue_running.stdout != ''
+
+    - name: Build Docker images
+      shell:
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue frontend
+        chdir: /opt/nemologic
+      become: true
 
     - name: Deploy to backend-green
       block:
