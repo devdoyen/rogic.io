@@ -266,40 +266,36 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Deploy backend-blue
+    - name: Check if backend-blue is running
+      shell:
+        cmd: docker ps --filter "name=nemologic-backend-blue" --filter "status=running" -q
+        chdir: /opt/nemologic
+      register: blue_running
+      changed_when: false
+      become: true
+
+    - name: Check if backend-green is running
+      shell:
+        cmd: docker ps --filter "name=nemologic-backend-green" --filter "status=running" -q
+        chdir: /opt/nemologic
+      register: green_running
+      changed_when: false
+      become: true
+
+    - name: Set target backend flag
+      set_fact:
+        deploy_green: "{{ blue_running.stdout != '' }}"
+
+    - name: Deploy to backend-green
       block:
-        - name: Start and rebuild backend-blue
+        - name: Stop backend-green if running (to free memory)
           shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend-blue
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-green || true
             chdir: /opt/nemologic
           become: true
+          when: green_running.stdout != ''
 
-        - name: Wait for backend-blue to be healthy
-          shell: curl -s --connect-timeout 3 --max-time 5 http://localhost:8081/actuator/health || true
-          register: result_blue
-          until: '"UP" in result_blue.stdout'
-          retries: 60
-          delay: 5
-          changed_when: false
-      rescue:
-        - name: Get backend-blue container logs on failure
-          shell:
-            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-blue
-            chdir: /opt/nemologic
-          register: container_logs_blue
-          become: true
-
-        - name: Display backend-blue container logs
-          debug:
-            var: container_logs_blue.stdout_lines
-
-        - name: Fail deployment for backend-blue
-          fail:
-            msg: "backend-blue failed to start. Container logs displayed above."
-
-    - name: Deploy backend-green
-      block:
-        - name: Start and rebuild backend-green
+        - name: Start backend-green
           shell:
             cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend-green
             chdir: /opt/nemologic
@@ -312,6 +308,13 @@
           retries: 60
           delay: 5
           changed_when: false
+
+        - name: Stop backend-blue after green is healthy
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-blue
+            chdir: /opt/nemologic
+          become: true
+      when: deploy_green | bool
       rescue:
         - name: Get backend-green container logs on failure
           shell:
@@ -327,6 +330,51 @@
         - name: Fail deployment for backend-green
           fail:
             msg: "backend-green failed to start. Container logs displayed above."
+
+    - name: Deploy to backend-blue
+      block:
+        - name: Stop backend-blue if running (to free memory)
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-blue || true
+            chdir: /opt/nemologic
+          become: true
+          when: blue_running.stdout != ''
+
+        - name: Start backend-blue
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend-blue
+            chdir: /opt/nemologic
+          become: true
+
+        - name: Wait for backend-blue to be healthy
+          shell: curl -s --connect-timeout 3 --max-time 5 http://localhost:8081/actuator/health || true
+          register: result_blue
+          until: '"UP" in result_blue.stdout'
+          retries: 60
+          delay: 5
+          changed_when: false
+
+        - name: Stop backend-green after blue is healthy
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-green
+            chdir: /opt/nemologic
+          become: true
+      when: not (deploy_green | bool)
+      rescue:
+        - name: Get backend-blue container logs on failure
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-blue
+            chdir: /opt/nemologic
+          register: container_logs_blue
+          become: true
+
+        - name: Display backend-blue container logs
+          debug:
+            var: container_logs_blue.stdout_lines
+
+        - name: Fail deployment for backend-blue
+          fail:
+            msg: "backend-blue failed to start. Container logs displayed above."
 
     - name: Start and rebuild frontend and alloy
       shell:
