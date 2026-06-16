@@ -249,7 +249,7 @@
     - name: Wait for backend-blue to be healthy
       shell: curl -s http://localhost:8081/actuator/health || true
       register: result_blue
-      until: '"UP"' in result_blue.stdout
+      until: '"UP" in result_blue.stdout'
       retries: 30
       delay: 5
       changed_when: false
@@ -263,7 +263,7 @@
     - name: Wait for backend-green to be healthy
       shell: curl -s http://localhost:8082/actuator/health || true
       register: result_green
-      until: '"UP"' in result_green.stdout
+      until: '"UP" in result_green.stdout'
       retries: 30
       delay: 5
       changed_when: false
