@@ -391,6 +391,13 @@
          - 원격 호스트 상에서 두 개의 백엔드 JVM 컨테이너가 동시에 작동하며 메모리를 한계까지 점유할 때 `docker compose build`가 스왑 쓰레싱으로 정지되거나 SSH 연결이 끊기는 문제를 해결하기 위해, 배포 플레이북 내에서 활성 컨테이너 검증 및 대상 (Passive) 컨테이너의 선제 중단 단계를 `Build Docker images` 태스크 이전으로 재배치 완료.
          - `backend/.dockerignore` 및 `frontend/.dockerignore` 파일을 구축하여, 불필요한 빌드 도구 캐시(`.gradle`, `node_modules` 등) 및 소스 파일들이 Docker 데몬에 빌드 컨텍스트로 전달되는 오버헤드를 완전 차단하고 빌드 시간을 최적화 완료.
 
+
+       - **GraalVM Native Image 컴파일 및 배포 전환**:
+         - Spring Boot 3.3.0 백엔드를 GraalVM Native Image로 컴파일하여 실행 시 메모리 점유율을 50MB 미만으로 경량화할 수 있도록 `backend/build.gradle`에 `org.graalvm.buildtools.native` 플러그인을 도입 완료.
+         - 유닛 테스트 시 Mockito mock 정의 (`MockDefinition`) 로직과 Spring Boot AOT 컴파일 도구 간의 호환 한계를 해소하기 위해 JVM 테스트 구동 시 `processTestAot` 태스크를 스킵(`enabled = false`)하도록 설정 완료.
+         - `.github/workflows/ci-cd.yml` 내 배포 빌드 단계를 GraalVM JDK 환경으로 구성하고 `./gradlew nativeCompile` 명령을 실행하도록 파이프라인 전환 완료.
+         - 빌드된 네이티브 바이너리 실행을 지원하기 위해 `backend/Dockerfile`의 베이스 이미지를 `debian:12-slim`으로 경량화 및 전환하고, JVM 전용 설정(`JAVA_TOOL_OPTIONS`)을 제거하여 저사양 호스트 적합성을 최대화 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
