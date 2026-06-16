@@ -250,7 +250,7 @@
       shell: curl -s http://localhost:8081/actuator/health || true
       register: result_blue
       until: '"UP" in result_blue.stdout'
-      retries: 30
+      retries: 60
       delay: 5
       changed_when: false
 
@@ -264,7 +264,7 @@
       shell: curl -s http://localhost:8082/actuator/health || true
       register: result_green
       until: '"UP" in result_green.stdout'
-      retries: 30
+      retries: 60
       delay: 5
       changed_when: false
 
