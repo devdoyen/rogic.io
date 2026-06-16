@@ -388,7 +388,7 @@
       - **가상 메모리(Swap File) 2GB 증설**: 저사양 인스턴스(512MB RAM)의 OOM 위험을 완전히 방지하고 안정성을 확보하기 위해 스왑 파일을 기존 1.5GB에서 2GB로 증설 완료. 또한 기존 서버에 반영된 스왑 크기를 자동으로 감지하여 필요 시 안전하게 동적으로 해제 후 재배포하는 스크립트 분기를 `playbook.yml`에 완비함.
 
        - **Docker 이미지 빌드 메모리 최적화 및 빌드 컨텍스트 경량화**:
-         - 원격 호스트 상에서 두 개의 백엔드 JVM 컨테이너가 동시에 작동하며 메모리를 한계까지 점유할 때 `docker compose build`가 스왑 쓰레싱으로 정지되거나 SSH 연결이 끊기는 문제를 해결하기 위해, 배포 플레이북 내에서 활성 컨테이너 검증 및 대상 (Passive) 컨테이너의 선제 중단 단계를 `Build Docker images` 태스크 이전으로 재배치 완료.
+         - GraalVM Native Image 도입을 통해 컨테이너당 메모리 점유율을 50MB 미만으로 대폭 경량화함에 따라, 배포 모델을 기존 Active-Passive 전환 방식에서 완전한 무중단(Zero-Downtime)을 유지하는 Active-Active 순차 롤링 배포(Rolling Update) 체계로 환원 완료.
          - `backend/.dockerignore` 및 `frontend/.dockerignore` 파일을 구축하여, 불필요한 빌드 도구 캐시(`.gradle`, `node_modules` 등) 및 소스 파일들이 Docker 데몬에 빌드 컨텍스트로 전달되는 오버헤드를 완전 차단하고 빌드 시간을 최적화 완료.
 
 
