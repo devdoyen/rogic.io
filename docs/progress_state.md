@@ -424,6 +424,7 @@
 * **자원 제약 최적화 (Memory Optimization)**:
   * 512MB RAM 수준의 극단적인 저비용 인스턴스(`t4g.nano`/`t3.nano`) 환경에서의 구동을 장기적 목표로 설정.
   * JVM Metaspace 메모리 제약 및 GC 최적화 설정을 적용하고, GraalVM 기반 Native Image 컴파일 빌드를 도입해 메모리 점유율을 50MB 이하로 낮추는 파이프라인 구성을 검증.
+  * **GraalVM Native Image Hibernate 프록시 호환성 오류 해결**: Native Image 환경에서 Hibernate의 `BytecodeProvider`가 `none`으로 설정되어 런타임 프록시 생성이 불가능한 문제(`HibernateException: Generation of HibernateProxy instances at runtime is not allowed`)를 진단. `History.java` 엔티티의 `User` 및 `Stage` 관계에 설정된 `@ManyToOne(fetch = FetchType.LAZY)`를 `FetchType.EAGER`로 변경하여 프록시 생성 없이 즉시 로딩(Eager Loading)되도록 수정. 대상 엔티티(`User`, `Stage`)가 경량 구조이므로 성능 영향은 무시할 수 있는 수준이며, JVM 기반 백엔드 단위 테스트 전원 통과를 확인 완료.
 * **서비스 가용성 및 수명 주기 모니터링 타협 (SaaS 모니터링 비용 제로화)**:
   * AWS Route 53 Health Check(월 $0.50~$0.75) 및 CloudWatch Metric Alarm(월 $0.10)의 클라우드 상시 지출을 완전히 방지하기 위해, Grafana Cloud의 무료 티어 내에 포함된 Synthetic Monitoring(월 500,000회 무료 쿼터)을 도입.
   * 전 세계 3개 이상의 멀티 리전 Probes에서 60초 간격으로 `https://rogic.io/api/stages` API 엔드포인트를 검증하며, Grafana Alertmanager를 통해 Slack 및 이메일로 무제한 경보 알림을 송출하도록 연동함.
