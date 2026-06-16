@@ -28,7 +28,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       AI_API_KEY: ${AI_API_KEY}
-      JAVA_TOOL_OPTIONS: "-Xmx128m -Xms128m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC"
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseSerialGC"
     depends_on:
       db:
         condition: service_healthy
@@ -47,7 +47,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
       AI_API_KEY: ${AI_API_KEY}
-      JAVA_TOOL_OPTIONS: "-Xmx128m -Xms128m -XX:MaxMetaspaceSize=64m -XX:+UseSerialGC"
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms128m -XX:+UseSerialGC"
     depends_on:
       db:
         condition: service_healthy
