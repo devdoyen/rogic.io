@@ -1,19 +1,9 @@
-# Multi-stage build for Vue 3 Frontend
-# Stage 1: Build stage
-FROM node:20-alpine AS builder
-WORKDIR /app
-
-# Copy dependency manifest files for layer caching
-COPY package*.json ./
-RUN npm ci
-
-# Copy the rest of the application files and build
-COPY . .
-RUN npm run build
-
-# Stage 2: Runtime stage using Nginx
+# Runtime Dockerfile using pre-built static assets.
+# To prevent high CPU/memory usage on resource-constrained EC2 hosts (e.g. t3a.nano),
+# the Vue frontend compilation (npm run build) is executed on the GitHub Actions runner,
+# and the generated 'dist/' directory is synchronized to the host.
 FROM nginx:stable-alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY dist /usr/share/nginx/html
 
 # Copy custom Nginx configuration for Vue Router support
 COPY nginx.conf /etc/nginx/conf.d/default.conf
