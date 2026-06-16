@@ -22,6 +22,21 @@
   vars:
     ansible_become_timeout: 60
   tasks:
+    - name: Debug host resources
+      shell: |
+        echo "=== FREE MEMORY ==="
+        free -m
+        echo "=== DOCKER STATUS ==="
+        docker ps -a
+        echo "=== SWAP STATUS ==="
+        swapon -s
+      register: debug_info
+      ignore_errors: true
+
+    - name: Display debug info
+      debug:
+        var: debug_info.stdout_lines
+
     - name: Check if swap file exists
       stat:
         path: /swapfile
