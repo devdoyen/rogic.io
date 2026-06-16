@@ -257,8 +257,9 @@
           changed_when: false
       rescue:
         - name: Get backend-blue container logs on failure
-          shell: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-blue
-          chdir: /opt/nemologic
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-blue
+            chdir: /opt/nemologic
           register: container_logs_blue
           become: true
 
@@ -287,8 +288,9 @@
           changed_when: false
       rescue:
         - name: Get backend-green container logs on failure
-          shell: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-green
-          chdir: /opt/nemologic
+          shell:
+            cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-green
+            chdir: /opt/nemologic
           register: container_logs_green
           become: true
 
