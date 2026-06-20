@@ -1,6 +1,6 @@
 spring:
   main:
-    lazy-initialization: true
+    lazy-initialization: false
   datasource:
     url: jdbc:postgresql://localhost:5432/nemologic
     driver-class-name: org.postgresql.Driver

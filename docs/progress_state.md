@@ -418,6 +418,10 @@
       - **APT 업데이트 에러 내성 확보**: GitHub Actions Runner(Ubuntu 24.04 환경) 실행 중 Microsoft/Azure 등 외부 써드파티 레포지토리의 일시적인 403 Forbidden 차단 이슈로 전체 `sudo apt update` 명령이 실패하는 문제를 발견 및 분석 완료.
       - **빌드 단락 차단 방지**: [ci-cd.yml](file:///.github/workflows/ci-cd.yml) 내의 모든 `apt update` 구문을 `apt-get update || true` 형태로 대체 수정하여, 외부 레포지토리의 사소한 서버 불안정이 전체 빌드 파이프라인 중단(Exit Code 100)으로 이어지지 않도록 내결함성(Fault-tolerance) 조치 적용 완료.
 
+    - **Nginx 포트 스위칭 대응 지연 초기화 비활성화 및 기동 최적화 (Step 41 - 완료)**:
+      - **지연 초기화 환원**: Active-Active 로드 밸런싱 환경에서 신규 슬롯 기동 즉시 외부 프로브 요청 유입 시 지연 초기화(Lazy Init)로 인한 커넥션 풀/JPA 바인딩 병목 및 이에 따른 `API Health Status` 일시적 하락(0) 현상을 분석 완료.
+      - **서버 기동 즉시 가용 상태 돌입**: `application-local.yml` 내 `spring.main.lazy-initialization` 설정을 `false`로 원상 복구하여, 서버 기동 완료와 동시에 모든 주요 빈(Bean) 및 리소스가 선제 할당(Eager Init)되어 외부 요청에 지연 없이 즉각 반응하도록 조치 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
