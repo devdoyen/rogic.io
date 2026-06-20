@@ -418,7 +418,7 @@
 * **SPOF 극복 및 고가용성 타협 (ALB 배제)**:
   * AWS ALB(Application Load Balancer) 기동 시 발생하는 상시 기본 비용(월 약 $20)을 제거하기 위해 Route 53 및 단일 EC2 호스트 구조로 타협.
   * 단일 인스턴스 장애 시 CloudWatch 경보와 연동해 자동 재시작(Auto Recovery)을 수행하거나, Terraform 및 Ansible로 정의된 IaC 코드를 활용해 5분 이내에 인프라와 애플리케이션 컨테이너를 신속 복구(Recovery-Oriented Architecture)하도록 설정해 이중화를 대체함.
-  * **Blue-Green 순차 교체(Rolling Replace) 배포 전략 도입**: 512MB RAM 환경에서 Blue/Green 컨테이너를 동시에 기동하면 메모리 부족으로 헬스체크 실패가 발생하는 문제를 해결하기 위해, Active-Active 동시 기동 방식에서 순차 교체 방식으로 전환. Ansible playbook이 현재 활성 슬롯(blue/green)을 자동 감지하고, 반대 슬롯에 새 버전을 배포하여 헬스체크를 통과한 뒤 이전 슬롯을 중지하는 무중단 배포(Zero-downtime Deployment) 흐름을 구현. 새 버전 헬스체크 실패 시 이전 버전이 그대로 유지되는 롤백 안전장치도 포함.
+  * **Blue-Green 액티브-액티브(Active-Active) 배포 전략**: GraalVM Native Image 도입을 통해 컨테이너당 메모리 사용량을 30MB 안팎으로 대폭 경량화함에 따라, 배포 완료 후에도 기존 활성 슬롯을 중지하지 않고 Blue와 Green 백엔드 컨테이너가 모두 가동되는 Active-Active 구조를 영구 유지함. 배포 시작 시 메모리 집중 점유를 막기 위해 모니터링 에이전트(`alloy`)만 정지하고 배포 대상 슬롯을 신규 기동해 헬스체크 통과를 확인한 후, 기존 구버전 슬롯을 종료하지 않고 함께 구동 상태로 유지해 안정적인 무중단 서비스 제공과 빠른 로드밸런싱/롤백 가용성을 극대화함.
 * **데이터베이스 영속성 레이어 타협 (RDS 대체)**:
   * AWS RDS 상시 구동 비용(월 약 $15~20 이상)을 방지하기 위해 단일 EC2 내 Docker Compose 기반 PostgreSQL 컨테이너를 구동.
   * RDS의 관리형 자동 백업 기능을 대체하기 위해, 매일 지정된 시간에 DB 백업 덤프파일을 생성하여 AWS S3 버킷으로 자동 전송하는 쉘 스크립트와 Cron 작업을 Ansible 플레이북으로 자동 구축함으로써 인프라 제어 및 데이터 보호 역량을 증명함.

@@ -330,21 +330,7 @@
 
         - name: Fail deployment
           fail:
-            msg: "backend-{{ deploy_to }} failed to start. Previous version ({{ stop_from }}) is still running."
-
-    - name: "Stop old backend-{{ stop_from }}"
-      shell:
-        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-{{ stop_from }}"
-        chdir: /opt/nemologic
-      become: true
-      when: stop_from != 'none'
-
-    - name: "Remove old backend-{{ stop_from }} container"
-      shell:
-        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml rm -f backend-{{ stop_from }}"
-        chdir: /opt/nemologic
-      become: true
-      when: stop_from != 'none'
+            msg: "backend-{{ deploy_to }} failed to start. Current active backend is still running."
 
     - name: Start and rebuild frontend and alloy
       shell:
