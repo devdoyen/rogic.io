@@ -414,6 +414,10 @@
       - **선입선출(FIFO) 기반 단일 릴리즈 활성화**: 매일 자정 00:00에 스케줄러(`releaseDailyPuzzle`)가 작동해 `stageService.releaseDailyPuzzles`를 실행하면, DB 내에 보관된 해당 크기의 가장 오래된 비공개 예비 퍼즐 하나를 선별하여 사용자 서비스용으로 활성화(`active = true`) 처리하는 선입선출 구조 설계 및 연동 완료.
       - **TDD 기반 단위 및 통합 테스트 전원 통과**: `StageServiceTest` 내 `testGetInactiveApprovedCount` 및 `testReleaseDailyPuzzles` 테스트를 신설하고 `AiStageGeneratorTest` 내 스케줄러 버퍼 리필 모킹 시나리오를 갱신 완료하여 전체 백엔드 63개 및 프론트엔드 68개 테스트가 모두 100% 성공(Pass)함을 확보 완료.
 
+    - **CI/CD 빌드 파이프라인 외부 패키지 레포지토리 예외 처리 및 안정화 (Step 40 - 완료)**:
+      - **APT 업데이트 에러 내성 확보**: GitHub Actions Runner(Ubuntu 24.04 환경) 실행 중 Microsoft/Azure 등 외부 써드파티 레포지토리의 일시적인 403 Forbidden 차단 이슈로 전체 `sudo apt update` 명령이 실패하는 문제를 발견 및 분석 완료.
+      - **빌드 단락 차단 방지**: [ci-cd.yml](file:///.github/workflows/ci-cd.yml) 내의 모든 `apt update` 구문을 `apt-get update || true` 형태로 대체 수정하여, 외부 레포지토리의 사소한 서버 불안정이 전체 빌드 파이프라인 중단(Exit Code 100)으로 이어지지 않도록 내결함성(Fault-tolerance) 조치 적용 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

@@ -48,8 +48,8 @@ jobs:
 
       - name: Setup Ansible for Syntax Check
         run: |
-          sudo apt update
-          sudo apt install -y ansible
+          sudo apt-get update || true
+          sudo apt-get install -y ansible
 
       - name: Validate Ansible Playbook Syntax (CI)
         run: |
@@ -196,8 +196,8 @@ jobs:
 
       - name: Setup Ansible
         run: |
-          sudo apt update
-          sudo apt install -y ansible rsync
+          sudo apt-get update || true
+          sudo apt-get install -y ansible rsync
 
       - name: Set up SSH Private Key
         run: |
