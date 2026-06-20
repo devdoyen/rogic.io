@@ -5232,6 +5232,276 @@
           }
         }
       },
+      "panel-1007": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1007,
+          "title": "24-Hour Service Availability",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "uid": "${DS_PROMETHEUS}"
+                      },
+                      "spec": {
+                        "expr": "avg_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) * 100",
+                        "format": "time_series",
+                        "legendFormat": "__auto",
+                        "instant": true,
+                        "range": false,
+                        "editorMode": "code"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.1.0-27335746580",
+            "spec": {
+              "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "mean"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "mappings": [],
+                  "max": 100,
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": null
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 95
+                      },
+                      {
+                        "color": "green",
+                        "value": 99
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-1008": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1008,
+          "title": "7-Day Service Availability",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "uid": "${DS_PROMETHEUS}"
+                      },
+                      "spec": {
+                        "expr": "avg_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) * 100",
+                        "format": "time_series",
+                        "legendFormat": "__auto",
+                        "instant": true,
+                        "range": false,
+                        "editorMode": "code"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.1.0-27335746580",
+            "spec": {
+              "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "mean"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "mappings": [],
+                  "max": 100,
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": null
+                      },
+                      {
+                        "color": "yellow",
+                        "value": 95
+                      },
+                      {
+                        "color": "green",
+                        "value": 99
+                      }
+                    ]
+                  },
+                  "unit": "percent"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-1009": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1009,
+          "title": "OS Memory/Swap Usage",
+          "description": "Host Swap Space and Memory Usage from Node Exporter to detect Thrashing",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "uid": "${DS_PROMETHEUS}"
+                      },
+                      "spec": {
+                        "expr": "(node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / 1024 / 1024",
+                        "format": "time_series",
+                        "legendFormat": "Swap Used (MB)"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "uid": "${DS_PROMETHEUS}"
+                      },
+                      "spec": {
+                        "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1024 / 1024",
+                        "format": "time_series",
+                        "legendFormat": "Mem Used (MB)"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.1.0-27335746580",
+            "spec": {
+              "options": {
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "mbytes",
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "lineWidth": 2
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
       "panel-1003": {
         "kind": "Panel",
         "spec": {
@@ -5586,12 +5856,12 @@
                 "kind": "GridLayout",
                 "spec": {
                   "items": [
-                    {
+                     {
                       "kind": "GridLayoutItem",
                       "spec": {
                         "x": 0,
                         "y": 0,
-                        "width": 6,
+                        "width": 3,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
@@ -5602,9 +5872,35 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
+                        "x": 3,
+                        "y": 0,
+                        "width": 3,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-1007"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
                         "x": 6,
                         "y": 0,
-                        "width": 6,
+                        "width": 3,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-1008"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 9,
+                        "y": 0,
+                        "width": 3,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
@@ -5617,7 +5913,7 @@
                       "spec": {
                         "x": 12,
                         "y": 0,
-                        "width": 4,
+                        "width": 3,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
@@ -5628,9 +5924,9 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 16,
+                        "x": 15,
                         "y": 0,
-                        "width": 4,
+                        "width": 3,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
@@ -5641,13 +5937,26 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 20,
+                        "x": 18,
                         "y": 0,
-                        "width": 4,
+                        "width": 3,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-1006"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 21,
+                        "y": 0,
+                        "width": 3,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-1009"
                         }
                       }
                     }

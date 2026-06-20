@@ -91,6 +91,7 @@
           - rsync
           - awscli
           - certbot
+          - prometheus-node-exporter
         state: present
 
     - name: Add Docker GPG key
@@ -115,6 +116,12 @@
     - name: Ensure Docker service is running and enabled
       service:
         name: docker
+        state: started
+        enabled: yes
+
+    - name: Ensure prometheus-node-exporter service is running and enabled
+      service:
+        name: prometheus-node-exporter
         state: started
         enabled: yes
 

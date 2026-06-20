@@ -63,4 +63,6 @@ services:
       - GRAFANA_CLOUD_PROM_USER=${GRAFANA_CLOUD_PROM_USER}
       - GRAFANA_CLOUD_PROM_TOKEN=${GRAFANA_CLOUD_PROM_TOKEN}
     command: [ "run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on: []
