@@ -88,4 +88,26 @@ public class StageServiceTest {
         verify(stageRepository, times(1)).save(s1);
         verify(stageRepository, times(1)).save(s2);
     }
+
+    @Test
+    public void testGetInactiveApprovedCount() {
+        when(stageRepository.countByWidthAndHeightAndActiveAndApproved(5, 5, false, true)).thenReturn(3L);
+        long count = stageService.getInactiveApprovedCount(5, 5);
+        assertEquals(3L, count);
+    }
+
+    @Test
+    public void testReleaseDailyPuzzles() {
+        Stage s1 = new Stage(1L, "Stage 5x5", 5, 5, new int[5][5]);
+        s1.setActive(false);
+        s1.setApproved(true);
+
+        when(stageRepository.findByWidthAndHeightAndActiveAndApprovedOrderByIdAsc(5, 5, false, true))
+                .thenReturn(java.util.List.of(s1));
+
+        stageService.releaseDailyPuzzles();
+
+        assertTrue(s1.isActive());
+        verify(stageRepository, times(1)).save(s1);
+    }
 }

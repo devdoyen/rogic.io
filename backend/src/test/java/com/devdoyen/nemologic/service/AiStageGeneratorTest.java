@@ -55,7 +55,7 @@ public class AiStageGeneratorTest {
 
         int[] sizes = {5, 10, 15, 20, 25, 30};
         for (int size : sizes) {
-            verify(mockGenerator, times(1)).generateAndSaveStage(size, size, false);
+            verify(mockGenerator, times(5)).generateAndSaveStage(size, size, false);
         }
     }
 
@@ -67,7 +67,7 @@ public class AiStageGeneratorTest {
 
         scheduler.releaseDailyPuzzle();
 
-        verify(mockStageService, times(1)).activateAllInactiveStages();
+        verify(mockStageService, times(1)).releaseDailyPuzzles();
     }
 
     @Test

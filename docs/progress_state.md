@@ -408,6 +408,12 @@
       - **그리드 완전 중복 검사**: `StageRepository`에 `existsBySolutionGrid(int[][] grid)` 조회를 구현하여 생성된 결과물이 기존 DB에 있는 퍼즐과 완전히 동일한 경우 재시도하도록 중복 차단 파이프라인 수립 완료.
       - **TDD 기반 단위 및 통합 테스트 성공**: JUnit 5 기반의 `AiStageGeneratorTest`에 중복 발생 시의 재시도 검증, 스케줄러의 다중 크기 루프 기동 호출 검증 테스트를 보강 완료하고 전체 백엔드 61개 및 프론트엔드 68개 테스트가 모두 100% 성공(Pass)함을 입증 완료.
 
+    - **AI 데일리 퍼즐 예비용 풀(Reserve Pool) 구축 및 무장애 릴리즈 자동화 (Step 39 - 완료)**:
+      - **예비용 버퍼 풀 상태 정의 및 시드 제어**: API 장애나 레이트 리밋에 대비하기 위해 DB 내에 비공개 승인 완료(`active = false, approved = true`) 상태의 예비용 퍼즐을 크기별로 최소 **5개** 상시 확보하도록 설계 완료.
+      - **스케줄러 자동 리필 및 풀 관리 고도화**: 매일 새벽 4시 17분에 스케줄러가 가동될 때 각 크기별 버퍼 카운트(`stageService.getInactiveApprovedCount`)를 체크하고, 5개 미만인 경우에만 `aiStageGenerator`를 기동해 5개를 채우도록 리필 로직 구성 완료.
+      - **선입선출(FIFO) 기반 단일 릴리즈 활성화**: 매일 자정 00:00에 스케줄러(`releaseDailyPuzzle`)가 작동해 `stageService.releaseDailyPuzzles`를 실행하면, DB 내에 보관된 해당 크기의 가장 오래된 비공개 예비 퍼즐 하나를 선별하여 사용자 서비스용으로 활성화(`active = true`) 처리하는 선입선출 구조 설계 및 연동 완료.
+      - **TDD 기반 단위 및 통합 테스트 전원 통과**: `StageServiceTest` 내 `testGetInactiveApprovedCount` 및 `testReleaseDailyPuzzles` 테스트를 신설하고 `AiStageGeneratorTest` 내 스케줄러 버퍼 리필 모킹 시나리오를 갱신 완료하여 전체 백엔드 63개 및 프론트엔드 68개 테스트가 모두 100% 성공(Pass)함을 확보 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

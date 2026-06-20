@@ -67,6 +67,24 @@ public class StageService {
         }
     }
 
+    @Transactional
+    public void releaseDailyPuzzles() {
+        int[] sizes = {5, 10, 15, 20, 25, 30};
+        for (int size : sizes) {
+            List<Stage> candidates = stageRepository.findByWidthAndHeightAndActiveAndApprovedOrderByIdAsc(size, size, false, true);
+            if (!candidates.isEmpty()) {
+                Stage oldest = candidates.get(0);
+                oldest.setActive(true);
+                stageRepository.save(oldest);
+            }
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public long getInactiveApprovedCount(int width, int height) {
+        return stageRepository.countByWidthAndHeightAndActiveAndApproved(width, height, false, true);
+    }
+
     @Transactional(readOnly = true)
     public Optional<Stage> getStageById(Long id) {
         return stageRepository.findById(id);

@@ -11,4 +11,6 @@ public interface StageRepository extends JpaRepository<Stage, Long> {
     java.util.List<Stage> findByActiveAndApproved(boolean active, boolean approved);
     java.util.List<Stage> findTop10ByOrderByIdDesc();
     boolean existsBySolutionGrid(int[][] solutionGrid);
+    long countByWidthAndHeightAndActiveAndApproved(int width, int height, boolean active, boolean approved);
+    java.util.List<Stage> findByWidthAndHeightAndActiveAndApprovedOrderByIdAsc(int width, int height, boolean active, boolean approved);
 }
