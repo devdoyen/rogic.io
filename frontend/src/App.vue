@@ -591,6 +591,62 @@ const isLoading = ref(true);
 const loadError = ref<string | null>(null);
 let countdownTimer: any = null;
 
+const rankings = ref<User[]>([]);
+const currentUser = ref<UserSession | null>(null);
+const currentTab = ref<'play' | 'mypage' | 'admin'>('play');
+const histories = ref<any[]>([]);
+const startTime = ref<number>(Date.now());
+
+const aiStages = ref<StageSummary[]>([]);
+const selectedAiStageId = ref<number | null>(null);
+const isAiStageActive = ref(false);
+const selectedCategory = ref<'normal' | 'ai'>('normal');
+const isHelpModalOpen = ref(false);
+const isMypageTipOpen = ref(false);
+
+const isStageListOpen = ref(false);
+const isLeaderboardOpen = ref(false);
+
+const currentActiveStage = computed(() => {
+  if (isAiStageActive.value) {
+    return (aiStages.value || []).find(s => s.id === selectedAiStageId.value) || null;
+  } else {
+    return (stages.value || []).find(s => s.id === selectedStageId.value) || null;
+  }
+});
+
+const clearedStageIds = computed(() => {
+  return new Set((histories.value || []).map(h => h.stageId));
+});
+
+const allUnclearedStages = computed(() => {
+  const stageMap = new Map<number, StageSummary>();
+  (stages.value || []).forEach(s => stageMap.set(s.id, s));
+  (aiStages.value || []).forEach(s => stageMap.set(s.id, s));
+  const combined = Array.from(stageMap.values());
+  return combined.filter(s => !clearedStageIds.value.has(s.id));
+});
+
+const selectedPlaySizeFilter = ref<string>('All');
+
+const availablePlaySizes = computed(() => {
+  const sizes = new Set<number>();
+  allUnclearedStages.value.forEach(s => {
+    sizes.add(s.width);
+  });
+  return Array.from(sizes).sort((a, b) => a - b);
+});
+
+const filteredPlayStages = computed(() => {
+  const list = allUnclearedStages.value;
+  if (selectedPlaySizeFilter.value === 'All') {
+    return list;
+  }
+  const size = parseInt(selectedPlaySizeFilter.value);
+  return list.filter(s => s.width === size);
+});
+
+
 const confettiCanvas = ref<HTMLCanvasElement | null>(null);
 let confettiAnimationId: any = null;
 
@@ -699,6 +755,18 @@ watch(solved, (newVal) => {
   }
 });
 
+watch(selectedPlaySizeFilter, (newSize) => {
+  if (newSize === 'All') return;
+  const sizeNum = parseInt(newSize);
+  const current = currentActiveStage.value;
+  if (!current || current.width !== sizeNum) {
+    const matching = allUnclearedStages.value.filter(s => s.width === sizeNum);
+    if (matching.length > 0 && (!current || current.id !== matching[0].id)) {
+      selectStageCard(matching[0].id, isStageAi(matching[0]));
+    }
+  }
+});
+
 function resetCountdown() {
   if (countdownTimer) {
     clearInterval(countdownTimer);
@@ -722,67 +790,51 @@ function startNextPuzzleCountdown() {
 }
 
 function navigateToNextPuzzle() {
-  const remaining = allUnclearedStages.value;
-  if (remaining.length > 0) {
-    const nextStage = remaining[0];
+  if (selectedPlaySizeFilter.value === 'All') {
+    const remaining = allUnclearedStages.value;
+    if (remaining.length > 0) {
+      const nextStage = remaining[0];
+      selectStageCard(nextStage.id, isStageAi(nextStage));
+    }
+    return;
+  }
+
+  // Filtered by size
+  const targetSize = parseInt(selectedPlaySizeFilter.value);
+  let remainingOfSize = allUnclearedStages.value.filter(s => s.width === targetSize);
+
+  if (remainingOfSize.length > 0) {
+    const nextStage = remainingOfSize[0];
     selectStageCard(nextStage.id, isStageAi(nextStage));
+  } else {
+    // No more puzzles of the current size! Look for the next size in ascending order
+    const allSizes = availablePlaySizes.value; // sorted list of sizes currently having uncleared puzzles
+    const nextSize = allSizes.find(size => size > targetSize);
+
+    if (nextSize !== undefined) {
+      selectedPlaySizeFilter.value = String(nextSize);
+      // Recalculate remaining list with the new size
+      remainingOfSize = allUnclearedStages.value.filter(s => s.width === nextSize);
+      if (remainingOfSize.length > 0) {
+        const nextStage = remainingOfSize[0];
+        selectStageCard(nextStage.id, isStageAi(nextStage));
+      }
+    } else {
+      // If no larger size is available, check if there's any smaller size left
+      const fallbackSize = allSizes[0];
+      if (fallbackSize !== undefined) {
+        selectedPlaySizeFilter.value = String(fallbackSize);
+        remainingOfSize = allUnclearedStages.value.filter(s => s.width === fallbackSize);
+        if (remainingOfSize.length > 0) {
+          const nextStage = remainingOfSize[0];
+          selectStageCard(nextStage.id, isStageAi(nextStage));
+        }
+      } else {
+        // Absolutely no puzzles left! (allUnclearedStages is empty)
+      }
+    }
   }
 }
-const rankings = ref<User[]>([]);
-const currentUser = ref<UserSession | null>(null);
-const currentTab = ref<'play' | 'mypage' | 'admin'>('play');
-const histories = ref<any[]>([]);
-const startTime = ref<number>(Date.now());
-
-const aiStages = ref<StageSummary[]>([]);
-const selectedAiStageId = ref<number | null>(null);
-const isAiStageActive = ref(false);
-const selectedCategory = ref<'normal' | 'ai'>('normal');
-const isHelpModalOpen = ref(false);
-const isMypageTipOpen = ref(false);
-
-const isStageListOpen = ref(false);
-const isLeaderboardOpen = ref(false);
-
-const currentActiveStage = computed(() => {
-  if (isAiStageActive.value) {
-    return (aiStages.value || []).find(s => s.id === selectedAiStageId.value) || null;
-  } else {
-    return (stages.value || []).find(s => s.id === selectedStageId.value) || null;
-  }
-});
-
-const clearedStageIds = computed(() => {
-  return new Set((histories.value || []).map(h => h.stageId));
-});
-
-const allUnclearedStages = computed(() => {
-  const stageMap = new Map<number, StageSummary>();
-  (stages.value || []).forEach(s => stageMap.set(s.id, s));
-  (aiStages.value || []).forEach(s => stageMap.set(s.id, s));
-  const combined = Array.from(stageMap.values());
-  return combined.filter(s => !clearedStageIds.value.has(s.id));
-});
-
-const selectedPlaySizeFilter = ref<string>('All');
-
-const availablePlaySizes = computed(() => {
-  const sizes = new Set<number>();
-  allUnclearedStages.value.forEach(s => {
-    sizes.add(s.width);
-  });
-  return Array.from(sizes).sort((a, b) => a - b);
-});
-
-const filteredPlayStages = computed(() => {
-  const list = allUnclearedStages.value;
-  if (selectedPlaySizeFilter.value === 'All') {
-    return list;
-  }
-  const size = parseInt(selectedPlaySizeFilter.value);
-  return list.filter(s => s.width === size);
-});
-
 
 function isStageAi(stage: StageSummary): boolean {
   return (aiStages.value || []).some(s => s.id === stage.id);
