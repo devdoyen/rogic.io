@@ -267,9 +267,15 @@
         chdir: /opt/nemologic
       become: true
 
+    - name: "Stop alloy container before deployment to free up memory"
+      shell:
+        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop alloy || true"
+        chdir: /opt/nemologic
+      become: true
+
     - name: Build Docker images
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue backend-green frontend
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue frontend
         chdir: /opt/nemologic
       become: true
 
@@ -294,12 +300,6 @@
     - name: Display deployment plan
       debug:
         msg: "Active slot: {{ active_slot.stdout | trim }} → Deploy new version to: {{ deploy_to }}, then stop: {{ stop_from }}"
-
-    - name: "Stop alloy container before deployment to free up memory"
-      shell:
-        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop alloy || true"
-        chdir: /opt/nemologic
-      become: true
 
     - name: Deploy new version to target slot
       block:

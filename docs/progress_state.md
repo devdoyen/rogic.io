@@ -514,6 +514,11 @@
       - **그리드 레이아웃(GridLayout) 최적화**: 신규 패널 수용을 위해 기존 SLA Metrics 2행의 그리드 배치를 재조정 완료. 단일 수치 기반 지표(Incident Count, MTTR, MTBF)의 너비를 기존 6에서 `4`로 압축하고, 시계열 추이 모니터링이 용이한 수치 지표(Memory/Swap Usage, Disk Usage)의 너비를 `6`으로 설정하여 총합 `24` 그리드의 시각적 균형감 유지.
       - **설정 파일 반영**: `infra/monitoring/current_dashboard.json`을 프로그램 방식으로 안전하게 갱신하고, Terraform `grafana.tf` 배포 설정과의 연계가 즉시 가능하도록 형상관리 동기화 완료.
 
+    - **배포 서버(EC2) Docker 이미지 빌드 시 메모리 최적화 및 슬롯 단일화 (Step 58 - 완료)**:
+      - **Alloy 중지 단계 조기 배치**: 배포 중 메모리 경합을 줄이기 위해, 기존에 빌드 완료 후 실행되던 `Stop alloy container before deployment to free up memory` 태스크를 `Build Docker images` 실행 직전 단계로 상향 배치하여 모니터링 에이전트가 차지하던 메모리 공간을 선제적으로 확보함.
+      - **빌드 슬롯 단일화 및 명령어 최적화**: `backend-blue`와 `backend-green` 서비스는 동일 이미지(`nemologic-backend:latest`)를 사용하므로, 중복 빌드 오버헤드를 막기 위해 빌드 명령어에서 `backend-green`을 배제하고 `backend-blue` 및 `frontend`만 빌드하도록 명령어를 단일화 완료.
+      - **TDD 검증**: 변경 사항 적용 후 프론트엔드 테스트(70개) 정상 통과 확인 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
