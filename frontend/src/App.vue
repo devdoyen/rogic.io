@@ -325,8 +325,28 @@
       <!-- Center Main Column: Canvas & Solved Banner -->
       <main class="app-main">
         <template v-if="currentTab === 'play'">
+          <!-- Loading State -->
+          <div v-if="isLoading" class="loading-state">
+            <div class="spinner-logo">
+              <div class="spinner-cell filled"></div>
+              <div class="spinner-cell"></div>
+              <div class="spinner-cell"></div>
+              <div class="spinner-cell filled"></div>
+            </div>
+            <p class="loading-text">Loading board data...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="loadError" class="error-state">
+            <div class="error-icon">⚠️</div>
+            <p class="error-text">{{ loadError }}</p>
+            <button class="retry-btn" @click="handleRetryLoad">
+              🔄 Retry
+            </button>
+          </div>
+
           <!-- Canvas Area -->
-          <div v-if="board" class="canvas-wrapper-container">
+          <div v-else-if="board" class="canvas-wrapper-container">
             <!-- Floating Stage Selector -->
             <div class="puzzle-selector-floating-container" v-if="currentActiveStage">
               <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
@@ -367,9 +387,6 @@
             <div class="canvas-wrapper">
               <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" :readOnly="solved" @cell-click="handleCellClick" />
             </div>
-          </div>
-          <div v-else class="loading-state">
-            <p>Loading board data...</p>
           </div>
 
           <div v-if="solved" class="celebration-overlay-container">
@@ -550,6 +567,8 @@ const selectedStageId = ref<number | null>(null);
 const board = ref<PuzzleBoard | null>(null);
 const solved = ref(false);
 const nextPuzzleSeconds = ref(3);
+const isLoading = ref(true);
+const loadError = ref<string | null>(null);
 let countdownTimer: any = null;
 
 const confettiCanvas = ref<HTMLCanvasElement | null>(null);
@@ -749,21 +768,40 @@ const selectedHistory = ref<any>(null);
 const modalBoard = ref<PuzzleBoard | null>(null);
 
 
+function getErrorMessage(error: any, fallbackMessage: string): string {
+  if (error && error.response) {
+    const status = error.response.status;
+    if (status >= 500) {
+      return `Failed to load due to a server error (${status}). Please try again later.`;
+    }
+  }
+  return fallbackMessage;
+}
+
 async function loadStagesList() {
+  isLoading.value = true;
+  loadError.value = null;
   try {
     const list = await fetchStages();
     stages.value = list;
     if (list.length > 0) {
       selectedStageId.value = list[0].id;
       await loadStageDetails(list[0].id);
+    } else {
+      isLoading.value = false;
     }
   } catch (error) {
     console.error('Failed to load stages:', error);
+    loadError.value = getErrorMessage(error, 'Failed to load puzzles. Please check your connection and try again.');
+    isLoading.value = false;
   }
 }
 
 async function loadStageDetails(id: number) {
   resetCountdown();
+  isLoading.value = true;
+  loadError.value = null;
+  board.value = null;
   try {
     // Record starting attempt
     await startStage(id);
@@ -779,8 +817,24 @@ async function loadStageDetails(id: number) {
     board.value = new PuzzleBoard(rotated);
     solved.value = false;
     startTime.value = Date.now();
+    isLoading.value = false;
   } catch (error) {
     console.error(`Failed to load stage details for ID ${id}:`, error);
+    loadError.value = getErrorMessage(error, 'Failed to load puzzle details. Please try again.');
+    isLoading.value = false;
+  }
+}
+
+function handleRetryLoad() {
+  loadError.value = null;
+  if (currentActiveStage.value) {
+    loadStageDetails(currentActiveStage.value.id);
+  } else if (selectedStageId.value) {
+    loadStageDetails(selectedStageId.value);
+  } else if (selectedAiStageId.value) {
+    loadStageDetails(selectedAiStageId.value);
+  } else {
+    loadStagesList();
   }
 }
 
@@ -2055,9 +2109,111 @@ body {
 }
 
 .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
   color: #94a3b8;
-  font-size: 1rem;
+  font-size: 1.1rem;
   text-align: center;
+  height: 100%;
+  width: 100%;
+  min-height: 200px;
+}
+
+.spinner-logo {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 3px;
+  animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
+}
+
+.spinner-cell {
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background-color: #1e293b;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.spinner-cell.filled {
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+.loading-text {
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: #e2e8f0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  color: #f43f5e;
+  text-align: center;
+  padding: 2rem;
+  background: rgba(244, 63, 94, 0.05);
+  border: 1px solid rgba(244, 63, 94, 0.15);
+  border-radius: 16px;
+  max-width: 400px;
+  margin: auto;
+  backdrop-filter: blur(8px);
+}
+
+.error-icon {
+  font-size: 3rem;
+  animation: bounce 2s infinite;
+}
+
+.error-text {
+  font-size: 1rem;
+  color: #fda4af;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.retry-btn {
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+  transition: all 0.2s ease;
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(244, 63, 94, 0.4);
+}
+
+.retry-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
 .confetti-canvas {

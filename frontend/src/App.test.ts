@@ -544,6 +544,74 @@ describe('App.vue Leaderboard Integration TDD', () => {
     expect(stageItems[1].text()).toContain('B Stage');
     expect(stageItems[2].text()).toContain('A Stage');
   });
+
+  it('should display rotating logo spinner when loading board data', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    let resolveStageDetails: any;
+    const stageDetailsPromise = new Promise((resolve) => {
+      resolveStageDetails = resolve;
+    });
+    vi.spyOn(stageApi, 'fetchStageById').mockReturnValue(stageDetailsPromise as any);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(wrapper.find('.spinner-logo').exists()).toBe(true);
+    expect(wrapper.find('.loading-text').text()).toContain('Loading board data...');
+
+    resolveStageDetails({ id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  });
+
+  it('should display error message and retry button when stage load fails', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockRejectedValue(new Error('500 Internal Server Error'));
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('.error-state').exists()).toBe(true);
+    expect(wrapper.find('.error-text').text()).toContain('Failed to load');
+    expect(wrapper.find('.retry-btn').exists()).toBe(true);
+
+    const fetchStageSpy = vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue({ id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] } as any);
+    
+    await wrapper.find('.retry-btn').trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(fetchStageSpy).toHaveBeenCalledWith(1);
+    expect(wrapper.find('.error-state').exists()).toBe(false);
+    expect(wrapper.find('.canvas-wrapper-container').exists()).toBe(true);
+  });
+
+  it('should display server error message when API returns 502 status', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    const error502 = {
+      response: {
+        status: 502,
+        statusText: 'Bad Gateway'
+      }
+    };
+    vi.spyOn(stageApi, 'fetchStageById').mockRejectedValue(error502);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(wrapper.find('.error-state').exists()).toBe(true);
+    expect(wrapper.find('.error-text').text()).toContain('server error (502)');
+  });
 });
 
 
