@@ -2034,8 +2034,8 @@ body {
   background: rgba(30, 41, 59, 0.55);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.35rem;
-  border-radius: 9999px;
+  padding: 0.25rem;
+  border-radius: 20px;
   width: fit-content;
   flex-shrink: 0;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
@@ -2048,10 +2048,10 @@ body {
 }
 
 .play-size-filter-btn {
-  padding: 0.3rem 0.5rem;
+  padding: 0.4rem 0.6rem;
   background-color: transparent;
   border: 1px solid transparent;
-  border-radius: 9999px;
+  border-radius: 10px;
   color: #94a3b8;
   font-size: 0.72rem;
   font-weight: 700;
@@ -2060,6 +2060,20 @@ body {
   transition: all 0.15s ease;
   font-family: 'Outfit', sans-serif;
   text-align: center;
+}
+
+.play-size-filter-bar .play-size-filter-btn:first-child {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.play-size-filter-bar .play-size-filter-btn:last-child {
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
 }
 
 .play-size-filter-btn:hover {
@@ -2083,10 +2097,24 @@ body {
     margin-bottom: 0.5rem;
     padding: 0.25rem;
     background: rgba(30, 41, 59, 0.4);
-    border-radius: 12px;
+    border-radius: 20px;
     box-shadow: none;
     z-index: 100;
     box-sizing: border-box;
+  }
+
+  .play-size-filter-bar .play-size-filter-btn:first-child {
+    border-top-left-radius: 16px;
+    border-bottom-left-radius: 16px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+
+  .play-size-filter-bar .play-size-filter-btn:last-child {
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
   }
 }
 
