@@ -422,6 +422,9 @@
       - **지연 초기화 환원**: Active-Active 로드 밸런싱 환경에서 신규 슬롯 기동 즉시 외부 프로브 요청 유입 시 지연 초기화(Lazy Init)로 인한 커넥션 풀/JPA 바인딩 병목 및 이에 따른 `API Health Status` 일시적 하락(0) 현상을 분석 완료.
       - **서버 기동 즉시 가용 상태 돌입**: `application-local.yml` 내 `spring.main.lazy-initialization` 설정을 `false`로 원상 복구하여, 서버 기동 완료와 동시에 모든 주요 빈(Bean) 및 리소스가 선제 할당(Eager Init)되어 외부 요청에 지연 없이 즉각 반응하도록 조치 완료.
 
+    - **GraalVM Quick Build 모드 설정을 통한 빌드 파이프라인 속도 최적화 (Step 42 - 완료)**:
+      - **빌드 옵션 추가**: [build.gradle](file:///c:/Users/82107/dev/project/nemologic/backend/build.gradle) 파일 내 `graalvmNative` 블록에 `-Ob` (Quick Build) 옵션을 추가하여 불필요한 컴파일러 최적화 분석 단계를 스킵함으로써 GitHub Actions의 GraalVM nativeCompile 빌드 속도 개선 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

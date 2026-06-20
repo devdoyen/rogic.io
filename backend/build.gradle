@@ -40,3 +40,11 @@ tasks.named('test') {
 tasks.named('processTestAot') {
     enabled = false
 }
+
+graalvmNative {
+    binaries {
+        main {
+            buildArgs.add('-Ob') // Quick Build mode to optimize build time on CI/CD
+        }
+    }
+}
