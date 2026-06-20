@@ -443,6 +443,11 @@
       - **CSS 레이아웃 붕괴 방지**: 부모 컨테이너가 뷰포트 높이에 반응하여 높이가 일시적으로 0으로 붕괴되더라도 스피너가 숨겨지지 않고 화면 중앙에 최소 높이를 확보하며 표출되도록 `.loading-state` 스타일에 `min-height: 200px` 및 `width: 100%` 속성 연동 완료.
       - **TDD 기반 단위 테스트 확인**: 71개의 프론트엔드 유닛/통합 테스트가 모두 정상적으로 성공(Pass)함을 최종 확인 완료.
 
+    - **Grafana Cloud 및 AWS EC2 경보 알림 누락 개선 (Step 47 - 완료)**:
+      - **Grafana 알림 정책 정의**: `infra/terraform/grafana.tf` 내에 `grafana_notification_policy` 리소스를 신규 구성하여, 생성된 경보들이 정의된 이메일 연락처(`Developer-Email-Alerts`)로 정상 라우팅되도록 설정 완료.
+      - **무데이터(No Data) 대응**: 서버 완전 중단 시 지연/미작동 방지를 위해 `Nemologic-Service-Down-Alert` 룰의 `no_data_state` 및 `exec_err_state` 옵션을 `Alerting` 상태로 강제하여 데이터 유실 시 즉각 경보가 발생하도록 최적화 완료.
+      - **물리적 EC2 장애 경보 추가**: `infra/terraform/main.tf` 파일에 `StatusCheckFailed` 메트릭을 추적하는 `aws_cloudwatch_metric_alarm` 리소스를 배치하고 SNS 토픽과 연결하여 인스턴스 정지/네트워크 단절 등의 물리 다운 시 실시간 감지가 가능하도록 인프라 구성 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

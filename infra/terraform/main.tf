@@ -369,4 +369,27 @@ resource "aws_cloudwatch_metric_alarm" "server_error_alarm" {
   }
 }
 
+# CloudWatch Metric Alarm for EC2 Status Check Failed (Instance Offline Detection)
+resource "aws_cloudwatch_metric_alarm" "ec2_status_check_alarm" {
+  alarm_name          = "nemologic-ec2-status-check-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "StatusCheckFailed"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Maximum"
+  threshold           = 0
+  alarm_description   = "This alarm triggers when the EC2 instance status check fails (instance down/offline)."
+  alarm_actions       = [aws_sns_topic.nemologic_alerts.arn]
+
+  dimensions = {
+    InstanceId = aws_instance.nemologic_server.id
+  }
+
+  tags = {
+    Name = "nemologic-ec2-status-check-alarm"
+  }
+}
+
+
 

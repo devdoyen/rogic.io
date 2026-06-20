@@ -59,9 +59,11 @@ resource "grafana_rule_group" "nemologic_alerts" {
   interval_seconds = 60
 
   rule {
-    name      = "Nemologic-Service-Down-Alert"
-    for       = "2m"
-    condition = "C"
+    name           = "Nemologic-Service-Down-Alert"
+    for            = "2m"
+    condition      = "C"
+    no_data_state  = "Alerting"
+    exec_err_state = "Alerting"
 
     # Query A: PromQL to check if active probes count is 0
     data {
@@ -172,5 +174,14 @@ resource "grafana_dashboard" "sla_dashboard" {
     "\"${data.grafana_data_source.prometheus[0].uid}\""
   )
 }
+
+# Configure Grafana Notification Policy to route all alerts to Developer-Email-Alerts
+resource "grafana_notification_policy" "nemologic_policy" {
+  count = var.grafana_url != "" && var.grafana_auth != "" ? 1 : 0
+
+  contact_point = grafana_contact_point.email_alerts[0].name
+  group_by      = ["alertname", "grafana_folder"]
+}
+
 
 
