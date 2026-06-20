@@ -39,9 +39,17 @@ public class AiStageGenerator {
         int maxAttempts = 3;
         Exception lastException = null;
 
+        java.util.List<Stage> recentStages = stageRepository.findTop10ByOrderByIdDesc();
+        java.util.List<String> recentThemes = new java.util.ArrayList<>();
+        for (Stage s : recentStages) {
+            if (s.getName() != null) {
+                recentThemes.add(s.getName());
+            }
+        }
+
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                String json = aiClient.generatePuzzleJson(width, height);
+                String json = aiClient.generatePuzzleJson(width, height, recentThemes);
                 if (json == null || json.isEmpty()) {
                     throw new IllegalArgumentException("AI response is empty");
                 }
@@ -53,6 +61,10 @@ public class AiStageGenerator {
 
                 if (dto.getWidth() != width || dto.getHeight() != height) {
                     throw new IllegalArgumentException("Generated puzzle size mismatch. Expected: " + width + "x" + height + ", Actual: " + dto.getWidth() + "x" + dto.getHeight());
+                }
+
+                if (stageRepository.existsBySolutionGrid(grid)) {
+                    throw new IllegalArgumentException("Generated puzzle already exists in database");
                 }
 
                 if (!nonogramSolver.isUnique(grid)) {

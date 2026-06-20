@@ -29,4 +29,9 @@ public class MockAiClient implements AiClient {
         String gridStr = sb.toString();
         return String.format("{\"name\": \"AI Puzzle: Custom Shape\", \"width\": %d, \"height\": %d, \"grid\": \"%s\"}", width, height, gridStr);
     }
+
+    @Override
+    public String generatePuzzleJson(int width, int height, java.util.List<String> recentThemes) {
+        return generatePuzzleJson(width, height);
+    }
 }

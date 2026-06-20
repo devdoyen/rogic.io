@@ -31,6 +31,11 @@ public class GeminiAiClient implements AiClient {
 
     @Override
     public String generatePuzzleJson(int width, int height) {
+        return generatePuzzleJson(width, height, java.util.Collections.emptyList());
+    }
+
+    @Override
+    public String generatePuzzleJson(int width, int height, java.util.List<String> recentThemes) {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             throw new IllegalStateException("[AI] API Key is missing. Cannot generate AI puzzle.");
         }
@@ -48,14 +53,21 @@ public class GeminiAiClient implements AiClient {
                 Map<String, Object> contents = new HashMap<>();
                 Map<String, Object> parts = new HashMap<>();
                 
+                String excludePrompt = "";
+                if (recentThemes != null && !recentThemes.isEmpty()) {
+                    excludePrompt = String.format("Do NOT generate puzzles with similar themes or names to the following: %s. ", String.join(", ", recentThemes));
+                }
+
                 String prompt = String.format(
                     "Generate a valid, creative, and unique nonogram puzzle of size %dx%d in JSON format. " +
                     "Do NOT generate a simple heart shape. Create a different recognizable shape (like a tree, a letter, a face, a cup, an arrow, etc.). " +
+                    "%s" +
                     "The response must follow this exact JSON schema: { \"name\": \"ObjectName\", \"width\": %d, \"height\": %d, \"grid\": \"...\" }. " +
                     "Do NOT prefix the name with 'AI Puzzle:' or 'Daily Puzzle:'. Just output the pure name of the object. " +
                     "Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). " +
-                    "Grid string must be a valid serialized JSON array representing %dx%d cells containing only 0 and 1.",
-                    width, height, width, height, width, height
+                    "Grid string must be a valid serialized JSON array representing %dx%d cells containing only 0 and 1. " +
+                    "Ensure the filled cells form a recognizable connected component with symmetry where appropriate, avoiding isolated noise pixels.",
+                    width, height, excludePrompt, width, height, width, height
                 );
 
                 parts.put("text", prompt);

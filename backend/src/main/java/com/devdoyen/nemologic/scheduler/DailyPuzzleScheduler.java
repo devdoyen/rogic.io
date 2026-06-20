@@ -18,7 +18,14 @@ public class DailyPuzzleScheduler {
 
     @Scheduled(cron = "0 17 4 * * ?")
     public void generateDailyPuzzle() {
-        aiStageGenerator.generateAndSaveStage(false);
+        int[] sizes = {5, 10, 15, 20, 25, 30};
+        for (int size : sizes) {
+            try {
+                aiStageGenerator.generateAndSaveStage(size, size, false);
+            } catch (Exception e) {
+                System.err.println("[Scheduler] Failed to generate daily puzzle of size " + size + "x" + size + ": " + e.getMessage());
+            }
+        }
     }
 
     // Automatic release is disabled to require manual admin approval
