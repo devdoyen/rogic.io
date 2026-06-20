@@ -297,12 +297,6 @@
         >
           🏆 <span class="btn-text">Leaderboard</span>
         </button>
-        <button 
-          class="help-toggle-btn" 
-          @click="isHelpModalOpen = true"
-        >
-          ❓ <span class="btn-text">Help</span>
-        </button>
       </div>
     </header>
 
@@ -527,33 +521,7 @@
       </div>
     </div>
 
-    <!-- Modal for Help / Instructions (Auto-shown to first-time visitors) -->
-    <div v-if="isHelpModalOpen" class="help-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 10000;" @click.self="isHelpModalOpen = false">
-      <div class="modal-content" style="max-width: 420px;">
-        <h3 class="modal-title" style="margin-top: 0; color: #38bdf8; font-weight: 700; font-size: 1.4rem;">🎮 How to Play</h3>
-        <div class="help-content-body" style="text-align: left; color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin: 1.5rem 0; display: flex; flex-direction: column; gap: 0.75rem;">
-          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-            <span style="font-size: 1.1rem;">🔹</span>
-            <div><strong>Left Click / Tap:</strong> Fill cells to match the puzzle solution (Blue cells).</div>
-          </div>
-          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-            <span style="font-size: 1.1rem;">🔹</span>
-            <div><strong>Right Click:</strong> Mark empty cells where blocks cannot be placed (Red X).</div>
-          </div>
-          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-            <span style="font-size: 1.1rem;">🔹</span>
-            <div><strong>Mouse Wheel / HUD:</strong> Zoom in and out of the canvas. Drag to move or fill.</div>
-          </div>
-          <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
-            <span style="font-size: 1.1rem;">🔹</span>
-            <div><strong>Hint Numbers:</strong> Numbers show consecutive filled cells in rows and columns.</div>
-          </div>
-        </div>
-        <div>
-          <button class="modal-close-btn" @click="isHelpModalOpen = false" style="padding: 0.6rem 2rem; background: linear-gradient(135deg, #38bdf8, #818cf8); border: none; border-radius: 8px; color: #ffffff; font-weight: 600; cursor: pointer; transition: opacity 0.2s;">Start Game</button>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Modal for Puzzle Replay Guide (First-time My Page view) -->
     <div v-if="isMypageTipOpen" class="help-modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 10000;" @click.self="closeMypageTip">
@@ -641,7 +609,6 @@ const aiStages = ref<StageSummary[]>([]);
 const selectedAiStageId = ref<number | null>(null);
 const isAiStageActive = ref(false);
 const selectedCategory = ref<'normal' | 'ai'>('normal');
-const isHelpModalOpen = ref(false);
 const isMypageTipOpen = ref(false);
 
 const isStageListOpen = ref(false);
@@ -1574,14 +1541,6 @@ onMounted(async () => {
   window.addEventListener('resize', handleConfettiResize);
   document.addEventListener('touchstart', preventPinchZoom, { passive: false });
 
-  // Show Help modal to first-time visitors
-  if (!isAdminMode.value) {
-    const visited = localStorage.getItem('rotagic_visited');
-    if (!visited) {
-      isHelpModalOpen.value = true;
-      localStorage.setItem('rotagic_visited', 'true');
-    }
-  }
 });
 
 onUnmounted(() => {
