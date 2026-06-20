@@ -320,6 +320,26 @@
       </select>
     </div>
 
+    <!-- Play Size Filter Bar (Always visible on the right) -->
+    <div class="play-size-filter-bar" v-if="availablePlaySizes.length > 0 && currentTab === 'play'">
+      <button 
+        class="play-size-filter-btn" 
+        :class="{ active: selectedPlaySizeFilter === 'All' }"
+        @click.stop="selectedPlaySizeFilter = 'All'"
+      >
+        All
+      </button>
+      <button 
+        v-for="size in availablePlaySizes" 
+        :key="size"
+        class="play-size-filter-btn" 
+        :class="{ active: selectedPlaySizeFilter === String(size) }"
+        @click.stop="selectedPlaySizeFilter = String(size)"
+      >
+        {{ size }}x{{ size }}
+      </button>
+    </div>
+
     <!-- Main Layout Grid -->
     <div class="app-layout">
       <!-- Center Main Column: Canvas & Solved Banner -->
@@ -349,29 +369,8 @@
           <div v-else-if="board" class="canvas-wrapper-container">
             <!-- Floating Stage Selector -->
             <div class="puzzle-selector-floating-container" v-if="currentActiveStage">
-              <!-- Play Size Filter Bar (Always visible outside) -->
-              <div class="play-size-filter-bar" v-if="availablePlaySizes.length > 0">
-                <button 
-                  class="play-size-filter-btn" 
-                  :class="{ active: selectedPlaySizeFilter === 'All' }"
-                  @click.stop="selectedPlaySizeFilter = 'All'"
-                >
-                  All
-                </button>
-                <button 
-                  v-for="size in availablePlaySizes" 
-                  :key="size"
-                  class="play-size-filter-btn" 
-                  :class="{ active: selectedPlaySizeFilter === String(size) }"
-                  @click.stop="selectedPlaySizeFilter = String(size)"
-                >
-                  {{ size }}x{{ size }}
-                </button>
-              </div>
-
               <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
                 <span class="active-stage-badge-name">{{ currentActiveStage.name }}</span>
-                <span class="active-stage-badge-size">{{ currentActiveStage.width }}x{{ currentActiveStage.height }}</span>
                 <span class="active-stage-arrow" :class="{ 'open': isStageListOpen }">▼</span>
               </div>
 
@@ -390,7 +389,6 @@
                     >
                       <div class="stage-card-info">
                         <span class="stage-card-name">{{ stage.name }}</span>
-                        <span class="stage-card-size">{{ stage.width }}x{{ stage.height }}</span>
                         <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
                           Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
                         </div>
@@ -1836,16 +1834,15 @@ body {
   }
 }
 
+/* Floating Stage Selector */
 .puzzle-selector-floating-container {
   position: absolute;
-  top: 15px; /* Shift slightly up to accommodate the filter bar */
+  top: 25px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
+  justify-content: center;
 }
 
 .active-stage-badge {
@@ -1931,16 +1928,21 @@ body {
 
 /* Play size filter styling */
 .play-size-filter-bar {
+  position: fixed;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  gap: 0.35rem;
-  overflow-x: auto;
+  flex-direction: column;
+  gap: 0.5rem;
   background: rgba(30, 41, 59, 0.55);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.25rem 0.5rem;
+  padding: 0.5rem 0.35rem;
   border-radius: 9999px;
   flex-shrink: 0;
-  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  z-index: 100;
   scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
@@ -1949,7 +1951,7 @@ body {
 }
 
 .play-size-filter-btn {
-  padding: 0.2rem 0.65rem;
+  padding: 0.4rem 0.65rem;
   background-color: transparent;
   border: 1px solid transparent;
   border-radius: 9999px;
@@ -1971,6 +1973,21 @@ body {
   background-color: rgba(56, 189, 248, 0.15);
   border-color: rgba(56, 189, 248, 0.3);
   color: #38bdf8;
+}
+
+@media (max-width: 768px) {
+  .play-size-filter-bar {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    right: auto;
+    top: auto;
+    transform: translateX(-50%);
+    flex-direction: row;
+    padding: 0.35rem 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+  }
 }
 
 /* Leaderboard Popup Modal */
