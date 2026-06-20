@@ -349,6 +349,26 @@
           <div v-else-if="board" class="canvas-wrapper-container">
             <!-- Floating Stage Selector -->
             <div class="puzzle-selector-floating-container" v-if="currentActiveStage">
+              <!-- Play Size Filter Bar (Always visible outside) -->
+              <div class="play-size-filter-bar" v-if="availablePlaySizes.length > 0">
+                <button 
+                  class="play-size-filter-btn" 
+                  :class="{ active: selectedPlaySizeFilter === 'All' }"
+                  @click.stop="selectedPlaySizeFilter = 'All'"
+                >
+                  All
+                </button>
+                <button 
+                  v-for="size in availablePlaySizes" 
+                  :key="size"
+                  class="play-size-filter-btn" 
+                  :class="{ active: selectedPlaySizeFilter === String(size) }"
+                  @click.stop="selectedPlaySizeFilter = String(size)"
+                >
+                  {{ size }}x{{ size }}
+                </button>
+              </div>
+
               <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
                 <span class="active-stage-badge-name">{{ currentActiveStage.name }}</span>
                 <span class="active-stage-badge-size">{{ currentActiveStage.width }}x{{ currentActiveStage.height }}</span>
@@ -358,26 +378,6 @@
               <!-- Slide-down Dropdown List -->
               <transition name="slide-down">
                 <div v-if="isStageListOpen" class="puzzle-selector-dropdown">
-                  <!-- Play Size Filter Bar -->
-                  <div class="play-size-filter-bar" v-if="availablePlaySizes.length > 0">
-                    <button 
-                      class="play-size-filter-btn" 
-                      :class="{ active: selectedPlaySizeFilter === 'All' }"
-                      @click.stop="selectedPlaySizeFilter = 'All'"
-                    >
-                      All
-                    </button>
-                    <button 
-                      v-for="size in availablePlaySizes" 
-                      :key="size"
-                      class="play-size-filter-btn" 
-                      :class="{ active: selectedPlaySizeFilter === String(size) }"
-                      @click.stop="selectedPlaySizeFilter = String(size)"
-                    >
-                      {{ size }}x{{ size }}
-                    </button>
-                  </div>
-
                   <div class="stage-card-list">
                     <div 
                       v-for="stage in filteredPlayStages" 
@@ -1836,15 +1836,16 @@ body {
   }
 }
 
-/* Floating Stage Selector */
 .puzzle-selector-floating-container {
   position: absolute;
-  top: 25px;
+  top: 15px; /* Shift slightly up to accommodate the filter bar */
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .active-stage-badge {
@@ -1933,9 +1934,13 @@ body {
   display: flex;
   gap: 0.35rem;
   overflow-x: auto;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.55);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
   flex-shrink: 0;
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.2);
   scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
@@ -1944,13 +1949,13 @@ body {
 }
 
 .play-size-filter-btn {
-  padding: 0.25rem 0.5rem;
-  background-color: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 6px;
+  padding: 0.2rem 0.65rem;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 9999px;
   color: #94a3b8;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
@@ -1958,13 +1963,13 @@ body {
 }
 
 .play-size-filter-btn:hover {
-  border-color: #38bdf8;
   color: #f8fafc;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .play-size-filter-btn.active {
   background-color: rgba(56, 189, 248, 0.15);
-  border-color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
   color: #38bdf8;
 }
 
