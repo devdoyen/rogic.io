@@ -21,6 +21,11 @@ public class VisitorController {
         visitorService.recordVisit(uuid, ip);
     }
 
+    @GetMapping("/stats")
+    public com.devdoyen.nemologic.dto.TelemetryStatsResponse getTelemetryStats() {
+        return visitorService.getTelemetryStats();
+    }
+
     private String getClientIp(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.trim().isEmpty()) {

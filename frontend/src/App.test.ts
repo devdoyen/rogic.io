@@ -24,6 +24,16 @@ describe('App.vue Leaderboard Integration TDD', () => {
       { id: 1, name: 'Seeded Stage 1', width: 5, height: 5, active: true, approved: true, solutionGrid: [[1]] },
       { id: 9, name: 'AI Pending Stage', width: 5, height: 5, active: false, approved: false, solutionGrid: [[1]] }
     ]);
+    vi.mocked(userApi.fetchTelemetryStats).mockResolvedValue({
+      dailyUniqueVisitors: 5,
+      totalUniqueVisitors: 20,
+      totalVisits: 100,
+      totalAttempts: 50,
+      totalClears: 30,
+      uptimeRatio: 0.9998,
+      mtbf: 720,
+      mttr: 0.8
+    });
   });
 
   it('should call fetchStages and fetchRanking on mount, and render rankings list', async () => {
@@ -611,6 +621,47 @@ describe('App.vue Leaderboard Integration TDD', () => {
 
     expect(wrapper.find('.error-state').exists()).toBe(true);
     expect(wrapper.find('.error-text').text()).toContain('server error (502)');
+  });
+
+  it('should switch to Home tab, render telemetry dashboard, and switch back to Play tab when CTA button is clicked', async () => {
+    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
+    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
+    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
+
+    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
+    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
+    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
+    vi.spyOn(userApi, 'fetchTelemetryStats');
+
+    const wrapper = mount(App);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Under test, defaults to play tab
+    expect((wrapper.vm as any).currentTab).toBe('play');
+
+    // Click header logo to go to Home tab
+    const headerLogo = wrapper.find('.app-header .logo-wrapper');
+    expect(headerLogo.exists()).toBe(true);
+    await headerLogo.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect((wrapper.vm as any).currentTab).toBe('home');
+    expect(wrapper.find('.home-dashboard').exists()).toBe(true);
+
+    // Verify homepage content
+    const dashboardText = wrapper.find('.home-dashboard').text();
+    expect(dashboardText).toContain('rogic.io');
+    expect(dashboardText).toContain('The next-generation Nonogram');
+
+    // Click CTA play button inside home dashboard
+    const ctaBtn = wrapper.find('.cta-play-btn');
+    expect(ctaBtn.exists()).toBe(true);
+    await ctaBtn.trigger('click');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Verify it switches back to play tab
+    expect((wrapper.vm as any).currentTab).toBe('play');
+    expect(wrapper.find('.home-dashboard').exists()).toBe(false);
   });
 });
 

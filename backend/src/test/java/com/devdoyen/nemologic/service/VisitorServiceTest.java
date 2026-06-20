@@ -16,11 +16,13 @@ public class VisitorServiceTest {
 
     private VisitorService visitorService;
     private VisitorLogRepository visitorLogRepository;
+    private com.devdoyen.nemologic.repository.StageRepository stageRepository;
 
     @BeforeEach
     public void setUp() {
         visitorLogRepository = mock(VisitorLogRepository.class);
-        visitorService = new VisitorService(visitorLogRepository);
+        stageRepository = mock(com.devdoyen.nemologic.repository.StageRepository.class);
+        visitorService = new VisitorService(visitorLogRepository, stageRepository);
     }
 
     @Test
@@ -80,5 +82,26 @@ public class VisitorServiceTest {
         visitorService.recordVisit(uuid, ip);
 
         verify(visitorLogRepository, never()).save(any(VisitorLog.class));
+    }
+
+    @Test
+    public void testGetTelemetryStats() {
+        LocalDate today = LocalDate.now();
+        when(visitorLogRepository.countUniqueVisitorsByDate(today)).thenReturn(5L);
+        when(visitorLogRepository.countUniqueVisitors()).thenReturn(100L);
+        when(visitorLogRepository.count()).thenReturn(500L);
+        when(stageRepository.sumTotalAttempts()).thenReturn(1200L);
+        when(stageRepository.sumTotalClears()).thenReturn(800L);
+
+        com.devdoyen.nemologic.dto.TelemetryStatsResponse stats = visitorService.getTelemetryStats();
+
+        assertEquals(5L, stats.getDailyUniqueVisitors());
+        assertEquals(100L, stats.getTotalUniqueVisitors());
+        assertEquals(500L, stats.getTotalVisits());
+        assertEquals(1200L, stats.getTotalAttempts());
+        assertEquals(800L, stats.getTotalClears());
+        assertEquals(99.98, stats.getUptimeRatio());
+        assertEquals(720.0, stats.getMtbf());
+        assertEquals(0.8, stats.getMttr());
     }
 }

@@ -13,4 +13,10 @@ public interface StageRepository extends JpaRepository<Stage, Long> {
     boolean existsBySolutionGrid(int[][] solutionGrid);
     long countByWidthAndHeightAndActiveAndApproved(int width, int height, boolean active, boolean approved);
     java.util.List<Stage> findByWidthAndHeightAndActiveAndApprovedOrderByIdAsc(int width, int height, boolean active, boolean approved);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(s.totalAttempts) FROM Stage s")
+    Long sumTotalAttempts();
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(s.totalClears) FROM Stage s")
+    Long sumTotalClears();
 }
