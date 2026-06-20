@@ -509,6 +509,11 @@
       - **컴포넌트 라이프사이클 및 반응형 상태 정리**: `App.vue` 내 `isHelpModalOpen` ref 변수와 `onMounted` 시점의 최초 방문 여부(`rotagic_visited`) 판별 및 로컬 스토리지 기입 분기를 삭제하여 리소스를 절감하고 상태 복잡도를 경감함.
       - **TDD 단위/통합 테스트 최적화**: 도움말 모달 개폐를 다루던 구버전 통합 테스트 케이스들을 `App.test.ts`에서 영구 소거하여, 에러 없이 총 70개의 Vitest 프론트엔드 테스트를 성공적으로 통과(Pass) 완료.
 
+    - **Grafana 통합 대시보드 내 OS 디스크 사용률(Disk Usage) 모니터링 패널 추가 (Step 57 - 완료)**:
+      - **디스크 사용률 수식 패널 설계**: `host.docker.internal:9100`에서 수집되는 `node_exporter` 지표 기반으로 호스트의 디스크 잔여량 및 실시간 사용 비율을 추적하기 위한 `"OS Disk Usage"` 패널(`panel-1010`)을 신설 완료. PromQL 연산 수식 `100 * (1 - (node_filesystem_avail_bytes{mountpoint="/"}/node_filesystem_size_bytes{mountpoint="/"}))` 및 `percent` 포맷 단위를 부여하여 시각 가독성 확보.
+      - **그리드 레이아웃(GridLayout) 최적화**: 신규 패널 수용을 위해 기존 SLA Metrics 2행의 그리드 배치를 재조정 완료. 단일 수치 기반 지표(Incident Count, MTTR, MTBF)의 너비를 기존 6에서 `4`로 압축하고, 시계열 추이 모니터링이 용이한 수치 지표(Memory/Swap Usage, Disk Usage)의 너비를 `6`으로 설정하여 총합 `24` 그리드의 시각적 균형감 유지.
+      - **설정 파일 반영**: `infra/monitoring/current_dashboard.json`을 프로그램 방식으로 안전하게 갱신하고, Terraform `grafana.tf` 배포 설정과의 연계가 즉시 가능하도록 형상관리 동기화 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

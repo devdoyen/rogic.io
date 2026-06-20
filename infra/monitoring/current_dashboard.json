@@ -5841,6 +5841,76 @@
             }
           }
         }
+      },
+      "panel-1010": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1010,
+          "title": "OS Disk Usage",
+          "description": "Host Disk Space Usage from Node Exporter",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "uid": "${DS_PROMETHEUS}"
+                      },
+                      "spec": {
+                        "expr": "100 * (1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}))",
+                        "format": "time_series",
+                        "legendFormat": "Disk Usage (%)"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.1.0-27335746580",
+            "spec": {
+              "options": {
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "lineWidth": 2
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
       }
     },
     "layout": {
@@ -5913,7 +5983,7 @@
                       "spec": {
                         "x": 0,
                         "y": 5,
-                        "width": 6,
+                        "width": 4,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
@@ -5924,13 +5994,26 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 6,
+                        "x": 4,
                         "y": 5,
-                        "width": 6,
+                        "width": 4,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-1005"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 5,
+                        "width": 4,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-1006"
                         }
                       }
                     },
@@ -5943,7 +6026,7 @@
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-1006"
+                          "name": "panel-1009"
                         }
                       }
                     },
@@ -5956,7 +6039,7 @@
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-1009"
+                          "name": "panel-1010"
                         }
                       }
                     }
