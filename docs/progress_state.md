@@ -448,6 +448,11 @@
       - **무데이터(No Data) 대응**: 서버 완전 중단 시 지연/미작동 방지를 위해 `Nemologic-Service-Down-Alert` 룰의 `no_data_state` 및 `exec_err_state` 옵션을 `Alerting` 상태로 강제하여 데이터 유실 시 즉각 경보가 발생하도록 최적화 완료.
       - **물리적 EC2 장애 경보 추가**: `infra/terraform/main.tf` 파일에 `StatusCheckFailed` 메트릭을 추적하는 `aws_cloudwatch_metric_alarm` 리소스를 배치하고 SNS 토픽과 연결하여 인스턴스 정지/네트워크 단절 등의 물리 다운 시 실시간 감지가 가능하도록 인프라 구성 완료.
 
+    - **퍼즐 선택 목록 내 규격(크기)별 필터링 기능 추가 (Step 48 - 완료)**:
+      - **필터 UI 도입**: 퍼즐 선택용 상단 플로팅 드롭다운(`.puzzle-selector-dropdown`) 상단에 `All` 및 사용 가능한 규격들(`5x5`, `10x10` 등)을 동적으로 추출하여 표시하는 가로형 버튼 바(`play-size-filter-bar`) 구축 완료.
+      - **동적 필터 적용**: 선택한 규격 필터링 조건(`selectedPlaySizeFilter`)과 실제 노출 대기 리스트(`allUnclearedStages`)를 실시간 매핑 연산(`filteredPlayStages`)하여, 지정 크기 퍼즐들만 드롭다운에 출력되도록 가독성 개선 완료.
+      - **TDD 단위 테스트 확인**: 추가/변경된 템플릿 및 반응형 동작 하에서도 기존 71개 전체 유닛/통합 테스트가 오류 없이 빌드 및 정상 통과(Pass)함을 최종 확인 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

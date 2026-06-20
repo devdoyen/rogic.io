@@ -358,9 +358,29 @@
               <!-- Slide-down Dropdown List -->
               <transition name="slide-down">
                 <div v-if="isStageListOpen" class="puzzle-selector-dropdown">
+                  <!-- Play Size Filter Bar -->
+                  <div class="play-size-filter-bar" v-if="availablePlaySizes.length > 0">
+                    <button 
+                      class="play-size-filter-btn" 
+                      :class="{ active: selectedPlaySizeFilter === 'All' }"
+                      @click.stop="selectedPlaySizeFilter = 'All'"
+                    >
+                      All
+                    </button>
+                    <button 
+                      v-for="size in availablePlaySizes" 
+                      :key="size"
+                      class="play-size-filter-btn" 
+                      :class="{ active: selectedPlaySizeFilter === String(size) }"
+                      @click.stop="selectedPlaySizeFilter = String(size)"
+                    >
+                      {{ size }}x{{ size }}
+                    </button>
+                  </div>
+
                   <div class="stage-card-list">
                     <div 
-                      v-for="stage in allUnclearedStages" 
+                      v-for="stage in filteredPlayStages" 
                       :key="stage.id" 
                       class="stage-item-card"
                       :class="{ 
@@ -376,8 +396,8 @@
                         </div>
                       </div>
                     </div>
-                    <div v-if="allUnclearedStages.length === 0" class="empty-stages" style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
-                      🎉 All puzzles solved!
+                    <div v-if="filteredPlayStages.length === 0" class="empty-stages" style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
+                      🎉 No puzzles found!
                     </div>
                   </div>
                 </div>
@@ -743,6 +763,26 @@ const allUnclearedStages = computed(() => {
   const combined = Array.from(stageMap.values());
   return combined.filter(s => !clearedStageIds.value.has(s.id));
 });
+
+const selectedPlaySizeFilter = ref<string>('All');
+
+const availablePlaySizes = computed(() => {
+  const sizes = new Set<number>();
+  allUnclearedStages.value.forEach(s => {
+    sizes.add(s.width);
+  });
+  return Array.from(sizes).sort((a, b) => a - b);
+});
+
+const filteredPlayStages = computed(() => {
+  const list = allUnclearedStages.value;
+  if (selectedPlaySizeFilter.value === 'All') {
+    return list;
+  }
+  const size = parseInt(selectedPlaySizeFilter.value);
+  return list.filter(s => s.width === size);
+});
+
 
 function isStageAi(stage: StageSummary): boolean {
   return (aiStages.value || []).some(s => s.id === stage.id);
@@ -1834,6 +1874,46 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+/* Play size filter styling */
+.play-size-filter-bar {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+}
+
+.play-size-filter-bar::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+.play-size-filter-btn {
+  padding: 0.25rem 0.5rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.play-size-filter-btn:hover {
+  border-color: #38bdf8;
+  color: #f8fafc;
+}
+
+.play-size-filter-btn.active {
+  background-color: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
 }
 
 /* Leaderboard Popup Modal */
