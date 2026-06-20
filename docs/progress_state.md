@@ -398,6 +398,10 @@
          - `.github/workflows/ci-cd.yml` 내 배포 빌드 단계를 `graalvm/setup-graalvm` 액션을 통한 GraalVM JDK 환경으로 구성하고 `./gradlew nativeCompile` 명령을 실행하도록 파이프라인 전환 완료.
          - 빌드된 네이티브 바이너리 실행을 지원하기 위해 `backend/Dockerfile`의 베이스 이미지를 `debian:12-slim`으로 경량화 및 전환하고, JVM 전용 설정(`JAVA_TOOL_OPTIONS`)을 제거하여 저사양 호스트 적합성을 최대화 완료.
 
+    - **SLA 대시보드 레이아웃 리팩토링 및 시각적 개선 (Step 37 - 완료)**:
+      - **그리드 구조 분할**: 단일 행에 가로 방향(width: 3)으로 8개 패널이 가로로 조밀하게 배치되어 있던 "Nemologic Service SLA Metrics" 행의 그리드 배치를 각각 가로 6, 세로 5 크기의 2개 행(4x2 그리드 배열) 구조로 개편 완료.
+      - **패널 가시성 최적화**: 1행에는 실시간 API Health, 24시간 가동률, 7일 가동률, 30일 가동률 패널을, 2행에는 30일 총 장애 횟수, MTTR, MTBF, 호스트 자원(Memory/Swap) 추이 패널을 배치하여 메트릭 수치 가독성 및 정보 탐색 시각화 안정성 극대화 완료.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
