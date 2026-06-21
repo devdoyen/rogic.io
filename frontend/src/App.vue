@@ -598,6 +598,7 @@ watch([currentTab, isAdminMode], ([newTab, newAdmin]) => {
   } else {
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
+    document.body.style.height = '100dvh';
     document.body.style.display = 'flex';
     document.body.style.backgroundColor = '#0f172a';
   }
@@ -1577,6 +1578,7 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden; /* Prevent body scroll */
   touch-action: pan-x pan-y;
 }
@@ -1585,6 +1587,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   box-sizing: border-box;
   padding: 1rem 1.5rem;
   max-width: 1200px;
@@ -1854,6 +1857,7 @@ body {
   }
   .mypage-dashboard .stage-card-list {
     max-height: calc(100vh - 250px) !important;
+    max-height: calc(100dvh - 250px) !important;
   }
   .active-stage-badge {
     width: 85vw;
@@ -2746,6 +2750,7 @@ body {
   overflow-y: auto;
   padding-right: 0.5rem;
   max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
   box-sizing: border-box;
 }
 
@@ -3012,6 +3017,7 @@ body {
 .app-container.home-mode {
   height: auto;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: visible;
   padding: 0;
   max-width: 100%;
@@ -3023,6 +3029,7 @@ body {
   display: block;
   height: auto;
   min-height: 100vh;
+  min-height: 100dvh;
   gap: 0;
 }
 
@@ -3031,6 +3038,7 @@ body {
   width: 100%;
   height: auto;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .home-mode .home-dashboard {

@@ -725,4 +725,26 @@ canvas {
 .zoom-level:hover {
   color: #818cf8;
 }
+
+@media (max-width: 768px) {
+  .draw-mode-hud {
+    bottom: 12px;
+    left: 12px;
+  }
+  .zoom-hud {
+    bottom: 12px;
+    right: 12px;
+    padding: 0.25rem 0.5rem;
+    gap: 0.35rem;
+  }
+  .zoom-btn {
+    width: 20px;
+    height: 20px;
+    font-size: 0.95rem;
+  }
+  .zoom-level {
+    min-width: 36px;
+    font-size: 0.72rem;
+  }
+}
 </style>
