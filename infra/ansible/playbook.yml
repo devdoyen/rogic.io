@@ -338,6 +338,22 @@
           retries: 60
           delay: 5
           changed_when: false
+
+        - name: "Start backend-green as well if active slot was none (initial deploy)"
+          shell:
+            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate backend-green"
+            chdir: /opt/nemologic
+          become: true
+          when: active_slot.stdout | trim == 'none'
+
+        - name: "Wait for backend-green to be healthy if active slot was none"
+          shell: "curl -s --connect-timeout 3 --max-time 5 http://localhost:8082/actuator/health || true"
+          register: result_green
+          until: '"UP" in result_green.stdout'
+          retries: 60
+          delay: 5
+          changed_when: false
+          when: active_slot.stdout | trim == 'none'
       rescue:
         - name: Get new slot container logs on failure
           shell:
@@ -352,14 +368,14 @@
 
         - name: Stop failed new slot
           shell:
-            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-{{ deploy_to }}"
+            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-blue backend-green"
             chdir: /opt/nemologic
           become: true
           ignore_errors: true
 
         - name: Fail deployment
           fail:
-            msg: "backend-{{ deploy_to }} failed to start. Current active backend is still running."
+            msg: "backend failed to start. Current active backend is still running."
 
     - name: Start and rebuild frontend
       shell:
