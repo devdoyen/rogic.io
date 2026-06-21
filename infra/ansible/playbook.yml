@@ -277,9 +277,15 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Build Docker images
+    - name: Log in to GitHub Container Registry
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue frontend
+        cmd: echo "{{ lookup('env', 'GHCR_PAT') }}" | docker login ghcr.io -u "{{ lookup('env', 'GHCR_USERNAME') }}" --password-stdin
+      become: true
+      when: lookup('env', 'GHCR_USERNAME') != '' and lookup('env', 'GHCR_PAT') != ''
+
+    - name: Pull Docker images
+      shell:
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
         chdir: /opt/nemologic
       become: true
 

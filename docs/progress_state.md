@@ -531,6 +531,12 @@
         - `deploy-staging` 단계를 통해 `main` 브랜치 푸시 시 스테이징 서버에 자동으로 배포하고, 이후 `production` 환경에 배포하기 전에 담당자가 수동 승인(Approval Gate)을 진행해야만 운영 환경으로 배포를 이관(Promotion)하도록 파이프라인의 안전장치를 완비함.
         - `docker save/load` 방식은 `gunzip` 해제 및 Docker 레이어 언팩킹 중 순간 리소스(메모리/디스크 I/O) 피크치가 높아 512MB RAM 사양에서 쓰레싱을 유발하므로, 기존의 온호스트 바이너리 카피 빌드(`docker compose build`) 방식으로 원복 완료함.
 
+    - **GitHub Container Registry (GHCR) 이미지 풀 방식 전환 및 메모리 쓰레싱 근본적 해결 (Step 60 - 완료)**:
+      - **문제 상황 진단**: GraalVM 네이티브 바이너리 파일 복사 및 온호스트 빌드(`docker compose build`) 방식 역시 512MB RAM 사양의 EC2 인스턴스에서는 Docker 데몬 빌드 컨텍스트 전송 및 CPU 점유로 인해 SSH 접속이 끊어지고 디스크 I/O Wait가 98%에 달하는 스레싱 장애가 발생함을 확인함.
+      - **GHCR 연동 및 빌드 오프로딩 완료**: Docker 이미지 빌드 및 푸시 작업을 GitHub Actions Runner에서 직접 수행하여 `ghcr.io`에 배포 버전을 push하도록 `ci-cd.yml` 워크플로우를 고도화함.
+      - **서버 측 배포 흐름 전환**: 대상 EC2 호스트에서 직접 Docker 이미지를 빌드하는 과정을 전면 제거하고, Ansible 플레이북이 `GHCR_USERNAME`과 `GHCR_PAT` 환경변수를 활용하여 GHCR에 로그인한 뒤 사전 빌드된 이미지를 `docker compose pull`로 내려받아 롤링 배포를 수행하도록 전환 완료함.
+      - **안정성 확인**: 빌드 과정의 호스트 메모리 및 CPU 자원 소모를 최소화하여 512MB RAM 한계 내에서도 SSH 중단이나 스레싱 없이 무중단 배포(Zero-downtime Blue-Green)가 안정적으로 완수됨을 보장함.
+
 
 ---
 

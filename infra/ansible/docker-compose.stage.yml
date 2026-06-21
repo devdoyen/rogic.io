@@ -7,6 +7,7 @@ services:
     ports: []
 
   frontend:
+    image: ghcr.io/devdoyen/nemologic-frontend:latest
     ports:
       - "80:80"
       - "443:443"
@@ -16,10 +17,7 @@ services:
     depends_on: []
 
   backend-blue:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: nemologic-backend:latest
+    image: ghcr.io/devdoyen/nemologic-backend:latest
     container_name: nemologic-backend-blue
     ports:
       - "8081:8080"
@@ -35,10 +33,7 @@ services:
     restart: unless-stopped
 
   backend-green:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: nemologic-backend:latest
+    image: ghcr.io/devdoyen/nemologic-backend:latest
     container_name: nemologic-backend-green
     ports:
       - "8082:8080"

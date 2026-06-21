@@ -194,19 +194,16 @@ jobs:
           npm ci
           npm run build
 
-      - name: Upload Backend Binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-binary
-          path: backend/build/native/nativeCompile/nemologic-backend
-          retention-days: 1
+      - name: Log in to GitHub Container Registry (GHCR)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Upload Frontend Dist
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
-          retention-days: 1
+      - name: Build and Push Docker Images
+        run: |
+          cp infra/ansible/nginx.prod.conf frontend/nginx.conf
+          docker build -t ghcr.io/devdoyen/nemologic-backend:latest ./backend
+          docker build -t ghcr.io/devdoyen/nemologic-frontend:latest ./frontend
+          docker push ghcr.io/devdoyen/nemologic-backend:latest
+          docker push ghcr.io/devdoyen/nemologic-frontend:latest
 
   # 5. Deploy Staging Phase: Deploys to Staging Server
   deploy-staging:
@@ -238,21 +235,6 @@ jobs:
             echo "Skipping EC2 start: AWS credentials not configured."
           fi
 
-      - name: Download Backend Binary
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-binary
-          path: backend/build/native/nativeCompile
-
-      - name: Make Backend Binary Executable
-        run: chmod +x backend/build/native/nativeCompile/nemologic-backend
-
-      - name: Download Frontend Dist
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
-
       - name: Setup Ansible
         run: |
           sudo apt-get update || true
@@ -274,6 +256,8 @@ jobs:
           GRAFANA_CLOUD_PROM_URL: ${{ secrets.GRAFANA_CLOUD_PROM_URL }}
           GRAFANA_CLOUD_PROM_USER: ${{ secrets.GRAFANA_CLOUD_PROM_USER }}
           GRAFANA_CLOUD_PROM_TOKEN: ${{ secrets.GRAFANA_CLOUD_PROM_TOKEN }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
         run: |
           cd infra/ansible
           STAGING_IP="${{ secrets.EC2_STAGING_IP }}"
@@ -296,21 +280,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Backend Binary
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-binary
-          path: backend/build/native/nativeCompile
-
-      - name: Make Backend Binary Executable
-        run: chmod +x backend/build/native/nativeCompile/nemologic-backend
-
-      - name: Download Frontend Dist
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist
-
       - name: Setup Ansible
         run: |
           sudo apt-get update || true
@@ -332,6 +301,8 @@ jobs:
           GRAFANA_CLOUD_PROM_URL: ${{ secrets.GRAFANA_CLOUD_PROM_URL }}
           GRAFANA_CLOUD_PROM_USER: ${{ secrets.GRAFANA_CLOUD_PROM_USER }}
           GRAFANA_CLOUD_PROM_TOKEN: ${{ secrets.GRAFANA_CLOUD_PROM_TOKEN }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
         run: |
           cd infra/ansible
           if [ -n "${{ secrets.EC2_IP }}" ]; then
