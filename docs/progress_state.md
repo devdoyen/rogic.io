@@ -553,7 +553,12 @@
     - **AWS CloudWatch Logs 대시보드 연동 구성 (Step 63 - 완료)**:
       - **CloudWatch Logs 패널 신설**: `current_dashboard.json` 대시보드 모델 사양에 `"AWS CloudWatch Logs"` 전용 행(Row) 및 24 가로 그리드를 완전히 채우는 10 높이의 Logs 시각화 패널(`panel-1015`)을 구성 및 추가 완료함.
       - **Logs Insights Query 지정**: `/aws/ec2/nemologic` 로그 그룹을 대상으로 실시간 로그 추이를 최신순으로 정렬 조회하는 `fields @timestamp, @message | sort @timestamp desc | limit 100` Logs Insights 쿼리 및 `ap-northeast-2` 리전을 기본 매핑함.
-      - **동적 데이터소스 UID 결합**: `variables.tf` 내에 `grafana_cloudwatch_datasource_name` 변수를 선언(기본값 `"CloudWatch"`)하고, `grafana.tf` 내에서 Grafana API를 활용해 이 이름의 데이터소스 UID를 실시간 조회한 뒤, `sla_dashboard` 리소스 선언부에서 `current_dashboard.json` 내의 placeholder인 `"$${DS_CLOUDWATCH}"`를 해당 CloudWatch data source의 실제 고유 UID로 자동 치환 및 배포하도록 Terraform IaC 구성을 고도화함.
+      - **동적 데이터소스 UID 결합**: `variables.tf` 내에 `grafana_cloudwatch_datasource_name` 변수를 선언(기본값 `"CloudWatch"`)하고, `grafana.tf` 내에서 Grafana API를 활용해 이 이름의 데이터소스 UID를 실시간 조회한 뒤, `sla_dashboard` 리소스 선언부에서 `current_dashboard.json` 내의 placeholder인 `"$${DS_CLOUDWATCH}"`를 해당 CloudWatch data source of 실제 고유 UID로 자동 치환 및 배포하도록 Terraform IaC 구성을 고도화함.
+
+    - **Git Commit SHA 기반의 Docker 이미지 버전 태깅 및 롤링 배포 연동 (Step 64 - 완료)**:
+      - **Docker 이미지 빌드 파이프라인 고도화**: `ci-cd.yml` 내 빌드 단계에서 Docker 이미지를 단순 `latest`뿐만 아니라 고유 식별을 위해 Git Commit SHA (`sha-${{ github.sha }}`) 태그를 부여하여 동시에 GHCR에 빌드 및 푸시하도록 변경함.
+      - **Ansible 및 Docker Compose 환경변수 동적 주입**: `playbook.yml` 내 `vars`와 원격지 `.env` 파일에 `IMAGE_TAG` 매핑 변수를 신설하여, 배포 실행 시점에 GHCR에서 해당 SHA 버전 이미지를 정확히 가져와 배포하도록 연동 완료함.
+      - **docker-compose.prod.yml 및 docker-compose.stage.yml 이미지 버전 제어**: 하드코딩된 `:latest` 이미지 명세를 `${IMAGE_TAG:-latest}` 환경변수 보간법 구조로 전면 전환하여, 무중단 롤백 및 다중 환경에서의 빌드 정합성을 완벽히 확보함.
 
 ---
 

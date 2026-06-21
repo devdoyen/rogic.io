@@ -25,6 +25,7 @@
     env_name: "{{ env | default('prod') }}"
     cert_domain: "{{ 'rotagic.com' if env_name == 'prod' else 'stage.rogic.io' }}"
     certbot_domains: "{{ 'rotagic.com -d www.rotagic.com -d rogic.io -d www.rogic.io' if env_name == 'prod' else 'stage.rogic.io' }}"
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
   tasks:
     - name: Debug host resources
       shell: |
@@ -201,6 +202,7 @@
           GRAFANA_CLOUD_PROM_URL={{ lookup('env', 'GRAFANA_CLOUD_PROM_URL') }}
           GRAFANA_CLOUD_PROM_USER={{ lookup('env', 'GRAFANA_CLOUD_PROM_USER') }}
           GRAFANA_CLOUD_PROM_TOKEN={{ lookup('env', 'GRAFANA_CLOUD_PROM_TOKEN') }}
+          IMAGE_TAG={{ image_tag }}
         dest: /opt/nemologic/.env
         owner: ubuntu
         group: ubuntu

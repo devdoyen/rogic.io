@@ -208,10 +208,13 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           cp infra/ansible/nginx.prod.conf frontend/nginx.conf
-          docker build -t ghcr.io/devdoyen/nemologic-backend:latest ./backend
-          docker build -t ghcr.io/devdoyen/nemologic-frontend:latest ./frontend
+          docker build -t ghcr.io/devdoyen/nemologic-backend:latest -t ghcr.io/devdoyen/nemologic-backend:sha-${{ github.sha }} ./backend
+          docker build -t ghcr.io/devdoyen/nemologic-frontend:latest -t ghcr.io/devdoyen/nemologic-frontend:sha-${{ github.sha }} ./frontend
           docker push ghcr.io/devdoyen/nemologic-backend:latest
+          docker push ghcr.io/devdoyen/nemologic-backend:sha-${{ github.sha }}
           docker push ghcr.io/devdoyen/nemologic-frontend:latest
+          docker push ghcr.io/devdoyen/nemologic-frontend:sha-${{ github.sha }}
+
 
   # 5. Deploy Staging Phase: Deploys to Staging Server
   deploy-staging:
@@ -266,6 +269,7 @@ jobs:
           GRAFANA_CLOUD_PROM_TOKEN: ${{ secrets.GRAFANA_CLOUD_PROM_TOKEN }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          IMAGE_TAG: sha-${{ github.sha }}
         run: |
           cd infra/ansible
           STAGING_IP="${{ secrets.EC2_STAGING_IP }}"
@@ -311,6 +315,7 @@ jobs:
           GRAFANA_CLOUD_PROM_TOKEN: ${{ secrets.GRAFANA_CLOUD_PROM_TOKEN }}
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          IMAGE_TAG: sha-${{ github.sha }}
         run: |
           cd infra/ansible
           if [ -n "${{ secrets.EC2_IP }}" ]; then

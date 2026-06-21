@@ -7,7 +7,7 @@ services:
     ports: []
 
   frontend:
-    image: ghcr.io/devdoyen/nemologic-frontend:latest
+    image: ghcr.io/devdoyen/nemologic-frontend:${IMAGE_TAG:-latest}
     ports:
       - "80:80"
       - "443:443"
@@ -19,7 +19,7 @@ services:
     depends_on: []
 
   backend-blue:
-    image: ghcr.io/devdoyen/nemologic-backend:latest
+    image: ghcr.io/devdoyen/nemologic-backend:${IMAGE_TAG:-latest}
     container_name: nemologic-backend-blue
     ports:
       - "8081:8080"
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
 
   backend-green:
-    image: ghcr.io/devdoyen/nemologic-backend:latest
+    image: ghcr.io/devdoyen/nemologic-backend:${IMAGE_TAG:-latest}
     container_name: nemologic-backend-green
     ports:
       - "8082:8080"
