@@ -124,12 +124,11 @@ jobs:
           path: infra/terraform/terraform-graph.png
           retention-days: 7
 
-  # 3. Infra Apply Phase: Applies Terraform changes (Requires Manual Approval)
+  # 3. Infra Apply Phase: Applies Terraform changes (Auto-Apply)
   infra-apply:
-    name: Terraform Infrastructure Apply (Requires Approval)
+    name: Terraform Infrastructure Apply (Auto-Apply)
     needs: infra-plan
     runs-on: ubuntu-latest
-    environment: production-infra # Protects this job using manual approvals in GitHub Environments
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Checkout repository

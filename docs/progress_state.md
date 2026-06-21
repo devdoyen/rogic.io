@@ -544,7 +544,7 @@
 
 ### 핵심 작업 목록
 1. **CI/CD 파이프라인 정상 가동, SSL 적용 및 Grafana 모니터링 연동 확인**
-   - GitHub Actions `infra-apply` 단계에 수동 승인(Environment Gate) 및 리전 환경변수 바인딩 추가 완료.
+   - GitHub Actions `infra-apply` 단계의 수동 승인을 제거하고 자동 적용(Auto-Apply)되도록 고도화 완료.
    - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행 (SSL 인증서 발급, HTTPS 접속 테스트 및 Grafana Cloud 대시보드 메트릭 수집 검증).
 
 ---
