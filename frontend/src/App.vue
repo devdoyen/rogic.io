@@ -2576,9 +2576,9 @@ body {
 
 .top-progress-bar {
   height: 100%;
-  width: 100%;
+  width: 0%;
   background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-  animation: countdown-shrink 3s linear forwards;
+  animation: progress-grow 3s linear forwards;
 }
 
 .all-cleared-card {
@@ -2608,6 +2608,11 @@ body {
 @keyframes countdown-shrink {
   from { width: 100%; }
   to { width: 0%; }
+}
+
+@keyframes progress-grow {
+  from { width: 0%; }
+  to { width: 100%; }
 }
 
 @keyframes spin-pulse {
