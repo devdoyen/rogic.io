@@ -194,18 +194,18 @@ jobs:
           npm ci
           npm run build
 
-      - name: Build Docker Images on Runner
-        run: |
-          cp infra/ansible/nginx.prod.conf frontend/nginx.conf
-          docker build -t nemologic-backend:latest ./backend
-          docker build -t nemologic-frontend:latest ./frontend
-          docker save nemologic-backend:latest nemologic-frontend:latest | gzip > release.tar.gz
-
-      - name: Upload Release Archive
+      - name: Upload Backend Binary
         uses: actions/upload-artifact@v4
         with:
-          name: release-archive
-          path: release.tar.gz
+          name: backend-binary
+          path: backend/build/native/nativeCompile/nemologic-backend
+          retention-days: 1
+
+      - name: Upload Frontend Dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
           retention-days: 1
 
   # 5. Deploy Staging Phase: Deploys to Staging Server
@@ -238,11 +238,20 @@ jobs:
             echo "Skipping EC2 start: AWS credentials not configured."
           fi
 
-      - name: Download Release Archive
+      - name: Download Backend Binary
         uses: actions/download-artifact@v4
         with:
-          name: release-archive
-          path: .
+          name: backend-binary
+          path: backend/build/native/nativeCompile
+
+      - name: Make Backend Binary Executable
+        run: chmod +x backend/build/native/nativeCompile/nemologic-backend
+
+      - name: Download Frontend Dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
 
       - name: Setup Ansible
         run: |
@@ -287,11 +296,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download Release Archive
+      - name: Download Backend Binary
         uses: actions/download-artifact@v4
         with:
-          name: release-archive
-          path: .
+          name: backend-binary
+          path: backend/build/native/nativeCompile
+
+      - name: Make Backend Binary Executable
+        run: chmod +x backend/build/native/nativeCompile/nemologic-backend
+
+      - name: Download Frontend Dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
 
       - name: Setup Ansible
         run: |

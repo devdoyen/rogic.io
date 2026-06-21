@@ -526,9 +526,11 @@
       - **EC2 시작/종료 수명 주기 자동화**:
         - `deploy-staging` 실행 전 AWS CLI를 통해 중지 상태인 스테이징 EC2를 자동으로 부팅(`start-instances`)하고 인스턴스가 `running` 상태가 될 때까지 대기한 뒤 빌드 자산을 배포 및 테스트하도록 연동함.
         - 비용 최소화를 위해 매일 새벽 02:00 AM KST에 스테이징 EC2를 자동으로 안전하게 중지시키는 `staging-cleanup.yml` 야간 정리 워크플로우를 추가 구축함.
-      - **CI/CD 워크플로우 최적화 (승인 게이트 도입)**:
+      - **CI/CD 워크플로우 최적화 (승인 게이트 도입 및 빌드 방식 원복)**:
         - `build` 단계를 신설하여 GraalVM Native Image 컴파일과 Node frontend 빌드를 최초 1회만 수행한 후, 생성된 바이너리와 자산을 GitHub Artifact로 업로드해 중복 빌드를 차단함.
         - `deploy-staging` 단계를 통해 `main` 브랜치 푸시 시 스테이징 서버에 자동으로 배포하고, 이후 `production` 환경에 배포하기 전에 담당자가 수동 승인(Approval Gate)을 진행해야만 운영 환경으로 배포를 이관(Promotion)하도록 파이프라인의 안전장치를 완비함.
+        - `docker save/load` 방식은 `gunzip` 해제 및 Docker 레이어 언팩킹 중 순간 리소스(메모리/디스크 I/O) 피크치가 높아 512MB RAM 사양에서 쓰레싱을 유발하므로, 기존의 온호스트 바이너리 카피 빌드(`docker compose build`) 방식으로 원복 완료함.
+
 
 ---
 
