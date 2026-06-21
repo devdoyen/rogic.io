@@ -519,6 +519,17 @@
       - **빌드 슬롯 단일화 및 명령어 최적화**: `backend-blue`와 `backend-green` 서비스는 동일 이미지(`nemologic-backend:latest`)를 사용하므로, 중복 빌드 오버헤드를 막기 위해 빌드 명령어에서 `backend-green`을 배제하고 `backend-blue` 및 `frontend`만 빌드하도록 명령어를 단일화 완료.
       - **TDD 검증**: 변경 사항 적용 후 프론트엔드 테스트(70개) 정상 통과 확인 완료.
 
+    - **스테이징(Staging) 환경 구축 및 승인 게이트 기반의 프로모션 배포 파이프라인 연동 (Step 59 - 완료)**:
+      - **스테이징 인프라 추가**: `main.tf` 및 `outputs.tf`를 고도화하여 별도의 스테이징용 EC2 인스턴스(`aws_instance.nemologic_staging_server`), 전용 Elastic IP, 스테이징 CloudWatch 로그 그룹 및 인스턴스 헬스 상태 알림 경보를 구성함.
+      - **환경별 SSL/HTTPS 연동**: `nginx.stage.conf` 및 `docker-compose.stage.yml`을 구성하여 `stage.rogic.io` 도메인에 대한 SSL 리포팅 및 443 포트 포워딩을 격리 매핑함.
+      - **Ansible 플레이북 템플릿화**: `playbook.yml`에 `env_name`, `cert_domain`, `certbot_domains` 변수들을 연동하여 스테이징(`stage.rogic.io`)과 운영(`rotagic.com`) 환경 모두 각각에 알맞은 Let's Encrypt SSL 인증서 자동 발급 및 갱신 파이프라인이 안전하게 가동되도록 고도화함.
+      - **EC2 시작/종료 수명 주기 자동화**:
+        - `deploy-staging` 실행 전 AWS CLI를 통해 중지 상태인 스테이징 EC2를 자동으로 부팅(`start-instances`)하고 인스턴스가 `running` 상태가 될 때까지 대기한 뒤 빌드 자산을 배포 및 테스트하도록 연동함.
+        - 비용 최소화를 위해 매일 새벽 02:00 AM KST에 스테이징 EC2를 자동으로 안전하게 중지시키는 `staging-cleanup.yml` 야간 정리 워크플로우를 추가 구축함.
+      - **CI/CD 워크플로우 최적화 (승인 게이트 도입)**:
+        - `build` 단계를 신설하여 GraalVM Native Image 컴파일과 Node frontend 빌드를 최초 1회만 수행한 후, 생성된 바이너리와 자산을 GitHub Artifact로 업로드해 중복 빌드를 차단함.
+        - `deploy-staging` 단계를 통해 `main` 브랜치 푸시 시 스테이징 서버에 자동으로 배포하고, 이후 `production` 환경에 배포하기 전에 담당자가 수동 승인(Approval Gate)을 진행해야만 운영 환경으로 배포를 이관(Promotion)하도록 파이프라인의 안전장치를 완비함.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)

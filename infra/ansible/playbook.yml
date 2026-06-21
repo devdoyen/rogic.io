@@ -21,6 +21,9 @@
   become: true
   vars:
     ansible_become_timeout: 60
+    env_name: "{{ env | default('prod') }}"
+    cert_domain: "{{ 'rotagic.com' if env_name == 'prod' else 'stage.rogic.io' }}"
+    certbot_domains: "{{ 'rotagic.com -d www.rotagic.com -d rogic.io -d www.rogic.io' if env_name == 'prod' else 'stage.rogic.io' }}"
   tasks:
     - name: Debug host resources
       shell: |
@@ -190,18 +193,18 @@
         group: ubuntu
         mode: '0644'
 
-    - name: Deploy production Nginx configuration
+    - name: Deploy environment Nginx configuration
       copy:
-        src: /opt/nemologic/infra/ansible/nginx.prod.conf
+        src: "/opt/nemologic/infra/ansible/nginx.{{ env_name }}.conf"
         dest: /opt/nemologic/frontend/nginx.conf
         remote_src: yes
         owner: ubuntu
         group: ubuntu
         mode: '0644'
 
-    - name: Deploy production Docker Compose override
+    - name: Deploy environment Docker Compose override
       copy:
-        src: /opt/nemologic/infra/ansible/docker-compose.prod.yml
+        src: "/opt/nemologic/infra/ansible/docker-compose.{{ env_name }}.yml"
         dest: /opt/nemologic/docker-compose.prod.yml
         remote_src: yes
         owner: ubuntu
@@ -210,7 +213,7 @@
 
     - name: Check if SSL certificate exists
       stat:
-        path: /etc/letsencrypt/live/rotagic.com/fullchain.pem
+        path: "/etc/letsencrypt/live/{{ cert_domain }}/fullchain.pem"
       register: ssl_cert_check
 
     - name: Stop frontend container if running (for standalone certbot)
@@ -223,8 +226,8 @@
     - name: Generate SSL certificate via Certbot (standalone)
       command: >
         certbot certonly --standalone
-        -d rotagic.com -d www.rotagic.com -d rogic.io -d www.rogic.io
-        --email "{{ lookup('env', 'ALERT_EMAIL') | default('admin@rotagic.com', true) }}"
+        -d {{ certbot_domains }}
+        --email "{{ lookup('env', 'ALERT_EMAIL') | default('admin@' + cert_domain, true) }}"
         --agree-tos
         --non-interactive
       become: true

@@ -246,6 +246,25 @@ resource "aws_instance" "nemologic_server" {
   }
 }
 
+# Staging EC2 Instance
+resource "aws_instance" "nemologic_staging_server" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.nemologic_subnet.id
+  vpc_security_group_ids = [aws_security_group.nemologic_sg.id]
+  key_name               = var.key_name
+  iam_instance_profile   = aws_iam_instance_profile.nemologic_ec2_profile.name
+
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
+
+  tags = {
+    Name = "nemologic-staging-server"
+  }
+}
+
 # S3 Bucket for Terraform State
 resource "aws_s3_bucket" "tfstate_bucket" {
   bucket        = "nemologic-tfstate-${random_string.suffix.result}"
@@ -289,6 +308,15 @@ resource "aws_eip" "nemologic_eip" {
   }
 }
 
+resource "aws_eip" "nemologic_staging_eip" {
+  instance = aws_instance.nemologic_staging_server.id
+  domain   = "vpc"
+
+  tags = {
+    Name = "nemologic-staging-eip"
+  }
+}
+
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "nemologic_log_group" {
   name              = "/aws/ec2/nemologic"
@@ -296,6 +324,15 @@ resource "aws_cloudwatch_log_group" "nemologic_log_group" {
 
   tags = {
     Name = "nemologic-log-group"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "nemologic_staging_log_group" {
+  name              = "/aws/ec2/nemologic-staging"
+  retention_in_days = 7
+
+  tags = {
+    Name = "nemologic-staging-log-group"
   }
 }
 
@@ -388,6 +425,28 @@ resource "aws_cloudwatch_metric_alarm" "ec2_status_check_alarm" {
 
   tags = {
     Name = "nemologic-ec2-status-check-alarm"
+  }
+}
+
+# CloudWatch Metric Alarm for Staging EC2 Status Check Failed
+resource "aws_cloudwatch_metric_alarm" "staging_ec2_status_check_alarm" {
+  alarm_name          = "nemologic-staging-ec2-status-check-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "StatusCheckFailed"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Maximum"
+  threshold           = 0
+  alarm_description   = "This alarm triggers when the Staging EC2 instance status check fails."
+  alarm_actions       = [aws_sns_topic.nemologic_alerts.arn]
+
+  dimensions = {
+    InstanceId = aws_instance.nemologic_staging_server.id
+  }
+
+  tags = {
+    Name = "nemologic-staging-ec2-status-check-alarm"
   }
 }
 

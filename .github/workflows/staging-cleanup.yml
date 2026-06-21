@@ -1,0 +1,31 @@
+name: Nightly Staging EC2 Cleanup
+
+on:
+  schedule:
+    # Run daily at 17:00 UTC (02:00 AM KST)
+    - cron: '0 17 * * *'
+  workflow_dispatch: # Enable manual trigger if needed
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: "ap-northeast-2"
+
+jobs:
+  stop-staging:
+    name: Stop Staging EC2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stop Staging Instance
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            STAGING_INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=nemologic-staging-server" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].InstanceId" --output text)
+            if [ -n "$STAGING_INSTANCE_ID" ]; then
+              echo "Stopping Staging EC2 Instance: $STAGING_INSTANCE_ID"
+              aws ec2 stop-instances --instance-ids $STAGING_INSTANCE_ID
+            else
+              echo "Staging EC2 Instance is already stopped or not found."
+            fi
+          else
+            echo "AWS credentials not configured. Skipping."
+          fi

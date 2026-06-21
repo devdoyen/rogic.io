@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  backend:
+    entrypoint: ["echo", "backend service disabled"]
+    restart: "no"
+    ports: []
+
+  frontend:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: []
+
+  backend-blue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: nemologic-backend:latest
+    container_name: nemologic-backend-blue
+    ports:
+      - "8081:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/nemologic
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      AI_API_KEY: ${AI_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend-green:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: nemologic-backend:latest
+    container_name: nemologic-backend-green
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/nemologic
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      AI_API_KEY: ${AI_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: nemologic-alloy
+    volumes:
+      - ./infra/monitoring/config.alloy:/etc/alloy/config.alloy:ro
+    environment:
+      - GRAFANA_CLOUD_PROM_URL=${GRAFANA_CLOUD_PROM_URL}
+      - GRAFANA_CLOUD_PROM_USER=${GRAFANA_CLOUD_PROM_USER}
+      - GRAFANA_CLOUD_PROM_TOKEN=${GRAFANA_CLOUD_PROM_TOKEN}
+    command: [ "run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy/data" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on: []

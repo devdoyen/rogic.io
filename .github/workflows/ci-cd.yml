@@ -158,10 +158,10 @@ jobs:
             echo "Skipping apply: AWS credentials not configured."
           fi
 
-  # 4. App Deploy Phase: Run Ansible Playbook (Runs automatically on main push)
-  app-deploy:
-    name: App Deployment (Ansible)
-    needs: [ci, infra-apply]
+  # 4. Build Phase: Compile GraalVM Native Image and Frontend Assets
+  build:
+    name: Build Application (GraalVM & Node)
+    needs: ci
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
@@ -194,6 +194,65 @@ jobs:
           npm ci
           npm run build
 
+      - name: Upload Backend Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-binary
+          path: backend/build/native/nativeCompile/nemologic-backend
+          retention-days: 1
+
+      - name: Upload Frontend Dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 1
+
+  # 5. Deploy Staging Phase: Deploys to Staging Server
+  deploy-staging:
+    name: Deploy to Staging (Ansible)
+    needs: [build, infra-apply]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start Staging EC2 Instance
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: "ap-northeast-2"
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            STAGING_INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=nemologic-staging-server" "Name=instance-state-name,Values=stopped,running" --query "Reservations[*].Instances[*].InstanceId" --output text)
+            if [ -n "$STAGING_INSTANCE_ID" ]; then
+              echo "Starting Staging EC2 Instance: $STAGING_INSTANCE_ID"
+              aws ec2 start-instances --instance-ids $STAGING_INSTANCE_ID
+              echo "Waiting for Staging EC2 Instance to be running..."
+              aws ec2 wait instance-running --instance-ids $STAGING_INSTANCE_ID
+            else
+              echo "Staging EC2 Instance not found by name tag 'nemologic-staging-server'."
+            fi
+          else
+            echo "Skipping EC2 start: AWS credentials not configured."
+          fi
+
+      - name: Download Backend Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-binary
+          path: backend/build/native/nativeCompile
+
+      - name: Make Backend Binary Executable
+        run: chmod +x backend/build/native/nativeCompile/nemologic-backend
+
+      - name: Download Frontend Dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
       - name: Setup Ansible
         run: |
           sudo apt-get update || true
@@ -205,7 +264,7 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/nemologic-key.pem
           chmod 400 ~/.ssh/nemologic-key.pem
 
-      - name: Run Ansible Playbook
+      - name: Run Ansible Playbook (Staging)
         env:
           ANSIBLE_HOST_KEY_CHECKING: 'False'
           ANSIBLE_TIMEOUT: '60'
@@ -217,11 +276,71 @@ jobs:
           GRAFANA_CLOUD_PROM_TOKEN: ${{ secrets.GRAFANA_CLOUD_PROM_TOKEN }}
         run: |
           cd infra/ansible
-          # Generate inventory hosts.ini dynamically using secrets if available
+          STAGING_IP="${{ secrets.EC2_STAGING_IP }}"
+          if [ -z "$STAGING_IP" ]; then
+            STAGING_IP="${{ secrets.EC2_IP }}"
+          fi
+          if [ -n "$STAGING_IP" ]; then
+            echo "[nemologic_servers]" > hosts.ini
+            echo "nemologic-app-server ansible_host=$STAGING_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60" >> hosts.ini
+            ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=stage"
+          else
+            echo "Skipping Staging Deploy: IP secret not set."
+          fi
+
+  # 6. Deploy Production Phase: Deploys to Production Server (Requires Manual Approval Gate)
+  deploy-production:
+    name: Deploy to Production (Ansible)
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Backend Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-binary
+          path: backend/build/native/nativeCompile
+
+      - name: Make Backend Binary Executable
+        run: chmod +x backend/build/native/nativeCompile/nemologic-backend
+
+      - name: Download Frontend Dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Setup Ansible
+        run: |
+          sudo apt-get update || true
+          sudo apt-get install -y ansible rsync
+
+      - name: Set up SSH Private Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/nemologic-key.pem
+          chmod 400 ~/.ssh/nemologic-key.pem
+
+      - name: Run Ansible Playbook (Production)
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: 'False'
+          ANSIBLE_TIMEOUT: '60'
+          ANSIBLE_BECOME_TIMEOUT: '60'
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          GRAFANA_CLOUD_PROM_URL: ${{ secrets.GRAFANA_CLOUD_PROM_URL }}
+          GRAFANA_CLOUD_PROM_USER: ${{ secrets.GRAFANA_CLOUD_PROM_USER }}
+          GRAFANA_CLOUD_PROM_TOKEN: ${{ secrets.GRAFANA_CLOUD_PROM_TOKEN }}
+        run: |
+          cd infra/ansible
           if [ -n "${{ secrets.EC2_IP }}" ]; then
             echo "[nemologic_servers]" > hosts.ini
             echo "nemologic-app-server ansible_host=${{ secrets.EC2_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60" >> hosts.ini
-            ansible-playbook -i hosts.ini playbook.yml
+            ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=prod"
           else
-            echo "Skipping Ansible: EC2_IP secret not set."
+            echo "Skipping Production Deploy: EC2_IP secret not set."
           fi
