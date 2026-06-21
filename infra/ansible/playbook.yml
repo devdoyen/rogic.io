@@ -19,6 +19,7 @@
 - name: Deploy Nemologic App to AWS EC2
   hosts: nemologic_servers
   become: true
+  gather_facts: false
   vars:
     ansible_become_timeout: 60
     env_name: "{{ env | default('prod') }}"
@@ -104,7 +105,7 @@
 
     - name: Add Docker repository
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
         state: present
 
     - name: Install Docker CE & Docker Compose Plugin
