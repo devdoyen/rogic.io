@@ -560,6 +560,11 @@
       - **Ansible 및 Docker Compose 환경변수 동적 주입**: `playbook.yml` 내 `vars`와 원격지 `.env` 파일에 `IMAGE_TAG` 매핑 변수를 신설하여, 배포 실행 시점에 GHCR에서 해당 SHA 버전 이미지를 정확히 가져와 배포하도록 연동 완료함.
       - **docker-compose.prod.yml 및 docker-compose.stage.yml 이미지 버전 제어**: 하드코딩된 `:latest` 이미지 명세를 `${IMAGE_TAG:-latest}` 환경변수 보간법 구조로 전면 전환하여, 무중단 롤백 및 다중 환경에서의 빌드 정합성을 완벽히 확보함.
 
+    - **GitHub Release 및 패치노트 생성 자동화 도입 (Step 65 - 완료)**:
+      - **태그 릴리즈 트리거 고도화**: Git tag `v*` 형태가 푸시될 경우 파이프라인(`ci-cd.yml`)이 자동 동작하도록 push 트리거 대상을 확장하고, 각 빌드 및 배포 작업(`build`, `deploy-staging`, `deploy-production`)의 conditional을 태그 배포 시에도 정상 수행되도록 갱신 완료함.
+      - **동적 이미지 태그 할당**: 태그 푸시인 경우 Docker 이미지 빌드 시 Git Commit SHA 대신 해당 태그 이름(예: `v1.0.0`)을 `IMAGE_TAG`로 적용해 태깅 및 푸시하며, Ansible 배포 스크립트에도 동적 전달하도록 파이프라인 변수를 정교화함.
+      - **자동 GitHub Release 생성 단계 수립**: Production 배포 완료 이후 최신 커밋로그와 PR 내역을 기반으로 패치노트(Changelog)를 자동 추출하여 GitHub Release를 발행하는 `create-release` 전용 작업을 최종 단계에 통합 완료함.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
