@@ -79,10 +79,18 @@
         opts: sw
         state: present
 
+    - name: Check if Docker is installed
+      command: which docker
+      register: docker_check
+      ignore_errors: true
+      changed_when: false
+
     - name: Update apt package cache
       apt:
         update_cache: yes
         force_apt_get: yes
+        cache_valid_time: 86400
+      when: docker_check.rc != 0 or (force_setup | default(false) | bool)
 
     - name: Install prerequisite packages
       apt:
@@ -97,16 +105,19 @@
           - certbot
           - prometheus-node-exporter
         state: present
+      when: docker_check.rc != 0 or (force_setup | default(false) | bool)
 
     - name: Add Docker GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
+      when: docker_check.rc != 0 or (force_setup | default(false) | bool)
 
     - name: Add Docker repository
       apt_repository:
         repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
         state: present
+      when: docker_check.rc != 0 or (force_setup | default(false) | bool)
 
     - name: Install Docker CE & Docker Compose Plugin
       apt:
@@ -116,6 +127,7 @@
           - containerd.io
           - docker-compose-plugin
         state: present
+      when: docker_check.rc != 0 or (force_setup | default(false) | bool)
 
     - name: Ensure Docker service is running and enabled
       service:
