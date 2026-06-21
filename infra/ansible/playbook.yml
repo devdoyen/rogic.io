@@ -361,9 +361,15 @@
           fail:
             msg: "backend-{{ deploy_to }} failed to start. Current active backend is still running."
 
-    - name: Start and rebuild frontend and alloy
+    - name: Start and rebuild frontend
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d frontend alloy
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d frontend
+        chdir: /opt/nemologic
+      become: true
+
+    - name: Start and rebuild alloy
+      shell:
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d alloy
         chdir: /opt/nemologic
       become: true
 
