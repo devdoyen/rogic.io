@@ -512,7 +512,7 @@
     - **Grafana 통합 대시보드 내 OS 디스크 사용률(Disk Usage) 모니터링 패널 추가 (Step 57 - 완료)**:
       - **디스크 사용률 수식 패널 설계**: `host.docker.internal:9100`에서 수집되는 `node_exporter` 지표 기반으로 호스트의 디스크 잔여량 및 실시간 사용 비율을 추적하기 위한 `"OS Disk Usage"` 패널(`panel-1010`)을 신설 완료. PromQL 연산 수식 `100 * (1 - (node_filesystem_avail_bytes{mountpoint="/"}/node_filesystem_size_bytes{mountpoint="/"}))` 및 `percent` 포맷 단위를 부여하여 시각 가독성 확보.
       - **그리드 레이아웃(GridLayout) 최적화**: 신규 패널 수용을 위해 기존 SLA Metrics 2행의 그리드 배치를 재조정 완료. 단일 수치 기반 지표(Incident Count, MTTR, MTBF)의 너비를 기존 6에서 `4`로 압축하고, 시계열 추이 모니터링이 용이한 수치 지표(Memory/Swap Usage, Disk Usage)의 너비를 `6`으로 설정하여 총합 `24` 그리드의 시각적 균형감 유지.
-      - **설정 파일 반영**: `infra/monitoring/current_dashboard.json`을 프로그램 방식으로 안전하게 갱신하고, Terraform `grafana.tf` 배포 설정과의 연계가 즉시 가능하도록 형상관리 동기화 완료.
+      - **설정 파일 반영**: `infra/monitoring/current_dashboard.json`을 프로그램 방식으로 안전하게 갱신하고, Agentless Pull 전환에 맞춰 `instance` 라벨 대신 `scrape_job` 라벨을 필터로 매핑하도록 PromQL 쿼리 및 변수 설정을 일괄 고도화 완료. Terraform `grafana.tf` 배포 설정과의 연계가 즉시 가능하도록 형상관리 동기화 완료.
 
     - **배포 서버(EC2) Docker 이미지 빌드 시 메모리 최적화 및 슬롯 단일화 (Step 58 - 완료)**:
       - **Alloy 중지 단계 조기 배치**: 배포 중 메모리 경합을 줄이기 위해, 기존에 빌드 완료 후 실행되던 `Stop alloy container before deployment to free up memory` 태스크를 `Build Docker images` 실행 직전 단계로 상향 배치하여 모니터링 에이전트가 차지하던 메모리 공간을 선제적으로 확보함.
