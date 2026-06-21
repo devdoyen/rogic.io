@@ -568,7 +568,7 @@
   * **GraalVM Native Image Hibernate 프록시 호환성 오류 해결**: Native Image 환경에서 Hibernate의 `BytecodeProvider`가 `none`으로 설정되어 런타임 프록시 생성이 불가능한 문제(`HibernateException: Generation of HibernateProxy instances at runtime is not allowed`)를 진단. `History.java` 엔티티의 `User` 및 `Stage` 관계에 설정된 `@ManyToOne(fetch = FetchType.LAZY)`를 `FetchType.EAGER`로 변경하여 프록시 생성 없이 즉시 로딩(Eager Loading)되도록 수정. 대상 엔티티(`User`, `Stage`)가 경량 구조이므로 성능 영향은 무시할 수 있는 수준이며, JVM 기반 백엔드 단위 테스트 전원 통과를 확인 완료.
   * **Alloy 에이전트 영구 제거 및 Agentless Pull 아키텍처 전환**:
     * 512MB RAM 수준의 초경량 VM 환경에서 Grafana Alloy 에이전트 구동에 따른 메모리 및 CPU 부하로 인한 스래싱 장애를 차단하기 위해, Alloy 수집기 컨테이너를 영구 제거함.
-    * **지표 수집(Pull 방식) 개방**: 호스트에는 10MB 미만의 메모리만 소모하는 `prometheus-node-exporter`만 9100 포트로 띄우고, 백엔드 프로메테우스 지표 `/actuator/prometheus`를 Nginx를 통해 외부로 개방하여 Grafana Cloud(Hosted Prometheus)가 인터넷을 통해 보안 제어된 상태에서 서버를 직접 찔러 당겨가도록(Pull) 구성을 변경함.
+    * **지표 수집(Pull 방식) 개방 및 Bearer Token 보안**: 호스트에는 10MB 미만의 메모리만 소모하는 `prometheus-node-exporter`만 9100 포트로 띄우고, 백엔드 프로메테우스 지표 `/actuator/prometheus` 및 호스트 지표 `/node-metrics`를 Nginx를 통해 외부로 개방함. 이때 Grafana Cloud Scrape Job과의 연동 및 보안 규격 충족을 위해 `Authorization: Bearer nemologic-metrics-token-2026` 헤더 존재 여부를 검증하고 누락 시 `401 Unauthorized`를 반환하도록 Nginx 설정을 고도화함.
     * **로그 수집(CloudWatch 연동) 오프로딩**: 서버 내부에 추가 수집기를 띄우지 않고, Docker 데몬의 `awslogs` 드라이버를 통해 CloudWatch Logs로 로그를 전송(서버 부하 0%)한 뒤, Grafana Cloud의 AWS CloudWatch 데이터소스를 연결하여 로그를 쿼리하도록 모니터링 아키텍처를 경량 최적화 완료함.
 * **서비스 가용성 및 수명 주기 모니터링 타협 (SaaS 모니터링 비용 제로화)**:
   * AWS Route 53 Health Check(월 $0.50~$0.75) 및 CloudWatch Metric Alarm(월 $0.10)의 클라우드 상시 지출을 완전히 방지하기 위해, Grafana Cloud의 무료 티어 내에 포함된 Synthetic Monitoring(월 500,000회 무료 쿼터)을 도입.
