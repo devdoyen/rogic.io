@@ -388,6 +388,7 @@
         cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d alloy
         chdir: /opt/nemologic
       become: true
+      when: enable_alloy | default(false) | bool
 
 
 
