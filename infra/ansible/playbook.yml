@@ -176,10 +176,8 @@
           - "--exclude=.gradle"
           - "--exclude=node_modules"
           - "--exclude=infra/terraform/.terraform"
-          - "--exclude=backend/build/classes"
-          - "--exclude=backend/build/tmp"
-          - "--exclude=backend/build/reports"
-          - "--exclude=backend/build/test-results"
+          - "--exclude=backend"
+          - "--exclude=frontend"
 
     - name: Ensure environment configurations are set
       copy:
@@ -277,9 +275,9 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Build Docker images
+    - name: Load Docker images from archive
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend-blue frontend
+        cmd: gunzip -c /opt/nemologic/release.tar.gz | docker load
         chdir: /opt/nemologic
       become: true
 
