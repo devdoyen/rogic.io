@@ -399,7 +399,7 @@
                 <span class="active-size-badge-name">
                   {{ selectedPlaySizeFilter === 'All' ? 'All' : selectedPlaySizeFilter + 'x' + selectedPlaySizeFilter }}
                 </span>
-                <span class="active-size-arrow" :class="{ 'open': isSizeListOpen }">▼</span>
+                <span class="active-size-arrow" :class="{ 'open': isSizeListOpen }">▲</span>
               </div>
               <transition name="slide-up">
                 <div v-if="isSizeListOpen" class="play-size-filter-dropdown">
@@ -2049,16 +2049,18 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  width: 90px;
 }
 
 .active-size-badge {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.4rem;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 9999px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   cursor: pointer;
@@ -2068,8 +2070,8 @@ body {
   font-size: 0.8rem;
   color: #38bdf8;
   transition: all 0.2s ease;
-  min-width: 70px;
-  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .active-size-badge:hover {
@@ -2082,6 +2084,8 @@ body {
   font-size: 0.65rem;
   transition: transform 0.25s ease;
   color: #94a3b8;
+  display: inline-block;
+  line-height: 1;
 }
 
 .active-size-arrow.open {
@@ -2091,7 +2095,7 @@ body {
 
 .play-size-filter-dropdown {
   position: absolute;
-  bottom: 45px;
+  bottom: calc(100% + 8px);
   right: 0;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(12px);
@@ -2102,13 +2106,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  min-width: 95px;
+  width: 100%;
   z-index: 101;
   box-sizing: border-box;
 }
 
 .play-size-filter-dropdown-item {
-  padding: 0.4rem 0.75rem;
+  padding: 0.4rem 0.5rem;
   border-radius: 8px;
   color: #94a3b8;
   font-size: 0.75rem;
@@ -2117,6 +2121,8 @@ body {
   transition: all 0.15s ease;
   font-family: 'Outfit', sans-serif;
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .play-size-filter-dropdown-item:hover {
@@ -2155,14 +2161,11 @@ body {
   .play-size-filter-bar-floating {
     bottom: 12px;
     right: 12px;
+    width: 80px;
   }
   .active-size-badge {
-    padding: 0.4rem 0.8rem;
+    padding: 0.4rem 0.6rem;
     font-size: 0.72rem;
-    min-width: 60px;
-  }
-  .play-size-filter-dropdown {
-    bottom: 40px;
   }
 }
 
