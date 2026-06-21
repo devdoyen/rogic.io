@@ -676,7 +676,8 @@ canvas {
 .zoom-hud {
   position: absolute;
   bottom: 20px;
-  right: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -733,7 +734,8 @@ canvas {
   }
   .zoom-hud {
     bottom: 12px;
-    right: 12px;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 0.25rem 0.5rem;
     gap: 0.35rem;
   }

@@ -326,25 +326,7 @@
       </select>
     </div>
 
-    <!-- Play Size Filter Bar (Always visible on the right) -->
-    <div class="play-size-filter-bar" v-if="availablePlaySizes.length > 0 && currentTab === 'play'">
-      <button 
-        class="play-size-filter-btn" 
-        :class="{ active: selectedPlaySizeFilter === 'All' }"
-        @click.stop="selectedPlaySizeFilter = 'All'"
-      >
-        All
-      </button>
-      <button 
-        v-for="size in availablePlaySizes" 
-        :key="size"
-        class="play-size-filter-btn" 
-        :class="{ active: selectedPlaySizeFilter === String(size) }"
-        @click.stop="selectedPlaySizeFilter = String(size)"
-      >
-        {{ size }}x{{ size }}
-      </button>
-    </div>
+    <!-- Old Play Size Filter Bar removed and replaced with floating version -->
 
     <!-- Main Layout Grid -->
     <div class="app-layout">
@@ -406,6 +388,36 @@
                     <div v-if="filteredPlayStages.length === 0" class="empty-stages" style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
                       🎉 No puzzles found!
                     </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Floating Size Selector (Bottom-Right) -->
+            <div class="play-size-filter-bar-floating" v-if="availablePlaySizes.length > 0">
+              <div class="active-size-badge" @click.stop="isSizeListOpen = !isSizeListOpen">
+                <span class="active-size-badge-name">
+                  {{ selectedPlaySizeFilter === 'All' ? 'All' : selectedPlaySizeFilter + 'x' + selectedPlaySizeFilter }}
+                </span>
+                <span class="active-size-arrow" :class="{ 'open': isSizeListOpen }">▼</span>
+              </div>
+              <transition name="slide-up">
+                <div v-if="isSizeListOpen" class="play-size-filter-dropdown">
+                  <div 
+                    class="play-size-filter-dropdown-item" 
+                    :class="{ active: selectedPlaySizeFilter === 'All' }"
+                    @click.stop="selectSizeFilter('All')"
+                  >
+                    All
+                  </div>
+                  <div 
+                    v-for="size in availablePlaySizes" 
+                    :key="size"
+                    class="play-size-filter-dropdown-item" 
+                    :class="{ active: selectedPlaySizeFilter === String(size) }"
+                    @click.stop="selectSizeFilter(String(size))"
+                  >
+                    {{ size }}x{{ size }}
                   </div>
                 </div>
               </transition>
@@ -648,6 +660,12 @@ const allUnclearedStages = computed(() => {
 });
 
 const selectedPlaySizeFilter = ref<string>('All');
+const isSizeListOpen = ref<boolean>(false);
+
+function selectSizeFilter(size: string) {
+  selectedPlaySizeFilter.value = size;
+  isSizeListOpen.value = false;
+}
 
 const availablePlaySizes = computed(() => {
   const sizes = new Set<number>();
@@ -1498,6 +1516,17 @@ async function initializeUserSession() {
   }
 }
 
+function handleGlobalClick(event: MouseEvent) {
+  const target = event.target as HTMLElement;
+  if (!target) return;
+  if (!target.closest('.puzzle-selector-floating-container')) {
+    isStageListOpen.value = false;
+  }
+  if (!target.closest('.play-size-filter-bar-floating')) {
+    isSizeListOpen.value = false;
+  }
+}
+
 function preventPinchZoom(e: TouchEvent) {
   if (e.touches.length > 1) {
     e.preventDefault();
@@ -1553,7 +1582,9 @@ onMounted(async () => {
 
   window.addEventListener('resize', handleConfettiResize);
   document.addEventListener('touchstart', preventPinchZoom, { passive: false });
-
+  if (!isTestEnv) {
+    document.addEventListener('click', handleGlobalClick);
+  }
 });
 
 onUnmounted(() => {
@@ -1562,6 +1593,7 @@ onUnmounted(() => {
   document.removeEventListener('touchstart', preventPinchZoom);
   if (!isTestEnv) {
     window.removeEventListener('hashchange', handleHashChange);
+    document.removeEventListener('click', handleGlobalClick);
   }
   stopConfetti();
   
@@ -2008,101 +2040,129 @@ body {
   gap: 0.75rem;
 }
 
-/* Play size filter styling */
-/* Play size filter styling */
-.play-size-filter-bar {
-  position: fixed;
+/* Play size filter styling (Floating Dropdown) */
+.play-size-filter-bar-floating {
+  position: absolute;
+  bottom: 20px;
   right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+  z-index: 100;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  gap: 0.25rem;
-  background: rgba(30, 41, 59, 0.55);
-  backdrop-filter: blur(12px);
+  align-items: flex-end;
+}
+
+.active-size-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.25rem;
-  border-radius: 20px;
-  width: fit-content;
-  flex-shrink: 0;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-  z-index: 100;
-  scrollbar-width: none; /* Hide scrollbar for Firefox */
-}
-
-.play-size-filter-bar::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for Chrome/Safari */
-}
-
-.play-size-filter-btn {
-  padding: 0.4rem 0.6rem;
-  background-color: transparent;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  white-space: nowrap;
+  user-select: none;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #38bdf8;
+  transition: all 0.2s ease;
+  min-width: 70px;
+  justify-content: space-between;
+}
+
+.active-size-badge:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #ffffff;
+}
+
+.active-size-arrow {
+  font-size: 0.65rem;
+  transition: transform 0.25s ease;
+  color: #94a3b8;
+}
+
+.active-size-arrow.open {
+  transform: rotate(180deg);
+  color: #38bdf8;
+}
+
+.play-size-filter-dropdown {
+  position: absolute;
+  bottom: 45px;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 95px;
+  z-index: 101;
+  box-sizing: border-box;
+}
+
+.play-size-filter-dropdown-item {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.15s ease;
   font-family: 'Outfit', sans-serif;
   text-align: center;
 }
 
-.play-size-filter-bar .play-size-filter-btn:first-child {
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
-.play-size-filter-bar .play-size-filter-btn:last-child {
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-}
-
-.play-size-filter-btn:hover {
+.play-size-filter-dropdown-item:hover {
   color: #f8fafc;
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.play-size-filter-btn.active {
+.play-size-filter-dropdown-item.active {
   background-color: rgba(56, 189, 248, 0.15);
   border-color: rgba(56, 189, 248, 0.3);
   color: #38bdf8;
 }
 
+/* Transitions */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-down-enter-from,
+.slide-down-leave-to {
+  transform: translateX(-50%) translateY(-10px);
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(10px);
+  opacity: 0;
+}
+
 @media (max-width: 768px) {
-  .play-size-filter-bar {
-    position: static;
-    transform: none;
-    flex-direction: row;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 0.5rem;
-    padding: 0.25rem;
-    background: rgba(30, 41, 59, 0.4);
-    border-radius: 20px;
-    box-shadow: none;
-    z-index: 100;
-    box-sizing: border-box;
+  .play-size-filter-bar-floating {
+    bottom: 12px;
+    right: 12px;
   }
-
-  .play-size-filter-bar .play-size-filter-btn:first-child {
-    border-top-left-radius: 16px;
-    border-bottom-left-radius: 16px;
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
+  .active-size-badge {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.72rem;
+    min-width: 60px;
   }
-
-  .play-size-filter-bar .play-size-filter-btn:last-child {
-    border-top-right-radius: 16px;
-    border-bottom-right-radius: 16px;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
+  .play-size-filter-dropdown {
+    bottom: 40px;
   }
 }
 
