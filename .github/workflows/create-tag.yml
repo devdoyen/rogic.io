@@ -1,0 +1,59 @@
+name: Create & Push Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Calculate Next Version Tag
+        id: get_version
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION=${LATEST_TAG#v}
+          
+          IFS='.' read -r major minor patch <<< "$VERSION"
+          
+          BUMP="${{ github.event.inputs.bump_type }}"
+          if [ "$BUMP" = "major" ]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [ "$BUMP" = "minor" ]; then
+            minor=$((minor + 1))
+            patch=0
+          else
+            patch=$((patch + 1))
+          fi
+          
+          NEXT_TAG="v$major.$minor.$patch"
+          echo "NEXT_TAG=$NEXT_TAG" >> $GITHUB_ENV
+          echo "next_tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create and Push Tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag ${{ env.NEXT_TAG }}
+          git push origin ${{ env.NEXT_TAG }}

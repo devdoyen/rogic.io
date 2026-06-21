@@ -574,6 +574,10 @@
    - GitHub Actions `infra-apply` 단계의 수동 승인을 제거하고 자동 적용(Auto-Apply)되도록 고도화 완료.
    - GitHub Actions `app-deploy`를 트리거하여 배포 및 기동 검증 진행 (SSL 인증서 발급, HTTPS 접속 테스트 및 Grafana Cloud 대시보드 메트릭 수집 검증).
 
+    - **릴리즈 태그 자동 생성 및 푸시 워크플로우 추가 (Step 66 - 완료)**:
+      - **Create & Push Release Tag 워크플로우 구현**: `.github/workflows/create-tag.yml`을 신설하여 GitHub UI 상에서 사용자가 버전 증가 범위(`patch`, `minor`, `major`)를 선택하고 원클릭 실행 시 자동으로 최신 Git 태그를 계산해 원격지에 푸시해 주도록 자동화함.
+      - **태그 및 릴리즈 딜레이 연동**: 수동으로 Git 커맨드를 작성하지 않고도 안전하게 신규 릴리즈 및 롤백용 태그 버전을 생성할 수 있는 통합 관리 체계를 완성함.
+
 ---
 
 ## 3. 인프라 아키텍처 비용 최적화 및 타협 설계 (Self-Funded Infra Trade-offs)
