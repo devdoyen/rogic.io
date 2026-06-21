@@ -429,12 +429,9 @@
           </div>
 
           <div v-if="solved" class="celebration-overlay-container">
-            <div v-if="allUnclearedStages.length > 0" class="transition-indicator-card">
-              <span class="indicator-icon">✨</span>
-              <div class="indicator-progress-container">
-                <div class="indicator-progress-bar"></div>
-              </div>
-              <span class="indicator-next-arrow">➔</span>
+            <!-- Full-width progress bar at the very top of the viewport -->
+            <div v-if="allUnclearedStages.length > 0" class="top-progress-bar-container">
+              <div class="top-progress-bar"></div>
             </div>
             <div v-else class="all-cleared-card">
               <div class="trophy-icon">🏆</div>
@@ -2567,44 +2564,21 @@ body {
   z-index: 10000;
 }
 
-.transition-indicator-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(30, 41, 59, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.5rem 1.2rem;
-  border-radius: 9999px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-  animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.top-progress-bar-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.03);
+  z-index: 11000;
 }
 
-.indicator-icon {
-  font-size: 1.1rem;
-  animation: spin-pulse 2s infinite linear;
-}
-
-.indicator-progress-container {
-  width: 120px;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
-  overflow: hidden;
-}
-
-.indicator-progress-bar {
+.top-progress-bar {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #38bdf8, #818cf8);
-  border-radius: 9999px;
+  background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
   animation: countdown-shrink 3s linear forwards;
-}
-
-.indicator-next-arrow {
-  color: #38bdf8;
-  font-size: 1rem;
-  animation: arrow-bounce 1s infinite alternate ease-in-out;
 }
 
 .all-cleared-card {
