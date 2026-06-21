@@ -277,7 +277,7 @@ jobs:
   # 6. Deploy Production Phase: Deploys to Production Server (Requires Manual Approval Gate)
   deploy-production:
     name: Deploy to Production (Ansible)
-    needs: build
+    needs: [build, deploy-staging]
     runs-on: ubuntu-latest
     environment: production
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
