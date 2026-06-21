@@ -283,11 +283,7 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: "Stop alloy container before deployment to free up memory"
-      shell:
-        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop alloy || true"
-        chdir: /opt/nemologic
-      become: true
+
 
     - name: Log in to GitHub Container Registry
       shell:
@@ -383,12 +379,7 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Start and rebuild alloy
-      shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d alloy
-        chdir: /opt/nemologic
-      become: true
-      when: enable_alloy | default(false) | bool
+
 
 
 
