@@ -280,14 +280,22 @@
             :class="{ active: currentTab === 'play' }" 
             @click="onTabChange('play')"
           >
-            🎮 <span class="btn-text">Game Play</span>
+            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="3" />
+              <path d="M6 12h4M8 10v4M15 12h.01M18 12h.01" stroke-width="2.8" />
+            </svg>
+            <span class="btn-text">Game Play</span>
           </button>
           <button 
             class="tab-btn-mypage" 
             :class="{ active: currentTab === 'mypage' }" 
             @click="onTabChange('mypage')"
           >
-            👤 <span class="btn-text">My Page</span>
+            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span class="btn-text">My Page</span>
           </button>
         </nav>
         <button 
@@ -295,7 +303,11 @@
           :class="{ active: isLeaderboardOpen }" 
           @click="isLeaderboardOpen = !isLeaderboardOpen"
         >
-          🏆 <span class="btn-text">Leaderboard</span>
+          <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34" />
+            <path d="M12 2a6 6 0 0 1 6 6v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8a6 6 0 0 1 6-6Z" />
+          </svg>
+          <span class="btn-text">Leaderboard</span>
         </button>
       </div>
     </header>
@@ -1687,7 +1699,20 @@ body {
   transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
+}
+
+.header-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+  stroke: currentColor;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.app-nav button:hover .header-icon,
+.leaderboard-toggle-btn:hover .header-icon {
+  transform: scale(1.1);
 }
 
 .app-nav button.active {
