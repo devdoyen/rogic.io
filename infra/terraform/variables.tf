@@ -53,5 +53,12 @@ variable "grafana_prometheus_datasource_name" {
   default     = "grafanacloud-grandwalrus3189-prom"
 }
 
+variable "grafana_cloudwatch_datasource_name" {
+  description = "The name of the CloudWatch datasource in Grafana Cloud"
+  type        = string
+  default     = "CloudWatch"
+}
+
+
 
 

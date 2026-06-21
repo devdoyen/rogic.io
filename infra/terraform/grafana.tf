@@ -44,6 +44,13 @@ data "grafana_data_source" "prometheus" {
   name  = var.grafana_prometheus_datasource_name
 }
 
+# Look up the CloudWatch data source in Grafana Cloud
+data "grafana_data_source" "cloudwatch" {
+  count = var.grafana_url != "" && var.grafana_auth != "" ? 1 : 0
+  name  = var.grafana_cloudwatch_datasource_name
+}
+
+
 # Create a folder for Nemologic Alerts if auth is configured
 resource "grafana_folder" "nemologic_folder" {
   count = var.grafana_url != "" && var.grafana_auth != "" ? 1 : 0
@@ -169,9 +176,13 @@ resource "grafana_dashboard" "sla_dashboard" {
 
   folder = grafana_folder.nemologic_folder[0].uid
   config_json = replace(
-    file("${path.module}/../monitoring/current_dashboard.json"),
-    "\"$${DS_PROMETHEUS}\"",
-    "\"${data.grafana_data_source.prometheus[0].uid}\""
+    replace(
+      file("${path.module}/../monitoring/current_dashboard.json"),
+      "\"$${DS_PROMETHEUS}\"",
+      "\"${data.grafana_data_source.prometheus[0].uid}\""
+    ),
+    "\"$${DS_CLOUDWATCH}\"",
+    "\"${data.grafana_data_source.cloudwatch[0].uid}\""
   )
 }
 

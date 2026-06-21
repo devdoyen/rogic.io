@@ -545,6 +545,16 @@
       - **하단 우측 플로팅 크기 필터 드롭다운 전환**: 기존에 우측에 고정 노출되던 크기 필터 바(`.play-size-filter-bar`)를 제거하고, 하단 우측에 플로팅 배지(`.active-size-badge`) 형태로 띄운 뒤 클릭 시 선택지(All, 5x5, 10x10 등)가 부드럽게 슬라이드업(`slide-up`)되는 드롭다운 구조로 변경하여 캔버스 활용 공간을 넓히고 미니멀리즘 디자인을 한 단계 고도화했습니다. 바깥 영역 클릭 시 자동 닫힘 기능도 구현 완료했습니다.
       - **테스트 정합성 통과**: 변경 사항 반영 후에도 기존 70개 프론트엔드 테스트 케이스가 사이드이펙트 없이 100% 정상 통과함을 보장함.
 
+    - **Grafana 대시보드 SLA 지표 패널 분리 및 OS 지표 환경별 격리 (Step 62 - 완료)**:
+      - **SLA 대시보드 가독성 고도화**: Consolidated 되었던 MTTR, MTBF(24h, 7d, 30d) 지표들을 각각 개별 패널(panel-1011~1014 신설)로 완전히 분리하고, 24 그리드 내에 가로로 조화롭게 격리 배치하여 시각적 인지도를 대폭 개선함.
+      - **OS 메트릭 중복 노출 해결**: OS Memory/Swap Usage (`panel-1009`) 및 OS Disk Usage (`panel-1010`) 패널의 PromQL에 `$env` (springboot 인스턴스명에서 `stage` 또는 `prod`를 자동 추출하는 변수) 필터를 적용하여, staging 환경과 production 환경의 지표가 중복으로 노출되지 않고 각각 선택한 대상 인스턴스에 맞추어 깔끔하게 1개 라인으로만 렌더링되도록 수정 완료함.
+      - **JSON 정합성 검증**: python의 json 라이브러리를 통해 수정한 `current_dashboard.json` 파일의 구문 유효성을 백엔드 및 인프라 디렉토리 빌드 이전에 사전 검증함.
+
+    - **AWS CloudWatch Logs 대시보드 연동 구성 (Step 63 - 완료)**:
+      - **CloudWatch Logs 패널 신설**: `current_dashboard.json` 대시보드 모델 사양에 `"AWS CloudWatch Logs"` 전용 행(Row) 및 24 가로 그리드를 완전히 채우는 10 높이의 Logs 시각화 패널(`panel-1015`)을 구성 및 추가 완료함.
+      - **Logs Insights Query 지정**: `/aws/ec2/nemologic` 로그 그룹을 대상으로 실시간 로그 추이를 최신순으로 정렬 조회하는 `fields @timestamp, @message | sort @timestamp desc | limit 100` Logs Insights 쿼리 및 `ap-northeast-2` 리전을 기본 매핑함.
+      - **동적 데이터소스 UID 결합**: `variables.tf` 내에 `grafana_cloudwatch_datasource_name` 변수를 선언(기본값 `"CloudWatch"`)하고, `grafana.tf` 내에서 Grafana API를 활용해 이 이름의 데이터소스 UID를 실시간 조회한 뒤, `sla_dashboard` 리소스 선언부에서 `current_dashboard.json` 내의 placeholder인 `"$${DS_CLOUDWATCH}"`를 해당 CloudWatch data source의 실제 고유 UID로 자동 치환 및 배포하도록 Terraform IaC 구성을 고도화함.
+
 ---
 
 ## 2. 다음 단계: 서비스 고도화 및 운영 (Next Goals)
