@@ -5616,7 +5616,7 @@
                       "spec": {
                         "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) - sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) / 2, 1)",
                         "format": "time_series",
-                        "legendFormat": "24-Hour",
+                        "legendFormat": "{{probe}}",
                         "instant": true,
                         "range": false,
                         "editorMode": "code"
@@ -5697,7 +5697,7 @@
                       "spec": {
                         "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) - sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) / 2, 1)",
                         "format": "time_series",
-                        "legendFormat": "7-Day",
+                        "legendFormat": "{{probe}}",
                         "instant": true,
                         "range": false,
                         "editorMode": "code"
@@ -5778,7 +5778,7 @@
                       "spec": {
                         "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) - sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) / 2, 1)",
                         "format": "time_series",
-                        "legendFormat": "30-Day",
+                        "legendFormat": "{{probe}}",
                         "instant": true,
                         "range": false,
                         "editorMode": "code"
@@ -5859,7 +5859,7 @@
                       "spec": {
                         "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) / 2, 1)",
                         "format": "time_series",
-                        "legendFormat": "24-Hour",
+                        "legendFormat": "{{probe}}",
                         "instant": true,
                         "range": false,
                         "editorMode": "code"
@@ -5940,7 +5940,7 @@
                       "spec": {
                         "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) / 2, 1)",
                         "format": "time_series",
-                        "legendFormat": "7-Day",
+                        "legendFormat": "{{probe}}",
                         "instant": true,
                         "range": false,
                         "editorMode": "code"
@@ -6021,7 +6021,7 @@
                       "spec": {
                         "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) / 2, 1)",
                         "format": "time_series",
-                        "legendFormat": "30-Day",
+                        "legendFormat": "{{probe}}",
                         "instant": true,
                         "range": false,
                         "editorMode": "code"
