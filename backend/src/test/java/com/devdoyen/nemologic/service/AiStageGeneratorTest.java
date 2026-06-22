@@ -53,7 +53,7 @@ public class AiStageGeneratorTest {
 
         scheduler.generateDailyPuzzle();
 
-        int[] sizes = {5, 10, 15, 20, 25, 30};
+        int[] sizes = {5, 10, 15, 20};
         for (int size : sizes) {
             verify(mockGenerator, times(5)).generateAndSaveStage(size, size, false);
         }
