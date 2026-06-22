@@ -620,3 +620,12 @@
 ### Grafana 대시보드 OS 메트릭 필터 매핑 수정 - 완료
 - **현상**: Alloy를 제거하고 Node Exporter 직접 Scrape Job(node-metrics) 구성 후, OS Memory/Swap 및 OS Disk Usage 지표 누락 현상 발생.
 - **해결 내역**: infra/monitoring/current_dashboard.json 내의 해당 패널 쿼리에서 job 매핑을 정규식(job=~".*$env")에서 명시적인 job="node-metrics"로 고정 반영 완료.
+
+### Grafana 대시보드 SLA Metrics 레이아웃 개선 - 완료
+- **현상**: 여러 지표가 한 줄에 섞여 있어 시인성이 떨어짐 (Availability, MTTR, MTBF 패널 등)
+- **해결 내역**: infra/monitoring/current_dashboard.json의 Nemologic Service SLA Metrics Row 패널 배치를 다음과 같이 정리 완료
+  - Row 0: API Health Status, 30-Day Incident Count
+  - Row 1: 24-Hour/7-Day/30-Day Service Availability (각 폭 8)
+  - Row 2: 24-Hour/7-Day/30-Day MTTR (각 폭 8)
+  - Row 3: 24-Hour/7-Day/30-Day MTBF (각 폭 8)
+  - Row 4: OS Memory/Swap Usage, OS Disk Usage
