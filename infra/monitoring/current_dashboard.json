@@ -6467,6 +6467,96 @@
             }
           }
         }
+      },
+      "panel-2007": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2007,
+          "title": "OS CPU iowait & idle (%)",
+          "description": "Host CPU iowait and idle metrics from Node Exporter to detect Thrashing",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "uid": "${DS_PROMETHEUS}"
+                      },
+                      "spec": {
+                        "expr": "avg(rate(node_cpu_seconds_total{mode=\"iowait\"}[5m])) * 100",
+                        "format": "time_series",
+                        "legendFormat": "iowait"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "uid": "${DS_PROMETHEUS}"
+                      },
+                      "spec": {
+                        "expr": "avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100",
+                        "format": "time_series",
+                        "legendFormat": "idle"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.1.0-27335746580",
+            "spec": {
+              "options": {
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "mbytes",
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "lineWidth": 2
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
       }
     },
     "layout": {
@@ -6656,7 +6746,7 @@
                       "spec": {
                         "x": 0,
                         "y": 25,
-                        "width": 12,
+                        "width": 8,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
@@ -6667,9 +6757,22 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 12,
+                        "x": 8,
                         "y": 25,
-                        "width": 12,
+                        "width": 8,
+                        "height": 5,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-2007"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 25,
+                        "width": 8,
                         "height": 5,
                         "element": {
                           "kind": "ElementReference",
