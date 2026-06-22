@@ -6492,7 +6492,8 @@
                       "spec": {
                         "expr": "avg(rate(node_cpu_seconds_total{mode=\"iowait\"}[5m])) * 100",
                         "format": "time_series",
-                        "legendFormat": "iowait"
+                        "legendFormat": "iowait",
+                        "refId": "A"
                       }
                     },
                     "refId": "A",
@@ -6512,7 +6513,8 @@
                       "spec": {
                         "expr": "avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100",
                         "format": "time_series",
-                        "legendFormat": "idle"
+                        "legendFormat": "idle",
+                        "refId": "B"
                       }
                     },
                     "refId": "A",
