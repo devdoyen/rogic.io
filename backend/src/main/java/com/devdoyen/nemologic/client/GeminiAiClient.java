@@ -62,10 +62,10 @@ public class GeminiAiClient implements AiClient {
                     "Generate a valid, creative, and unique nonogram puzzle of size %dx%d in JSON format. " +
                     "Do NOT generate a simple heart shape. Create a different recognizable shape (like a tree, a letter, a face, a cup, an arrow, etc.). " +
                     "%s" +
-                    "The response must follow this exact JSON schema: { \"name\": \"ObjectName\", \"width\": %d, \"height\": %d, \"grid\": \"...\" }. " +
+                    "The response must follow this exact JSON schema: { \"name\": \"ObjectName\", \"width\": %d, \"height\": %d, \"grid\": [[...], [...]] }. " +
                     "Do NOT prefix the name with 'AI Puzzle:' or 'Daily Puzzle:'. Just output the pure name of the object. " +
                     "Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). " +
-                    "Grid string must be a valid serialized JSON array representing %dx%d cells containing only 0 and 1. " +
+                    "The 'grid' field MUST be an actual 2D JSON array (not a string) representing %dx%d cells containing only 0 and 1. " +
                     "Ensure the filled cells form a recognizable connected component with symmetry where appropriate, avoiding isolated noise pixels.",
                     width, height, excludePrompt, width, height, width, height
                 );

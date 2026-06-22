@@ -9,7 +9,7 @@ public class MockAiClient implements AiClient {
 
     @Override
     public String generateDailyPuzzleJson() {
-        return "{\"name\": \"AI Puzzle: Daily Apple\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        return "{\"name\": \"AI Puzzle: Daily Apple\", \"width\": 5, \"height\": 5, \"grid\": [[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]}";
     }
 
     @Override
@@ -27,7 +27,7 @@ public class MockAiClient implements AiClient {
         }
         sb.append("]");
         String gridStr = sb.toString();
-        return String.format("{\"name\": \"AI Puzzle: Custom Shape\", \"width\": %d, \"height\": %d, \"grid\": \"%s\"}", width, height, gridStr);
+        return String.format("{\"name\": \"AI Puzzle: Custom Shape\", \"width\": %d, \"height\": %d, \"grid\": %s}", width, height, gridStr);
     }
 
     @Override

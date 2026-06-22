@@ -31,7 +31,7 @@ public class AiStageGeneratorTest {
 
     @Test
     public void testParseJsonAndSaveStage() {
-        String mockJsonResponse = "{\"name\": \"AI Puzzle\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        String mockJsonResponse = "{\"name\": \"AI Puzzle\", \"width\": 5, \"height\": 5, \"grid\": [[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]}";
         when(aiClient.generatePuzzleJson(anyInt(), anyInt(), anyList())).thenReturn(mockJsonResponse);
         when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -83,7 +83,7 @@ public class AiStageGeneratorTest {
 
     @Test
     public void testGenerateAndSaveStageRetriesOnNonUniqueSolution() {
-        String mockNonUniqueJsonResponse = "{\"name\": \"Invalid AI Puzzle\", \"width\": 2, \"height\": 2, \"grid\": \"[[1,0],[0,1]]\"}";
+        String mockNonUniqueJsonResponse = "{\"name\": \"Invalid AI Puzzle\", \"width\": 2, \"height\": 2, \"grid\": [[1,0],[0,1]]}";
         when(aiClient.generatePuzzleJson(anyInt(), anyInt(), anyList())).thenReturn(mockNonUniqueJsonResponse);
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -106,7 +106,7 @@ public class AiStageGeneratorTest {
 
     @Test
     public void testTitleCleaning() {
-        String mockJsonResponse = "{\"name\": \"AI Puzzle: Fantastic Tree\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        String mockJsonResponse = "{\"name\": \"AI Puzzle: Fantastic Tree\", \"width\": 5, \"height\": 5, \"grid\": [[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]}";
         when(aiClient.generatePuzzleJson(eq(5), eq(5), anyList())).thenReturn(mockJsonResponse);
         when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -119,7 +119,7 @@ public class AiStageGeneratorTest {
     @Test
     public void testCustomSizeGeneration() {
         // 3x3 grid (unique solution: all 1s)
-        String mockJsonResponse = "{\"name\": \"Custom 3x3\", \"width\": 3, \"height\": 3, \"grid\": \"[[1,1,1],[1,1,1],[1,1,1]]\"}";
+        String mockJsonResponse = "{\"name\": \"Custom 3x3\", \"width\": 3, \"height\": 3, \"grid\": [[1,1,1],[1,1,1],[1,1,1]]}";
         when(aiClient.generatePuzzleJson(eq(3), eq(3), anyList())).thenReturn(mockJsonResponse);
         when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -133,7 +133,7 @@ public class AiStageGeneratorTest {
 
     @Test
     public void testDuplicateGridDeduplication() {
-        String mockJsonResponse = "{\"name\": \"AI Puzzle\", \"width\": 5, \"height\": 5, \"grid\": \"[[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]\"}";
+        String mockJsonResponse = "{\"name\": \"AI Puzzle\", \"width\": 5, \"height\": 5, \"grid\": [[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]}";
         when(aiClient.generatePuzzleJson(anyInt(), anyInt(), anyList())).thenReturn(mockJsonResponse);
         // First existsBySolutionGrid check returns true (duplicate), second returns false
         when(stageRepository.existsBySolutionGrid(any())).thenReturn(true).thenReturn(false);

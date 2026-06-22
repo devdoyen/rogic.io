@@ -629,3 +629,12 @@
   - Row 2: 24-Hour/7-Day/30-Day MTTR (각 폭 8)
   - Row 3: 24-Hour/7-Day/30-Day MTBF (각 폭 8)
   - Row 4: OS Memory/Swap Usage, OS Disk Usage
+
+### AI 퍼즐 자동 생성 알고리즘 개선 - 완료
+- **현상**: 스케줄러를 통한 AI 퍼즐 생성 시, Gemini가 JSON Array 형식([[0,1]..])을 문자열로 직렬화하지 않고 원시 배열 형식으로 응답하여 파싱 에러 발생. 또한 무작위 모양이 
+onogramSolver의 유일해(Unique Solution) 검증을 100% 확률로 통과하지 못해 실패를 반복하고 조용히 종료됨.
+- **해결 내역**:
+  - GeminiAiClient 프롬프트 명세 개선: JSON 배열 그대로를 응답하도록 지시.
+  - AiStageGenerator 내부의 AiResponseDto.grid 타입을 String에서 JsonNode로 변경하여 유연한 배열 데이터 매핑 지원 구현.
+  - 유일해 강제 보정 알고리즘(makeGridUnique) 도입: AI가 생성한 형태가 유일해 조건을 만족하지 못할 경우, 최대 50회 동안 랜덤하게 픽셀을 토글하며 유일해를 찾도록 보완(배경 작업이므로 15초 이내 소요).
+  - 관련 단위 테스트(AiStageGeneratorTest) 수정 및 검증 완료.

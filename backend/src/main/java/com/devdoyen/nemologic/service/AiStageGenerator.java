@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
+import java.util.Random;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
 public class AiStageGenerator {
@@ -55,7 +57,16 @@ public class AiStageGenerator {
                 }
 
                 AiResponseDto dto = objectMapper.readValue(json, AiResponseDto.class);
-                int[][] grid = objectMapper.readValue(dto.getGrid(), int[][].class);
+                
+                int[][] grid;
+                if (dto.getGrid() == null) {
+                    throw new IllegalArgumentException("Grid is null in AI response");
+                }
+                if (dto.getGrid().isTextual()) {
+                    grid = objectMapper.readValue(dto.getGrid().asText(), int[][].class);
+                } else {
+                    grid = objectMapper.convertValue(dto.getGrid(), int[][].class);
+                }
 
                 validateGrid(grid, dto.getWidth(), dto.getHeight());
 
@@ -68,7 +79,7 @@ public class AiStageGenerator {
                 }
 
                 if (!nonogramSolver.isUnique(grid)) {
-                    throw new IllegalArgumentException("Generated puzzle does not have a unique solution");
+                    makeGridUnique(grid, dto.getWidth(), dto.getHeight());
                 }
 
                 String rawName = dto.getName();
@@ -110,11 +121,26 @@ public class AiStageGenerator {
         }
     }
 
+    private void makeGridUnique(int[][] grid, int width, int height) {
+        Random random = new Random();
+        for (int i = 0; i < 50; i++) {
+            // Flip a random pixel
+            int r = random.nextInt(height);
+            int c = random.nextInt(width);
+            grid[r][c] ^= 1;
+            
+            if (nonogramSolver.isUnique(grid)) {
+                return; // Made it unique
+            }
+        }
+        throw new IllegalArgumentException("Failed to make puzzle unique after 50 iterations");
+    }
+
     private static class AiResponseDto {
         private String name;
         private int width;
         private int height;
-        private String grid;
+        private JsonNode grid;
 
         public String getName() {
             return name;
@@ -140,11 +166,11 @@ public class AiStageGenerator {
             this.height = height;
         }
 
-        public String getGrid() {
+        public JsonNode getGrid() {
             return grid;
         }
 
-        public void setGrid(String grid) {
+        public void setGrid(JsonNode grid) {
             this.grid = grid;
         }
     }
