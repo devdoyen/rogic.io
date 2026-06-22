@@ -616,3 +616,7 @@
 
 
 
+
+### Grafana 대시보드 OS 메트릭 필터 매핑 수정 - 완료
+- **현상**: Alloy를 제거하고 Node Exporter 직접 Scrape Job(node-metrics) 구성 후, OS Memory/Swap 및 OS Disk Usage 지표 누락 현상 발생.
+- **해결 내역**: infra/monitoring/current_dashboard.json 내의 해당 패널 쿼리에서 job 매핑을 정규식(job=~".*$env")에서 명시적인 job="node-metrics"로 고정 반영 완료.
