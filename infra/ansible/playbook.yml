@@ -61,7 +61,7 @@
         path: /swapfile
         owner: root
         group: root
-        mode: '0600'
+        mode: "0600"
       when: not swap_file_check.stat.exists or swap_file_check.stat.size != 2147483648
 
     - name: Make swap file
@@ -156,7 +156,7 @@
         dest: /etc/docker/daemon.json
         owner: root
         group: root
-        mode: '0644'
+        mode: "0644"
       register: docker_daemon_config
 
     - name: Restart Docker if daemon config changed
@@ -171,7 +171,7 @@
         state: directory
         owner: ubuntu
         group: ubuntu
-        mode: '0755'
+        mode: "0755"
 
     - name: Remove legacy nested directory if exists
       file:
@@ -206,7 +206,7 @@
         dest: /opt/nemologic/.env
         owner: ubuntu
         group: ubuntu
-        mode: '0644'
+        mode: "0644"
 
     - name: Deploy environment Nginx configuration
       copy:
@@ -215,7 +215,7 @@
         remote_src: yes
         owner: ubuntu
         group: ubuntu
-        mode: '0644'
+        mode: "0644"
 
     - name: Deploy environment Docker Compose override
       copy:
@@ -224,7 +224,7 @@
         remote_src: yes
         owner: ubuntu
         group: ubuntu
-        mode: '0644'
+        mode: "0644"
 
     - name: Check if SSL certificate exists
       stat:
@@ -254,7 +254,7 @@
         state: directory
         owner: root
         group: root
-        mode: '0755'
+        mode: "0755"
       loop:
         - /etc/letsencrypt/renewal-hooks/pre
         - /etc/letsencrypt/renewal-hooks/post
@@ -267,7 +267,7 @@
         dest: /etc/letsencrypt/renewal-hooks/pre/stop-frontend.sh
         owner: root
         group: root
-        mode: '0755'
+        mode: "0755"
 
     - name: Deploy Certbot renewal post-hook
       copy:
@@ -277,15 +277,13 @@
         dest: /etc/letsencrypt/renewal-hooks/post/start-frontend.sh
         owner: root
         group: root
-        mode: '0755'
+        mode: "0755"
 
     - name: Start Database service
       shell:
         cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d db
         chdir: /opt/nemologic
       become: true
-
-
 
     - name: Log in to GitHub Container Registry
       shell:
@@ -381,10 +379,12 @@
         chdir: /opt/nemologic
       become: true
 
-
-
-
-
+    - name: Stop old backend slot after successful deployment
+      shell:
+        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-{{ stop_from }}"
+        chdir: /opt/nemologic
+      become: true
+      when: stop_from != 'none'
 
     - name: Create backups directory
       file:
@@ -392,7 +392,7 @@
         state: directory
         owner: ubuntu
         group: ubuntu
-        mode: '0755'
+        mode: "0755"
 
     - name: Deploy DB backup script
       copy:
@@ -406,19 +406,19 @@
           fi
 
           BACKUP_NAME="db-backup-$(date +%Y%m%d-%H%M%S).sql.gz"
-          
+
           # Dump DB and compress
           docker exec nemologic-db pg_dump -U postgres nemologic | gzip > /tmp/$BACKUP_NAME
-          
+
           # Upload to S3
           aws s3 cp /tmp/$BACKUP_NAME s3://$BUCKET_NAME/postgres/$BACKUP_NAME
-          
+
           # Remove local temp backup file
           rm /tmp/$BACKUP_NAME
         dest: /opt/nemologic/backups/backup_db.sh
         owner: ubuntu
         group: ubuntu
-        mode: '0755'
+        mode: "0755"
 
     - name: Set up Daily Cron Job for DB Backups (Run daily at 3:00 AM)
       cron:
@@ -426,4 +426,3 @@
         minute: "0"
         hour: "3"
         job: "/bin/bash /opt/nemologic/backups/backup_db.sh > /dev/null 2>&1"
-
