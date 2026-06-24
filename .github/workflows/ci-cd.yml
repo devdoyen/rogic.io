@@ -356,18 +356,67 @@ jobs:
     name: Create GitHub Release & Changelog
     needs: deploy-production
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+    permissions:
+      contents: write
+    if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Create Release Notes
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine and Create Tag
+        id: tag_info
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "TAG_NAME=${{ github.ref_name }}" >> $GITHUB_ENV
+          else
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            VERSION=${LATEST_TAG#v}
+            
+            IFS='.' read -r major minor patch <<< "$VERSION"
+            
+            BUMP="patch"
+            if [ "$LATEST_TAG" != "v0.0.0" ]; then
+              COMMITS=$(git log ${LATEST_TAG}..HEAD --format=%s)
+            else
+              COMMITS=$(git log --format=%s)
+            fi
+
+            if echo "$COMMITS" | grep -E "BREAKING CHANGE|!" >/dev/null; then
+              BUMP="major"
+            elif echo "$COMMITS" | grep -E "^feat(\(.*\))?:" >/dev/null; then
+              BUMP="minor"
+            fi
+            
+            if [ "$BUMP" = "major" ]; then
+              major=$((major + 1))
+              minor=0
+              patch=0
+            elif [ "$BUMP" = "minor" ]; then
+              minor=$((minor + 1))
+              patch=0
+            else
+              patch=$((patch + 1))
+            fi
+            
+            NEXT_TAG="v$major.$minor.$patch"
+            echo "TAG_NAME=$NEXT_TAG" >> $GITHUB_ENV
+            
+            git tag $NEXT_TAG
+            git push origin $NEXT_TAG
+          fi
+
+      - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} \
-            --title "Release ${{ github.ref_name }}" \
+          gh release create ${{ env.TAG_NAME }} \
+            --title "Release ${{ env.TAG_NAME }}" \
             --generate-notes
 
