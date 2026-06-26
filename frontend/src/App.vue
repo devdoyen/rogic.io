@@ -569,8 +569,8 @@ import { PuzzleBoard } from './engine/puzzleBoard';
 import { rotateGrid } from './engine/gridRotator';
 import { fetchStages, fetchStageById, fetchAiStages, startStage } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
-import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory, logVisit, fetchTelemetryStats } from './api/userApi';
-import type { User, TelemetryStats } from './api/userApi';
+import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory } from './api/userApi';
+import type { User } from './api/userApi';
 import { hasUserSession, getUserSession, setUserSession } from './api/auth';
 import type { UserSession } from './api/auth';
 import { fetchAdminStages, createStage, approveStage, deleteStage, restoreStage, generateAiStage, loginAdmin, logoutAdmin, isAdminAuthenticated } from './api/adminApi';
@@ -598,7 +598,6 @@ const isTestEnv = typeof window !== 'undefined' && (
   navigator.userAgent.includes('jsdom')
 );
 
-const telemetryStats = ref<TelemetryStats | null>(null);
 
 const rankings = ref<User[]>([]);
 const currentUser = ref<UserSession | null>(null);
@@ -1039,16 +1038,6 @@ async function loadUserHistory() {
     console.error('Failed to load user history:', error);
   }
 }
-
-async function loadTelemetryStats() {
-  try {
-    const stats = await fetchTelemetryStats();
-    telemetryStats.value = stats;
-  } catch (error) {
-    console.error('Failed to load telemetry stats:', error);
-  }
-}
-
 function getTabFromHash(): 'home' | 'play' | 'mypage' | 'admin' {
   const hash = window.location.hash;
   if (hash === '#/play') return 'play';
@@ -1076,9 +1065,7 @@ async function handleHashChange() {
 async function onTabChange(tab: 'home' | 'play' | 'mypage' | 'admin') {
   currentTab.value = tab;
   updateHashFromTab(tab);
-  if (tab === 'home') {
-    await loadTelemetryStats();
-  } else if (tab === 'mypage') {
+  if (tab === 'mypage') {
     await loadUserHistory();
     const tipShown = localStorage.getItem('rogic_mypage_tip_shown');
     if (!tipShown) {
@@ -1557,19 +1544,11 @@ onMounted(async () => {
   }
 
   await initializeUserSession();
-  if (currentUser.value && currentUser.value.uuid) {
-    try {
-      await logVisit(currentUser.value.uuid);
-    } catch (error) {
-      console.warn('Failed to log visitor access:', error);
-    }
-  }
   await Promise.all([
     loadStagesList(),
     loadAiStagesList(),
     loadRankingsList(),
-    loadUserHistory(),
-    loadTelemetryStats()
+    loadUserHistory()
   ]);
 
   if (isAdminMode.value && isAdminLogged.value) {

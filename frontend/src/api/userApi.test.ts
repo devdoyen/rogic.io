@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import axios from 'axios';
-import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory, logVisit } from './userApi';
+import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory } from './userApi';
 
 vi.mock('axios');
 
@@ -59,15 +59,6 @@ describe('userApi TDD Red Phase', () => {
     const result = await registerAnonymousUser();
     expect(axios.post).toHaveBeenCalledWith('http://localhost:8080/api/users/register');
     expect(result).toEqual(mockNewUser);
-  });
-
-  it('logVisit should call POST /api/analytics/visit with uuid query param', async () => {
-    vi.mocked(axios.post).mockResolvedValue({});
-
-    await logVisit('test-uuid-value');
-    expect(axios.post).toHaveBeenCalledWith('http://localhost:8080/api/analytics/visit', null, {
-      params: { uuid: 'test-uuid-value' }
-    });
   });
 });
 

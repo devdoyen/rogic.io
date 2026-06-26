@@ -51,33 +51,3 @@ export async function registerAnonymousUser(): Promise<User> {
   return response.data;
 }
 
-export async function logVisit(uuid: string): Promise<void> {
-  const ANALYTICS_BASE_URL = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/api/analytics`
-    : (import.meta.env.PROD ? '/api/analytics' : 'http://localhost:8080/api/analytics');
-
-  await axios.post(`${ANALYTICS_BASE_URL}/visit`, null, {
-    params: { uuid }
-  });
-}
-
-export interface TelemetryStats {
-  dailyUniqueVisitors: number;
-  totalUniqueVisitors: number;
-  totalVisits: number;
-  totalAttempts: number;
-  totalClears: number;
-  uptimeRatio: number;
-  mtbf: number;
-  mttr: number;
-}
-
-export async function fetchTelemetryStats(): Promise<TelemetryStats> {
-  const ANALYTICS_BASE_URL = import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/api/analytics`
-    : (import.meta.env.PROD ? '/api/analytics' : 'http://localhost:8080/api/analytics');
-
-  const response = await axios.get<TelemetryStats>(`${ANALYTICS_BASE_URL}/stats`);
-  return response.data;
-}
-

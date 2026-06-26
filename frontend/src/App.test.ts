@@ -24,16 +24,6 @@ describe('App.vue Leaderboard Integration TDD', () => {
       { id: 1, name: 'Seeded Stage 1', width: 5, height: 5, active: true, approved: true, solutionGrid: [[1]] },
       { id: 9, name: 'AI Pending Stage', width: 5, height: 5, active: false, approved: false, solutionGrid: [[1]] }
     ]);
-    vi.mocked(userApi.fetchTelemetryStats).mockResolvedValue({
-      dailyUniqueVisitors: 5,
-      totalUniqueVisitors: 20,
-      totalVisits: 100,
-      totalAttempts: 50,
-      totalClears: 30,
-      uptimeRatio: 0.9998,
-      mtbf: 720,
-      mttr: 0.8
-    });
   });
 
   it('should call fetchStages and fetchRanking on mount, and render rankings list', async () => {
@@ -121,23 +111,6 @@ describe('App.vue Leaderboard Integration TDD', () => {
     expect(registerSpy).not.toHaveBeenCalled();
   });
 
-  it('should call logVisit on mount with the user session UUID', async () => {
-    localStorage.clear();
-    const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
-    const mockStageDetails = { id: 1, name: 'Heart Shape', width: 5, height: 5, solutionGrid: [[1]] };
-    const mockRankings = [{ id: 3, username: 'Player3', xp: 1000, level: 5 }];
-
-    vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
-    vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
-    vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
-    
-    const logVisitSpy = vi.spyOn(userApi, 'logVisit').mockResolvedValue(undefined as any);
-
-    mount(App);
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(logVisitSpy).toHaveBeenCalledWith('temp-uuid');
-  });
 
   it('should switch to My Page tab and fetch/render user history', async () => {
     const mockStages = [{ id: 1, name: 'Heart Shape', width: 5, height: 5 }];
@@ -576,7 +549,6 @@ describe('App.vue Leaderboard Integration TDD', () => {
     vi.spyOn(stageApi, 'fetchStages').mockResolvedValue(mockStages);
     vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
     vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
-    vi.spyOn(userApi, 'fetchTelemetryStats');
 
     const wrapper = mount(App);
     await new Promise((resolve) => setTimeout(resolve, 50));
