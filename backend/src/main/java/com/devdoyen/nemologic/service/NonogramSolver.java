@@ -89,6 +89,57 @@ public class NonogramSolver {
         return solutionsCount[0] == 1;
     }
 
+    public boolean isLogicalOnly(int[][] solutionGrid) {
+        if (solutionGrid == null || solutionGrid.length == 0 || solutionGrid[0].length == 0) {
+            return true;
+        }
+
+        int rowCount = solutionGrid.length;
+        int colCount = solutionGrid[0].length;
+
+        List<Integer>[] rowHints = calculateRowHints(solutionGrid);
+        List<Integer>[] colHints = calculateColHints(solutionGrid);
+
+        int[][] state = new int[rowCount][colCount];
+        for (int r = 0; r < rowCount; r++) {
+            for (int c = 0; c < colCount; c++) {
+                state[r][c] = -1;
+            }
+        }
+
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (int r = 0; r < rowCount; r++) {
+                if (solveLine(state[r], rowHints[r])) {
+                    changed = true;
+                }
+            }
+            for (int c = 0; c < colCount; c++) {
+                int[] colLine = new int[rowCount];
+                for (int r = 0; r < rowCount; r++) {
+                    colLine[r] = state[r][c];
+                }
+                if (solveLine(colLine, colHints[c])) {
+                    changed = true;
+                    for (int r = 0; r < rowCount; r++) {
+                        state[r][c] = colLine[r];
+                    }
+                }
+            }
+        }
+
+        for (int r = 0; r < rowCount; r++) {
+            for (int c = 0; c < colCount; c++) {
+                if (state[r][c] == -1) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+
     private void solveDFSCell(int r, int c, int[][] state, List<Integer>[] rowHints, List<Integer>[] colHints,
                               int[] solutionsCount, long startTime) {
         if (System.currentTimeMillis() - startTime > TIMEOUT_MS) {

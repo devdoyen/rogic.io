@@ -1,6 +1,7 @@
 package com.devdoyen.nemologic.controller;
 
 import org.junit.jupiter.api.Test;
+import com.devdoyen.nemologic.model.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,6 +24,18 @@ public class StageControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private com.devdoyen.nemologic.repository.StageRepository stageRepository;
+
+    @org.junit.jupiter.api.BeforeEach
+    public void setUp() {
+        for (Stage s : stageRepository.findAll()) {
+            s.setActive(true);
+            s.setApproved(true);
+            stageRepository.save(s);
+        }
+    }
 
     @Test
     public void getAllStagesShouldReturnStagesList() throws Exception {

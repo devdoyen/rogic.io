@@ -15,14 +15,22 @@ public class AdminAuthController {
 
     private final AdminSessionManager sessionManager;
 
-    @Value("${admin.username:admin}")
+    @Value("${admin.username}")
     private String adminUsername;
 
-    @Value("${admin.password:admin123!}")
+    @Value("${admin.password}")
     private String adminPassword;
 
     public AdminAuthController(AdminSessionManager sessionManager) {
         this.sessionManager = sessionManager;
+    }
+
+    @jakarta.annotation.PostConstruct
+    public void validateCredentials() {
+        if (adminUsername == null || adminUsername.trim().isEmpty() ||
+            adminPassword == null || adminPassword.trim().isEmpty()) {
+            throw new IllegalStateException("ADMIN_USERNAME and ADMIN_PASSWORD configurations must be set and non-empty.");
+        }
     }
 
     @PostMapping("/login")

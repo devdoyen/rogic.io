@@ -32,7 +32,6 @@ public class StageService {
         Stage stage = stageRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
         stage.setApproved(true);
-        stage.setActive(true);
         stageRepository.save(stage);
     }
 

@@ -6,10 +6,7 @@ import com.devdoyen.nemologic.repository.StageRepository;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.io.IOException;
-import java.util.Random;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
@@ -38,7 +35,7 @@ public class AiStageGenerator {
 
     @Transactional
     public Stage generateAndSaveStage(int width, int height, boolean active) {
-        int maxAttempts = 3;
+        int maxAttempts = 5;
         Exception lastException = null;
 
         java.util.List<Stage> recentStages = stageRepository.findTop10ByOrderByIdDesc();
@@ -56,39 +53,75 @@ public class AiStageGenerator {
                     throw new IllegalArgumentException("AI response is empty");
                 }
 
-                AiResponseDto dto = objectMapper.readValue(json, AiResponseDto.class);
-                
-                int[][] grid;
-                if (dto.getGrid() == null) {
-                    throw new IllegalArgumentException("Grid is null in AI response");
-                }
-                if (dto.getGrid().isTextual()) {
-                    grid = objectMapper.readValue(dto.getGrid().asText(), int[][].class);
+                java.util.List<AiResponseDto> candidates = new java.util.ArrayList<>();
+                String trimmedJson = json.trim();
+                if (trimmedJson.startsWith("[")) {
+                    com.fasterxml.jackson.core.type.TypeReference<java.util.List<AiResponseDto>> typeRef = 
+                        new com.fasterxml.jackson.core.type.TypeReference<java.util.List<AiResponseDto>>() {};
+                    candidates = objectMapper.readValue(trimmedJson, typeRef);
+                } else if (trimmedJson.startsWith("{")) {
+                    AiResponseDto singleDto = objectMapper.readValue(trimmedJson, AiResponseDto.class);
+                    candidates.add(singleDto);
                 } else {
-                    grid = objectMapper.convertValue(dto.getGrid(), int[][].class);
+                    throw new IllegalArgumentException("Invalid JSON format from AI");
                 }
 
-                validateGrid(grid, dto.getWidth(), dto.getHeight());
+                java.util.List<ValidatedCandidate> validatedList = new java.util.ArrayList<>();
+                for (AiResponseDto dto : candidates) {
+                    try {
+                        if (dto.getGrid() == null) continue;
+                        int[][] grid;
+                        if (dto.getGrid().isTextual()) {
+                            grid = objectMapper.readValue(dto.getGrid().asText(), int[][].class);
+                        } else {
+                            grid = objectMapper.convertValue(dto.getGrid(), int[][].class);
+                        }
 
-                if (dto.getWidth() != width || dto.getHeight() != height) {
-                    throw new IllegalArgumentException("Generated puzzle size mismatch. Expected: " + width + "x" + height + ", Actual: " + dto.getWidth() + "x" + dto.getHeight());
+                        validateGrid(grid, dto.getWidth(), dto.getHeight());
+
+                        if (dto.getWidth() != width || dto.getHeight() != height) {
+                            continue;
+                        }
+
+                        if (stageRepository.existsBySolutionGrid(grid)) {
+                            continue;
+                        }
+
+                        ValidatedCandidate vc = new ValidatedCandidate();
+                        vc.dto = dto;
+                        vc.grid = grid;
+                        vc.isLogicalOnly = nonogramSolver.isLogicalOnly(grid);
+                        if (vc.isLogicalOnly) {
+                            validatedList.add(vc);
+                        }
+                    } catch (Exception e) {
+                        // ignore invalid candidates
+                    }
                 }
 
-                if (stageRepository.existsBySolutionGrid(grid)) {
-                    throw new IllegalArgumentException("Generated puzzle already exists in database");
+                ValidatedCandidate selected = null;
+                // Stage 1: Logical-only
+                for (ValidatedCandidate vc : validatedList) {
+                    if (vc.isLogicalOnly) {
+                        selected = vc;
+                        break;
+                    }
                 }
 
-                if (!nonogramSolver.isUnique(grid)) {
-                    makeGridUnique(grid, dto.getWidth(), dto.getHeight());
+                if (selected == null) {
+                    throw new IllegalArgumentException("No valid logical-only nonogram puzzle found among AI candidates");
                 }
 
-                String rawName = dto.getName();
-                String cleanName = rawName != null ? rawName.replaceAll("^(?i)(AI\\s+Puzzle|Daily\\s+Puzzle)[:\\s-]*", "").trim() : "AI Puzzle";
+                AiResponseDto selectedDto = selected.dto;
+                int[][] selectedGrid = selected.grid;
+
+                String rawName = selectedDto.getName();
+                String cleanName = rawName != null ? rawName.replaceAll("^(?i)(AI\\s+Puzzle|Daily\\s+Puzzle)[:\\s-]*", "").trim() : "Puzzle";
                 if (cleanName.isEmpty()) {
-                    cleanName = "AI Puzzle";
+                    cleanName = "Puzzle";
                 }
 
-                Stage newStage = new Stage(null, cleanName, dto.getWidth(), dto.getHeight(), grid);
+                Stage newStage = new Stage(null, cleanName, selectedDto.getWidth(), selectedDto.getHeight(), selectedGrid);
                 newStage.setActive(active);
                 newStage.setApproved(active);
                 return stageRepository.save(newStage);
@@ -121,20 +154,6 @@ public class AiStageGenerator {
         }
     }
 
-    private void makeGridUnique(int[][] grid, int width, int height) {
-        Random random = new Random();
-        for (int i = 0; i < 50; i++) {
-            // Flip a random pixel
-            int r = random.nextInt(height);
-            int c = random.nextInt(width);
-            grid[r][c] ^= 1;
-            
-            if (nonogramSolver.isUnique(grid)) {
-                return; // Made it unique
-            }
-        }
-        throw new IllegalArgumentException("Failed to make puzzle unique after 50 iterations");
-    }
 
     private static class AiResponseDto {
         private String name;
@@ -173,5 +192,11 @@ public class AiStageGenerator {
         public void setGrid(JsonNode grid) {
             this.grid = grid;
         }
+    }
+
+    private static class ValidatedCandidate {
+        AiResponseDto dto;
+        int[][] grid;
+        boolean isLogicalOnly;
     }
 }

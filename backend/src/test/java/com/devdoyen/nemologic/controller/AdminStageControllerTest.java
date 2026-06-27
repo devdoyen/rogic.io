@@ -106,7 +106,7 @@ public class AdminStageControllerTest {
                 .andExpect(status().isOk());
 
         Stage updated = stageRepository.findById(saved.getId()).orElseThrow();
-        assertTrue(updated.isActive());
+        assertFalse(updated.isActive());
         assertTrue(updated.isApproved());
     }
 

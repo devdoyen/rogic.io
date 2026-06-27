@@ -59,16 +59,18 @@ public class GeminiAiClient implements AiClient {
                 }
 
                 String prompt = String.format(
-                    "Generate a valid, creative, and unique nonogram puzzle of size %dx%d in JSON format. " +
-                    "Do NOT generate a simple heart shape. Create a different recognizable shape (like a tree, a letter, a face, a cup, an arrow, etc.). " +
+                    "Generate a JSON array of exactly 5 different, creative, and recognizable pixel art grid designs of size %dx%d in JSON format. " +
+                    "Do NOT generate a simple heart shape. Create recognizable shapes (like a tree, a letter, a face, a cup, an arrow, animal, etc.). " +
                     "%s" +
-                    "The response must follow this exact JSON schema: { \"name\": \"ObjectName\", \"width\": %d, \"height\": %d, \"grid\": [[...], [...]] }. " +
-                    "Do NOT prefix the name with 'AI Puzzle:' or 'Daily Puzzle:'. Just output the pure name of the object. " +
+                    "The response must follow this exact JSON schema (a JSON array of candidate objects): " +
+                    "[ { \"name\": \"ObjectName\", \"width\": %d, \"height\": %d, \"grid\": [[...], [...]] }, ... ]. " +
+                    "Do NOT prefix names with 'AI Puzzle:' or 'Daily Puzzle:'. Just output the pure name of the object. " +
                     "Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). " +
-                    "The 'grid' field MUST be an actual 2D JSON array (not a string) representing %dx%d cells containing only 0 and 1. " +
-                    "Ensure the filled cells form a recognizable connected component with symmetry where appropriate, avoiding isolated noise pixels.",
+                    "For each candidate, the 'grid' field MUST be a 2D JSON array representing %dx%d cells containing only 0 and 1. " +
+                    "Ensure the filled cells form a recognizable connected shape with symmetry where appropriate, avoiding isolated noise pixels.",
                     width, height, excludePrompt, width, height, width, height
                 );
+
 
                 parts.put("text", prompt);
                 contents.put("parts", Collections.singletonList(parts));

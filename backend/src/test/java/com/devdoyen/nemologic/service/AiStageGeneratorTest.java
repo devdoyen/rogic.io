@@ -38,7 +38,7 @@ public class AiStageGeneratorTest {
         Stage stage = aiStageGenerator.generateAndSaveStage();
 
         assertNotNull(stage);
-        assertEquals("AI Puzzle", stage.getName());
+        assertEquals("Puzzle", stage.getName());
         assertEquals(5, stage.getWidth());
         assertEquals(5, stage.getHeight());
         assertNotNull(stage.getSolutionGrid());
@@ -78,7 +78,7 @@ public class AiStageGeneratorTest {
             aiStageGenerator.generateAndSaveStage();
         });
 
-        verify(aiClient, times(3)).generatePuzzleJson(eq(5), eq(5), anyList());
+        verify(aiClient, times(5)).generatePuzzleJson(eq(5), eq(5), anyList());
     }
 
     @Test
@@ -90,7 +90,7 @@ public class AiStageGeneratorTest {
             aiStageGenerator.generateAndSaveStage();
         });
 
-        verify(aiClient, times(3)).generatePuzzleJson(eq(5), eq(5), anyList());
+        verify(aiClient, times(5)).generatePuzzleJson(eq(5), eq(5), anyList());
     }
 
     @Test
@@ -101,7 +101,7 @@ public class AiStageGeneratorTest {
             aiStageGenerator.generateAndSaveStage();
         });
 
-        verify(aiClient, times(3)).generatePuzzleJson(eq(5), eq(5), anyList());
+        verify(aiClient, times(5)).generatePuzzleJson(eq(5), eq(5), anyList());
     }
 
     @Test
@@ -144,5 +144,20 @@ public class AiStageGeneratorTest {
         assertNotNull(stage);
         // Verified it retried and called client 2 times due to duplicate grid
         verify(aiClient, times(2)).generatePuzzleJson(eq(5), eq(5), anyList());
+    }
+
+    @Test
+    public void testMultipleCandidatesSelectsLogicalOnly() {
+        String mockJsonResponse = "[" +
+            "{\"name\": \"NonUnique\", \"width\": 5, \"height\": 5, \"grid\": [[1,0,0,0,0],[0,1,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]}," +
+            "{\"name\": \"Logical Heart\", \"width\": 5, \"height\": 5, \"grid\": [[0,1,0,1,0],[1,1,1,1,1],[1,1,1,1,1],[0,1,1,1,0],[0,0,1,0,0]]}" +
+            "]";
+        when(aiClient.generatePuzzleJson(eq(5), eq(5), anyList())).thenReturn(mockJsonResponse);
+        when(stageRepository.save(any(Stage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Stage stage = aiStageGenerator.generateAndSaveStage(5, 5, true);
+
+        assertNotNull(stage);
+        assertEquals("Logical Heart", stage.getName()); // It should select the logical-only one!
     }
 }

@@ -4,18 +4,28 @@ import com.devdoyen.nemologic.model.Stage;
 import com.devdoyen.nemologic.model.User;
 import com.devdoyen.nemologic.repository.StageRepository;
 import com.devdoyen.nemologic.repository.UserRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
+
+import java.io.InputStream;
+import java.util.List;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final StageRepository stageRepository;
+    private final ObjectMapper objectMapper;
 
-    public DataSeeder(UserRepository userRepository, StageRepository stageRepository) {
+    public DataSeeder(UserRepository userRepository, StageRepository stageRepository, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.stageRepository = stageRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -27,89 +37,45 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(new User(null, "Player3", 1000, 5));
         }
 
-        // Seed default stages if they don't exist
-        saveStageIfAbsent("Diamond Emblem", 5, 5, new int[][]{
-            {0, 0, 1, 0, 0},
-            {0, 1, 1, 1, 0},
-            {1, 1, 0, 1, 1},
-            {0, 1, 1, 1, 0},
-            {0, 0, 1, 0, 0}
-        });
-
-        saveStageIfAbsent("Cross Ruby", 5, 5, new int[][]{
-            {1, 0, 0, 0, 1},
-            {0, 1, 0, 1, 0},
-            {0, 0, 1, 0, 0},
-            {0, 1, 0, 1, 0},
-            {1, 0, 0, 0, 1}
-        });
-
-        saveStageIfAbsent("Crystalline Spark", 5, 5, new int[][]{
-            {0, 1, 0, 1, 0},
-            {1, 0, 1, 0, 1},
-            {0, 1, 0, 1, 0},
-            {1, 0, 1, 0, 1},
-            {0, 1, 0, 1, 0}
-        });
-
-        saveStageIfAbsent("Hourglass", 5, 5, new int[][]{
-            {1, 1, 1, 1, 1},
-            {0, 1, 1, 1, 0},
-            {0, 0, 1, 0, 0},
-            {0, 1, 1, 1, 0},
-            {1, 1, 1, 1, 1}
-        });
-
-        saveStageIfAbsent("Smile Face", 10, 10, new int[][]{
-            {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
-            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
-            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1},
-            {1, 0, 0, 1, 1, 1, 1, 0, 0, 1},
-            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0},
-            {0, 0, 1, 1, 1, 1, 1, 1, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-        });
-
-        saveStageIfAbsent("Ascending Star", 15, 15, new int[][]{
-            {0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},
-            {0,0,0,0,0,0,1,1,1,0,0,0,0,0,0},
-            {0,0,0,0,0,1,1,1,1,1,0,0,0,0,0},
-            {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-            {0,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
-            {0,0,1,1,1,1,1,1,1,1,1,1,1,0,0},
-            {0,0,0,1,1,1,1,1,1,1,1,1,0,0,0},
-            {0,0,0,0,1,1,1,1,1,1,1,0,0,0,0},
-            {0,0,0,0,1,1,1,1,1,1,1,0,0,0,0},
-            {0,0,0,1,1,1,1,0,1,1,1,1,0,0,0},
-            {0,0,1,1,1,1,0,0,0,1,1,1,1,0,0},
-            {0,1,1,1,0,0,0,0,0,0,0,1,1,1,0},
-            {1,1,1,0,0,0,0,0,0,0,0,0,1,1,1},
-            {1,1,0,0,0,0,0,0,0,0,0,0,0,1,1},
-            {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-        });
-
-        int[][] grid20 = new int[20][20];
-        for (int i = 0; i < 20; i++) {
-            for (int j = 0; j < 20; j++) {
-                grid20[i][j] = (i + j) % 2 == 0 ? 1 : 0;
+        // Seed stages from classpath:puzzles/*.json
+        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        Resource[] resources = resolver.getResources("classpath:puzzles/*.json");
+        for (Resource resource : resources) {
+            try (InputStream is = resource.getInputStream()) {
+                List<StageDto> dtos = objectMapper.readValue(is, new TypeReference<List<StageDto>>() {});
+                for (StageDto dto : dtos) {
+                    if (stageRepository.findByName(dto.getName()).isEmpty()) {
+                        Stage stage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), dto.getSolutionGrid());
+                        stage.setActive(dto.isActive());
+                        stage.setApproved(dto.isApproved());
+                        stageRepository.save(stage);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("[Seeder] Failed to seed resource " + resource.getFilename() + ": " + e.getMessage());
             }
         }
-        saveStageIfAbsent("Checkerboard 20x20", 20, 20, grid20);
-
-        int[][] grid30 = new int[30][30];
-        for (int i = 0; i < 30; i++) {
-            grid30[i][i] = 1;
-            grid30[i][29 - i] = 1;
-        }
-        saveStageIfAbsent("Giant Cross 30x30", 30, 30, grid30);
     }
 
-    private void saveStageIfAbsent(String name, int width, int height, int[][] solutionGrid) {
-        if (stageRepository.findByName(name).isEmpty()) {
-            stageRepository.save(new Stage(null, name, width, height, solutionGrid));
-        }
+    private static class StageDto {
+        private String name;
+        private int width;
+        private int height;
+        private int[][] solutionGrid;
+        private boolean active = true;
+        private boolean approved = true;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public int getWidth() { return width; }
+        public void setWidth(int width) { this.width = width; }
+        public int getHeight() { return height; }
+        public void setHeight(int height) { this.height = height; }
+        public int[][] getSolutionGrid() { return solutionGrid; }
+        public void setSolutionGrid(int[][] solutionGrid) { this.solutionGrid = solutionGrid; }
+        public boolean isActive() { return active; }
+        public void setActive(boolean active) { this.active = active; }
+        public boolean isApproved() { return approved; }
+        public void setApproved(boolean approved) { this.approved = approved; }
     }
 }

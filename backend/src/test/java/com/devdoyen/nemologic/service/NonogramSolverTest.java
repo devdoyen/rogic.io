@@ -125,4 +125,25 @@ public class NonogramSolverTest {
         }
         assertTrue(solver.isUnique(solidGrid), "Solid 30x30 grid should have a unique solution");
     }
+
+    @Test
+    public void testIsLogicalOnlyWithHeart() {
+        int[][] heartGrid = {
+            {0, 1, 0, 1, 0},
+            {1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1},
+            {0, 1, 1, 1, 0},
+            {0, 0, 1, 0, 0}
+        };
+        assertTrue(solver.isLogicalOnly(heartGrid), "Heart shape should be solvable purely logically");
+    }
+
+    @Test
+    public void testIsLogicalOnlyWithMultipleSolutions() {
+        int[][] symGrid = {
+            {1, 0},
+            {0, 1}
+        };
+        assertFalse(solver.isLogicalOnly(symGrid), "2x2 diagonal grid should not be solvable purely logically");
+    }
 }

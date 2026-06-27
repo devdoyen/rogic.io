@@ -12,5 +12,5 @@ management:
       application: nemologic
 
 admin:
-  username: admin
-  password: admin123!
+  username: ${ADMIN_USERNAME}
+  password: ${ADMIN_PASSWORD}

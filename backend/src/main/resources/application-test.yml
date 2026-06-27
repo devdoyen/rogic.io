@@ -14,3 +14,8 @@ spring:
         "[format_sql]": true
   flyway:
     enabled: false
+
+admin:
+  username: admin
+  password: admin123!
+
