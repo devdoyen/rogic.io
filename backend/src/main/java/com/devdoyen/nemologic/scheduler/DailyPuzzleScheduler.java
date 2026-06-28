@@ -18,7 +18,7 @@ public class DailyPuzzleScheduler {
 
     @Scheduled(cron = "0 17 4 * * ?")
     public void generateDailyPuzzle() {
-        int[] sizes = {5, 10, 15, 20};
+        int[] sizes = {5, 10, 15, 20, 25, 30};
         for (int size : sizes) {
             try {
                 long currentBuffer = stageService.getInactiveApprovedCount(size, size);

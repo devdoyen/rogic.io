@@ -55,4 +55,24 @@ public class StageController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @org.springframework.web.bind.annotation.PostMapping("/{id}/like")
+    public ResponseEntity<Stage> likeStage(@PathVariable Long id) {
+        try {
+            Stage updated = stageService.likeStage(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/{id}/dislike")
+    public ResponseEntity<Stage> dislikeStage(@PathVariable Long id) {
+        try {
+            Stage updated = stageService.dislikeStage(id);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

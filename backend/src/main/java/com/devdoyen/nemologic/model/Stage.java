@@ -35,6 +35,12 @@ public class Stage {
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean approved = true;
 
+    @Column(name = "upvotes", nullable = false, columnDefinition = "integer default 0")
+    private int upvotes = 0;
+
+    @Column(name = "downvotes", nullable = false, columnDefinition = "integer default 0")
+    private int downvotes = 0;
+
     public Stage() {
     }
 
@@ -161,5 +167,29 @@ public class Stage {
 
     public boolean approved() {
         return approved;
+    }
+
+    public int getUpvotes() {
+        return upvotes;
+    }
+
+    public void setUpvotes(int upvotes) {
+        this.upvotes = upvotes;
+    }
+
+    public int getDownvotes() {
+        return downvotes;
+    }
+
+    public void setDownvotes(int downvotes) {
+        this.downvotes = downvotes;
+    }
+
+    public int upvotes() {
+        return upvotes;
+    }
+
+    public int downvotes() {
+        return downvotes;
     }
 }

@@ -120,6 +120,7 @@
                       <th scope="col" class="admin-th-status" @click="toggleAdminSort('status')" style="cursor: pointer; user-select: none;">
                         Status <span v-if="adminSortKey === 'status'">{{ adminSortOrder === 'asc' ? '▲' : '▼' }}</span>
                       </th>
+                      <th scope="col" class="admin-th-feedback">Feedback</th>
                       <th scope="col" class="text-end pe-3">Actions</th>
                     </tr>
                   </thead>
@@ -136,6 +137,11 @@
                         <span v-if="s.approved && s.active" class="badge bg-success badge-active">Active</span>
                         <span v-else-if="!s.approved" class="badge bg-warning text-dark badge-pending">Pending Approval</span>
                         <span v-else class="badge bg-danger badge-inactive">Inactive</span>
+                      </td>
+                      <td>
+                        <span class="text-success fw-bold">👍 {{ s.upvotes || 0 }}</span>
+                        <span class="text-muted mx-1">/</span>
+                        <span class="text-danger fw-bold">👎 {{ s.downvotes || 0 }}</span>
                       </td>
                       <td class="text-end pe-3">
                         <div class="btn-group btn-group-sm" role="group">
@@ -155,7 +161,7 @@
                       </td>
                     </tr>
                     <tr v-if="adminStages.length === 0">
-                      <td colspan="5" class="text-center py-5 text-muted">
+                      <td colspan="6" class="text-center py-5 text-muted">
                         No stages found in database.
                       </td>
                     </tr>
@@ -427,6 +433,23 @@
             <div class="canvas-wrapper">
               <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" :readOnly="solved" @cell-click="handleCellClick" />
             </div>
+
+            <!-- Puzzle Feedback UI when solved -->
+            <transition name="fade">
+              <div v-if="solved" class="solved-feedback-card mt-3">
+                <div class="feedback-card-content text-center py-3 px-4 border rounded shadow-sm bg-dark text-light" style="max-width: 320px; margin: 1rem auto; background-color: #1e293b !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+                  <h5 style="color: #38bdf8; font-weight: 700; margin-bottom: 0.5rem;">🎉 Puzzle Solved!</h5>
+                  <p class="small text-muted" style="margin-bottom: 1rem;">Did you enjoy this puzzle design?</p>
+                  <div v-if="!hasVoted" class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-sm btn-outline-info" style="min-width: 80px;" @click="handleVote(true)">👍 Like</button>
+                    <button class="btn btn-sm btn-outline-danger" style="min-width: 80px;" @click="handleVote(false)">👎 Dislike</button>
+                  </div>
+                  <div v-else class="small text-info fw-bold">
+                    ✨ Thanks for feedback! (👍 {{ currentStageVotes.upvotes }} / 👎 {{ currentStageVotes.downvotes }})
+                  </div>
+                </div>
+              </div>
+            </transition>
           </div>
 
           <div v-if="solved" class="celebration-overlay-container">
@@ -568,7 +591,7 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import NonogramCanvas from './components/NonogramCanvas.vue';
 import { PuzzleBoard } from './engine/puzzleBoard';
 import { rotateGrid } from './engine/gridRotator';
-import { fetchStages, fetchStageById, fetchAiStages, startStage } from './api/stageApi';
+import { fetchStages, fetchStageById, fetchAiStages, startStage, likeStage, dislikeStage } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
 import { fetchRanking, clearStage, registerAnonymousUser, fetchUserHistory } from './api/userApi';
 import type { User } from './api/userApi';
@@ -587,6 +610,8 @@ const stages = ref<StageSummary[]>([]);
 const selectedStageId = ref<number | null>(null);
 const board = ref<PuzzleBoard | null>(null);
 const solved = ref(false);
+const hasVoted = ref(false);
+const currentStageVotes = ref({ upvotes: 0, downvotes: 0 });
 const nextPuzzleSeconds = ref(3);
 const isLoading = ref(true);
 const loadError = ref<string | null>(null);
@@ -943,6 +968,11 @@ async function loadStageDetails(id: number) {
     const rotated = rotateGrid(details.solutionGrid, k);
     board.value = new PuzzleBoard(rotated);
     solved.value = false;
+    currentStageVotes.value = {
+      upvotes: details.upvotes || 0,
+      downvotes: details.downvotes || 0
+    };
+    hasVoted.value = false;
     startTime.value = Date.now();
     isLoading.value = false;
   } catch (error) {
@@ -1416,6 +1446,26 @@ async function handleRestoreStage(id: number) {
     await loadAiStagesList();
   } catch (error) {
     console.error('Failed to restore stage:', error);
+  }
+}
+
+async function handleVote(isLike: boolean) {
+  const stageId = selectedStageId.value !== null ? selectedStageId.value : (selectedAiStageId.value !== null ? selectedAiStageId.value : null);
+  if (stageId === null) return;
+  try {
+    let updated;
+    if (isLike) {
+      updated = await likeStage(stageId);
+    } else {
+      updated = await dislikeStage(stageId);
+    }
+    currentStageVotes.value = {
+      upvotes: updated.upvotes || 0,
+      downvotes: updated.downvotes || 0
+    };
+    hasVoted.value = true;
+  } catch (error) {
+    console.error('Failed to submit vote:', error);
   }
 }
 

@@ -57,6 +57,22 @@ public class StageService {
     }
 
     @Transactional
+    public Stage likeStage(Long id) {
+        Stage stage = stageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
+        stage.setUpvotes(stage.getUpvotes() + 1);
+        return stageRepository.save(stage);
+    }
+
+    @Transactional
+    public Stage dislikeStage(Long id) {
+        Stage stage = stageRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
+        stage.setDownvotes(stage.getDownvotes() + 1);
+        return stageRepository.save(stage);
+    }
+
+    @Transactional
     public void activateAllInactiveStages() {
         List<Stage> inactive = stageRepository.findByActive(false);
         for (Stage stage : inactive) {

@@ -85,4 +85,22 @@ public class StageControllerTest {
                 .andExpect(jsonPath("$.width", is(5)))
                 .andExpect(jsonPath("$.height", is(5)));
     }
+
+    @Test
+    public void likeStageShouldIncrementUpvotesAndReturnOk() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/stages/1/like"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.upvotes", is(1)));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/stages/1/like"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.upvotes", is(2)));
+    }
+
+    @Test
+    public void dislikeStageShouldIncrementDownvotesAndReturnOk() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/stages/1/dislike"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.downvotes", is(1)));
+    }
 }

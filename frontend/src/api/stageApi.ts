@@ -8,6 +8,8 @@ export interface StageSummary {
   totalAttempts?: number;
   totalClears?: number;
   averageElapsedTime?: number;
+  upvotes?: number;
+  downvotes?: number;
 }
 
 export interface StageDetails extends StageSummary {
@@ -35,4 +37,14 @@ export async function fetchAiStages(): Promise<StageSummary[]> {
 
 export async function startStage(id: number): Promise<void> {
   await axios.post(`${API_BASE_URL}/${id}/start`);
+}
+
+export async function likeStage(id: number): Promise<StageDetails> {
+  const response = await axios.post<StageDetails>(`${API_BASE_URL}/${id}/like`);
+  return response.data;
+}
+
+export async function dislikeStage(id: number): Promise<StageDetails> {
+  const response = await axios.post<StageDetails>(`${API_BASE_URL}/${id}/dislike`);
+  return response.data;
 }
