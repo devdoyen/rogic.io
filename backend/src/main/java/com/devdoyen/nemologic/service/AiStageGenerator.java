@@ -155,7 +155,7 @@ public class AiStageGenerator {
     }
 
 
-    private static class AiResponseDto {
+    public static class AiResponseDto {
         private String name;
         private int width;
         private int height;

@@ -56,7 +56,7 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    private static class StageDto {
+    public static class StageDto {
         private String name;
         private int width;
         private int height;
