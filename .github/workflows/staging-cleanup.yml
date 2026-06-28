@@ -1,9 +1,9 @@
 name: Nightly Staging EC2 Cleanup
 
 on:
-  schedule:
-    # Run daily at 17:00 UTC (02:00 AM KST)
-    - cron: '0 17 * * *'
+  # schedule:
+  #   # Run daily at 17:00 UTC (02:00 AM KST)
+  #   - cron: '0 17 * * *'
   workflow_dispatch: # Enable manual trigger if needed
 
 env:
