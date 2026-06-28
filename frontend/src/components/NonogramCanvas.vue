@@ -223,9 +223,11 @@ function drawBoard() {
       const x = -halfW + c * cellSizeVal;
       const y = -halfH + r * cellSizeVal;
 
-      ctx.strokeStyle = '#334155'; // slate-700
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x, y, cellSizeVal, cellSizeVal);
+      if (!props.board.isSolved()) {
+        ctx.strokeStyle = '#334155'; // slate-700
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, cellSizeVal, cellSizeVal);
+      }
 
       const cellState = props.board.currentGrid[r][c];
       if (cellState === 1) {
@@ -234,11 +236,17 @@ function drawBoard() {
         grad.addColorStop(0, '#38bdf8'); // sky-400
         grad.addColorStop(1, '#818cf8'); // indigo-400
         ctx.fillStyle = grad;
-        ctx.fillRect(x + 1.5, y + 1.5, cellSizeVal - 3, cellSizeVal - 3);
 
-        ctx.strokeStyle = '#6366f1';
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(x + 1.5, y + 1.5, cellSizeVal - 3, cellSizeVal - 3);
+        if (props.board.isSolved()) {
+          // Seamless full cell fill for clean pixel art when solved
+          ctx.fillRect(x, y, cellSizeVal, cellSizeVal);
+        } else {
+          // Play mode: cell margin and border stroke
+          ctx.fillRect(x + 1.5, y + 1.5, cellSizeVal - 3, cellSizeVal - 3);
+          ctx.strokeStyle = '#6366f1';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x + 1.5, y + 1.5, cellSizeVal - 3, cellSizeVal - 3);
+        }
       } else if (cellState === 2 && !props.board.isSolved()) {
         // Marked (X) - Translucent slate grey
         ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
@@ -253,25 +261,27 @@ function drawBoard() {
     }
   }
 
-  // Draw bold line markers every 5 lines
-  ctx.strokeStyle = '#64748b'; // slate-500
-  ctx.lineWidth = 2.5;
-  for (let r = 0; r <= props.board.rowCount; r += 5) {
-    if (r > 0 && r < props.board.rowCount) {
-      const y = -halfH + r * cellSizeVal;
-      ctx.beginPath();
-      ctx.moveTo(-halfW, y);
-      ctx.lineTo(halfW, y);
-      ctx.stroke();
+  // Draw bold line markers every 5 lines only when active (not solved)
+  if (!props.board.isSolved()) {
+    ctx.strokeStyle = '#64748b'; // slate-500
+    ctx.lineWidth = 2.5;
+    for (let r = 0; r <= props.board.rowCount; r += 5) {
+      if (r > 0 && r < props.board.rowCount) {
+        const y = -halfH + r * cellSizeVal;
+        ctx.beginPath();
+        ctx.moveTo(-halfW, y);
+        ctx.lineTo(halfW, y);
+        ctx.stroke();
+      }
     }
-  }
-  for (let c = 0; c <= props.board.colCount; c += 5) {
-    if (c > 0 && c < props.board.colCount) {
-      const x = -halfW + c * cellSizeVal;
-      ctx.beginPath();
-      ctx.moveTo(x, -halfH);
-      ctx.lineTo(x, halfH);
-      ctx.stroke();
+    for (let c = 0; c <= props.board.colCount; c += 5) {
+      if (c > 0 && c < props.board.colCount) {
+        const x = -halfW + c * cellSizeVal;
+        ctx.beginPath();
+        ctx.moveTo(x, -halfH);
+        ctx.lineTo(x, halfH);
+        ctx.stroke();
+      }
     }
   }
 
