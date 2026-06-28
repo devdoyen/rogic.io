@@ -278,7 +278,7 @@
   <div v-else class="app-container" :class="{ 'home-mode': currentTab === 'home' }">
     <!-- Slim Header (Visible only outside home page) -->
     <header v-if="currentTab !== 'home'" class="app-header">
-      <div class="logo-wrapper" @click="onTabChange('home')" style="cursor: pointer; position: relative;">
+      <div class="logo-wrapper" @click="onTabChange('home')" style="cursor: pointer;">
         <div class="logo-icon">
           <div class="logo-cell filled"></div>
           <div class="logo-cell"></div>
@@ -289,13 +289,6 @@
           <h1 class="app-title">rogic.io</h1>
           <p class="app-subtitle">Rotate Logic Puzzle</p>
         </div>
-
-        <!-- Progress bar matching the logo width at its bottom edge -->
-        <transition name="fade">
-          <div v-if="solved && allUnclearedStages.length > 0 && currentTab === 'play'" class="logo-progress-bar-container">
-            <div class="logo-progress-bar"></div>
-          </div>
-        </transition>
       </div>
       
       <div class="header-controls" style="display: flex; align-items: center; gap: 0.75rem;">
@@ -336,6 +329,13 @@
           <span class="btn-text">Leaderboard</span>
         </button>
       </div>
+
+      <!-- Progress bar matching the entire header width at its bottom edge -->
+      <transition name="fade">
+        <div v-if="solved && allUnclearedStages.length > 0 && currentTab === 'play'" class="header-progress-bar-container">
+          <div class="header-progress-bar"></div>
+        </div>
+      </transition>
     </header>
 
     <!-- Hidden Selectors to keep legacy tests passing -->
@@ -1701,6 +1701,7 @@ body {
   padding-bottom: 0.75rem;
   border-bottom: 1px solid #1e293b;
   flex-shrink: 0;
+  position: relative;
 }
 
 .logo-wrapper {
@@ -2706,9 +2707,9 @@ body {
   z-index: 10000;
 }
 
-.logo-progress-bar-container {
+.header-progress-bar-container {
   position: absolute;
-  bottom: -0.85rem;
+  bottom: -1px;
   left: 0;
   width: 100%;
   height: 3px;
@@ -2718,7 +2719,7 @@ body {
   z-index: 10;
 }
 
-.logo-progress-bar {
+.header-progress-bar {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
