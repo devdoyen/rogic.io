@@ -439,11 +439,11 @@
               <transition name="fade">
                 <div v-if="solved" class="solved-feedback-card">
                   <div v-if="!hasVoted" class="feedback-buttons">
-                    <button class="feedback-btn" @click="handleVote(true)">👍</button>
-                    <button class="feedback-btn" @click="handleVote(false)">👎</button>
+                    <button class="feedback-btn like" @click="handleVote(true)">👍</button>
+                    <button class="feedback-btn dislike" @click="handleVote(false)">👎</button>
                   </div>
                   <div v-else class="feedback-thanks">
-                    👍 {{ currentStageVotes.upvotes }} / 👎 {{ currentStageVotes.downvotes }}
+                    ✨ Thank You!
                   </div>
                 </div>
               </transition>
@@ -2480,46 +2480,69 @@ body {
   min-height: 0;
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 .solved-feedback-card {
-  margin-top: 0.75rem;
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
 }
 
 .feedback-buttons {
   display: flex;
   gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.1);
 }
 
 .feedback-btn {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
-  padding: 0.35rem 0.65rem;
-  border-radius: 6px;
+  border: none;
+  color: #94a3b8;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 1.1rem;
-  line-height: 1;
-  transition: all 0.2s ease;
+  font-size: 1.15rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
 .feedback-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.35);
-  transform: scale(1.05);
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  transform: scale(1.15);
+}
+
+.feedback-btn.dislike:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
 .feedback-thanks {
-  font-size: 0.85rem;
-  color: #94a3b8;
-  font-weight: 500;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  color: #818cf8;
+  font-weight: 600;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6);
 }
 
 .loading-state {
