@@ -239,10 +239,10 @@ function drawBoard() {
         ctx.strokeStyle = '#6366f1';
         ctx.lineWidth = 1.5;
         ctx.strokeRect(x + 1.5, y + 1.5, cellSizeVal - 3, cellSizeVal - 3);
-      } else if (cellState === 2) {
-        // Marked (X)
-        ctx.strokeStyle = '#f43f5e'; // Rose 500
-        ctx.lineWidth = 2.5;
+      } else if (cellState === 2 && !props.board.isSolved()) {
+        // Marked (X) - Translucent slate grey
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.lineWidth = 2.0;
         ctx.beginPath();
         ctx.moveTo(x + cellSizeVal / 4, y + cellSizeVal / 4);
         ctx.lineTo(x + 3 * cellSizeVal / 4, y + 3 * cellSizeVal / 4);

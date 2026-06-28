@@ -278,7 +278,7 @@
   <div v-else class="app-container" :class="{ 'home-mode': currentTab === 'home' }">
     <!-- Slim Header (Visible only outside home page) -->
     <header v-if="currentTab !== 'home'" class="app-header">
-      <div class="logo-wrapper" @click="onTabChange('home')" style="cursor: pointer;">
+      <div class="logo-wrapper" @click="onTabChange('home')" style="cursor: pointer; position: relative;">
         <div class="logo-icon">
           <div class="logo-cell filled"></div>
           <div class="logo-cell"></div>
@@ -289,6 +289,13 @@
           <h1 class="app-title">rogic.io</h1>
           <p class="app-subtitle">Rotate Logic Puzzle</p>
         </div>
+
+        <!-- Progress bar matching the logo width at its bottom edge -->
+        <transition name="fade">
+          <div v-if="solved && allUnclearedStages.length > 0 && currentTab === 'play'" class="logo-progress-bar-container">
+            <div class="logo-progress-bar"></div>
+          </div>
+        </transition>
       </div>
       
       <div class="header-controls" style="display: flex; align-items: center; gap: 0.75rem;">
@@ -470,12 +477,8 @@
             </div>
           </div>
 
-          <div v-if="solved" class="celebration-overlay-container">
-            <!-- Full-width progress bar at the very top of the viewport -->
-            <div v-if="allUnclearedStages.length > 0" class="top-progress-bar-container">
-              <div class="top-progress-bar"></div>
-            </div>
-            <div v-else class="all-cleared-card">
+          <div v-if="solved && allUnclearedStages.length === 0" class="celebration-overlay-container">
+            <div class="all-cleared-card">
               <div class="trophy-icon">🏆</div>
               <div class="star-burst">🌟🌟🌟</div>
             </div>
@@ -2703,20 +2706,23 @@ body {
   z-index: 10000;
 }
 
-.top-progress-bar-container {
-  position: fixed;
-  top: 0;
+.logo-progress-bar-container {
+  position: absolute;
+  bottom: -0.85rem;
   left: 0;
-  width: 100vw;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.03);
-  z-index: 11000;
+  width: 100%;
+  height: 3px;
+  background: rgba(56, 189, 248, 0.05);
+  border-radius: 1.5px;
+  overflow: hidden;
+  z-index: 10;
 }
 
-.top-progress-bar {
+.logo-progress-bar {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
   animation: progress-grow 3s linear forwards;
 }
 
