@@ -430,26 +430,24 @@
               </transition>
             </div>
 
-            <div class="canvas-wrapper">
-              <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" :readOnly="solved" @cell-click="handleCellClick" />
-            </div>
+            <div class="play-area-inner">
+              <div class="canvas-wrapper">
+                <NonogramCanvas :board="board" :rotationSteps="currentRotationSteps" :readOnly="solved" @cell-click="handleCellClick" />
+              </div>
 
-            <!-- Puzzle Feedback UI when solved -->
-            <transition name="fade">
-              <div v-if="solved" class="solved-feedback-card mt-3">
-                <div class="feedback-card-content text-center py-3 px-4 border rounded shadow-sm bg-dark text-light" style="max-width: 320px; margin: 1rem auto; background-color: #1e293b !important; border: 1px solid rgba(255, 255, 255, 0.1) !important;">
-                  <h5 style="color: #38bdf8; font-weight: 700; margin-bottom: 0.5rem;">🎉 Puzzle Solved!</h5>
-                  <p class="small text-muted" style="margin-bottom: 1rem;">Did you enjoy this puzzle design?</p>
-                  <div v-if="!hasVoted" class="d-flex justify-content-center gap-2">
-                    <button class="btn btn-sm btn-outline-info" style="min-width: 80px;" @click="handleVote(true)">👍 Like</button>
-                    <button class="btn btn-sm btn-outline-danger" style="min-width: 80px;" @click="handleVote(false)">👎 Dislike</button>
+              <!-- Puzzle Feedback UI when solved -->
+              <transition name="fade">
+                <div v-if="solved" class="solved-feedback-card">
+                  <div v-if="!hasVoted" class="feedback-buttons">
+                    <button class="feedback-btn" @click="handleVote(true)">👍</button>
+                    <button class="feedback-btn" @click="handleVote(false)">👎</button>
                   </div>
-                  <div v-else class="small text-info fw-bold">
-                    ✨ Thanks for feedback! (👍 {{ currentStageVotes.upvotes }} / 👎 {{ currentStageVotes.downvotes }})
+                  <div v-else class="feedback-thanks">
+                    👍 {{ currentStageVotes.upvotes }} / 👎 {{ currentStageVotes.downvotes }}
                   </div>
                 </div>
-              </div>
-            </transition>
+              </transition>
+            </div>
           </div>
 
           <div v-if="solved" class="celebration-overlay-container">
@@ -1052,9 +1050,14 @@ async function handleCellClick() {
         await clearStage(userId, difficulty, stageId, elapsedTime);
         await loadRankingsList();
         await loadUserHistory();
-        startNextPuzzleCountdown();
       } catch (error) {
         console.error('Failed to submit stage clear:', error);
+        if (error && String(error).includes('User not found')) {
+          localStorage.removeItem('user_session');
+          await initializeUserSession();
+        }
+      } finally {
+        startNextPuzzleCountdown();
       }
     }
   }
@@ -2466,6 +2469,57 @@ body {
   height: 100%;
   min-width: 0;
   min-height: 0;
+}
+
+.play-area-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.solved-feedback-card {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.feedback-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.feedback-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feedback-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: scale(1.05);
+}
+
+.feedback-thanks {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .loading-state {

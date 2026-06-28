@@ -10,6 +10,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import org.springframework.core.env.Environment;
+
 import java.io.InputStream;
 import java.util.List;
 
@@ -19,11 +21,13 @@ public class DataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final StageRepository stageRepository;
     private final ObjectMapper objectMapper;
+    private final Environment env;
 
-    public DataSeeder(UserRepository userRepository, StageRepository stageRepository, ObjectMapper objectMapper) {
+    public DataSeeder(UserRepository userRepository, StageRepository stageRepository, ObjectMapper objectMapper, Environment env) {
         this.userRepository = userRepository;
         this.stageRepository = stageRepository;
         this.objectMapper = objectMapper;
+        this.env = env;
     }
 
     @Override
@@ -35,6 +39,8 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(new User(null, "Player3", 1000, 5));
         }
 
+        boolean isTestProfile = java.util.Arrays.asList(env.getActiveProfiles()).contains("test");
+
         // Seed stages from puzzles/stages.json directly to support GraalVM Native Image
         ClassPathResource resource = new ClassPathResource("puzzles/stages.json");
         if (resource.exists()) {
@@ -43,8 +49,13 @@ public class DataSeeder implements CommandLineRunner {
                 for (StageDto dto : dtos) {
                     if (stageRepository.findByName(dto.getName()).isEmpty()) {
                         Stage stage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), dto.getSolutionGrid());
-                        stage.setActive(dto.isActive());
-                        stage.setApproved(dto.isApproved());
+                        if (isTestProfile) {
+                            stage.setActive(true);
+                            stage.setApproved(true);
+                        } else {
+                            stage.setActive(dto.isActive());
+                            stage.setApproved(dto.isApproved());
+                        }
                         stageRepository.save(stage);
                     }
                 }
