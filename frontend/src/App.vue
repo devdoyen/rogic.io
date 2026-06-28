@@ -138,10 +138,22 @@
                         <span v-else-if="!s.approved" class="badge bg-warning text-dark badge-pending">Pending Approval</span>
                         <span v-else class="badge bg-danger badge-inactive">Inactive</span>
                       </td>
-                      <td>
-                        <span class="text-success fw-bold">👍 {{ s.upvotes || 0 }}</span>
-                        <span class="text-muted mx-1">/</span>
-                        <span class="text-danger fw-bold">👎 {{ s.downvotes || 0 }}</span>
+                      <td style="white-space: nowrap; vertical-align: middle;">
+                        <div style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; width: 100%;">
+                          <span style="display: inline-flex; align-items: center; gap: 0.25rem; color: #10b981; font-weight: 600;" title="Upvotes">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+                              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                            </svg>
+                            {{ s.upvotes || 0 }}
+                          </span>
+                          <span style="color: #64748b;">/</span>
+                          <span style="display: inline-flex; align-items: center; gap: 0.25rem; color: #ef4444; font-weight: 600;" title="Downvotes">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px;">
+                              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
+                            </svg>
+                            {{ s.downvotes || 0 }}
+                          </span>
+                        </div>
                       </td>
                       <td class="text-end pe-3">
                         <div class="btn-group btn-group-sm" role="group">
