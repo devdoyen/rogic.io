@@ -439,8 +439,16 @@
               <transition name="fade">
                 <div v-if="solved" class="solved-feedback-card">
                   <div v-if="!hasVoted" class="feedback-buttons">
-                    <button class="feedback-btn like" @click="handleVote(true)">👍</button>
-                    <button class="feedback-btn dislike" @click="handleVote(false)">👎</button>
+                    <button class="feedback-btn like" @click="handleVote(true)" aria-label="Like">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                      </svg>
+                    </button>
+                    <button class="feedback-btn dislike" @click="handleVote(false)" aria-label="Dislike">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="svg-icon">
+                        <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
+                      </svg>
+                    </button>
                   </div>
                   <div v-else class="feedback-thanks">
                     ✨ Thank You!
@@ -2543,6 +2551,18 @@ body {
   color: #818cf8;
   font-weight: 600;
   box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6);
+}
+
+.svg-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  transition: stroke-width 0.2s ease;
+}
+
+.feedback-btn:hover .svg-icon {
+  stroke-width: 2.2;
 }
 
 .loading-state {
