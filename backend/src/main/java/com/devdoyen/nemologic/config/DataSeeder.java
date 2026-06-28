@@ -7,9 +7,7 @@ import com.devdoyen.nemologic.repository.UserRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -37,10 +35,9 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(new User(null, "Player3", 1000, 5));
         }
 
-        // Seed stages from classpath:puzzles/*.json
-        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        Resource[] resources = resolver.getResources("classpath:puzzles/*.json");
-        for (Resource resource : resources) {
+        // Seed stages from puzzles/stages.json directly to support GraalVM Native Image
+        ClassPathResource resource = new ClassPathResource("puzzles/stages.json");
+        if (resource.exists()) {
             try (InputStream is = resource.getInputStream()) {
                 List<StageDto> dtos = objectMapper.readValue(is, new TypeReference<List<StageDto>>() {});
                 for (StageDto dto : dtos) {
@@ -54,6 +51,8 @@ public class DataSeeder implements CommandLineRunner {
             } catch (Exception e) {
                 System.err.println("[Seeder] Failed to seed resource " + resource.getFilename() + ": " + e.getMessage());
             }
+        } else {
+            System.err.println("[Seeder] Resource puzzles/stages.json does not exist");
         }
     }
 
