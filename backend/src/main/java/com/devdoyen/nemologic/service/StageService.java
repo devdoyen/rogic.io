@@ -39,8 +39,7 @@ public class StageService {
     public void deleteStageSoft(Long id) {
         Stage stage = stageRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Stage not found: " + id));
-        stage.setActive(false);
-        stageRepository.save(stage);
+        stageRepository.delete(stage);
     }
 
     @Transactional

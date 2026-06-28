@@ -145,7 +145,7 @@
                           <button v-if="!s.approved" class="btn btn-success btn-approve" @click="handleApproveStage(s.id)">
                             ✓ Approve
                           </button>
-                          <button v-if="s.active" class="btn btn-danger btn-delete" @click="handleDeleteStage(s.id)">
+                          <button class="btn btn-danger btn-delete" @click="handleDeleteStage(s.id)">
                             🗑️ Delete
                           </button>
                           <button v-if="!s.active && s.approved" class="btn btn-primary btn-restore" @click="handleRestoreStage(s.id)">
@@ -1397,7 +1397,7 @@ async function handleApproveStage(id: number) {
 }
 
 async function handleDeleteStage(id: number) {
-  if (!confirm('Are you sure you want to delete this stage? (Soft delete)')) return;
+  if (!confirm('Are you sure you want to delete this stage?')) return;
   try {
     await deleteStage(id);
     await loadAdminStagesList();

@@ -119,9 +119,7 @@ public class AdminStageControllerTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
 
-        Stage updated = stageRepository.findById(saved.getId()).orElseThrow();
-        assertFalse(updated.isActive());
-        assertTrue(updated.isApproved()); // still approved but active = false (soft deleted)
+        assertFalse(stageRepository.findById(saved.getId()).isPresent());
     }
 
     @Test
@@ -145,7 +143,7 @@ public class AdminStageControllerTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active", is(false)))
-                .andExpect(jsonPath("$.approved", is(false)));
+                .andExpect(jsonPath("$.approved", is(true)));
     }
 
     @Test
@@ -158,6 +156,6 @@ public class AdminStageControllerTest {
                 .andExpect(jsonPath("$.width", is(10)))
                 .andExpect(jsonPath("$.height", is(10)))
                 .andExpect(jsonPath("$.active", is(false)))
-                .andExpect(jsonPath("$.approved", is(false)));
+                .andExpect(jsonPath("$.approved", is(true)));
     }
 }
