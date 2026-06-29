@@ -64,12 +64,12 @@ output "acm_validation_dns_stage" {
 
 output "cloudfront_domain_prod" {
   description = "Domain name of the production CloudFront distribution"
-  value       = ""
+  value       = aws_cloudfront_distribution.prod_distribution.domain_name
 }
 
 output "cloudfront_domain_stage" {
   description = "Domain name of the staging CloudFront distribution"
-  value       = ""
+  value       = aws_cloudfront_distribution.stage_distribution.domain_name
 }
 
 output "frontend_prod_bucket" {

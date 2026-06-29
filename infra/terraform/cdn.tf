@@ -65,7 +65,6 @@ resource "aws_cloudfront_origin_access_control" "oac" {
   signing_protocol                  = "sigv4"
 }
 
-/*
 # --- S3 Bucket Policies for CloudFront OAC Read Access ---
 
 data "aws_iam_policy_document" "s3_prod_policy" {
@@ -299,4 +298,3 @@ resource "aws_cloudfront_distribution" "stage_distribution" {
     Name = "rogic-stage-cloudfront"
   }
 }
-*/
