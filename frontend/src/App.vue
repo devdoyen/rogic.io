@@ -402,13 +402,11 @@
                       @click.stop="selectStageCard(stage.id, isStageAi(stage))"
                     >
                       <div class="stage-card-info">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; width: 100%;">
+                          <span v-if="selectedPlaySizeFilter === 'All'" class="stage-card-size-label" style="font-size: 0.72rem; color: #64748b; background-color: rgba(255, 255, 255, 0.05); padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 600; width: 52px; text-align: center; flex-shrink: 0; display: inline-block;">{{ stage.width }}x{{ stage.height }}</span>
                           <span class="stage-card-name">{{ stage.name }}</span>
-                          <span v-if="selectedPlaySizeFilter === 'All'" class="stage-card-size-label" style="font-size: 0.72rem; color: #64748b; background-color: rgba(255, 255, 255, 0.05); padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 600;">{{ stage.width }}x{{ stage.height }}</span>
                         </div>
-                        <div v-if="stage.totalAttempts !== undefined && stage.totalAttempts !== null" class="stage-card-stats" style="font-size: 0.72rem; color: #94a3b8; margin-top: 0.25rem;">
-                          Rate: {{ stage.totalAttempts > 0 ? Math.round((stage.totalClears || 0) / stage.totalAttempts * 100) : 0 }}% | ⏱️ {{ Math.round(stage.averageElapsedTime || 0) }}s
-                        </div>
+
                       </div>
                     </div>
                     <div v-if="filteredPlayStages.length === 0" class="empty-stages" style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">

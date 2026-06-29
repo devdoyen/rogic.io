@@ -40,7 +40,7 @@ public class GeminiAiClient implements AiClient {
             throw new IllegalStateException("[AI] API Key is missing. Cannot generate AI puzzle.");
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent?key=" + apiKey;
         int maxAttempts = 3;
         Exception lastException = null;
 

@@ -2,11 +2,15 @@ package com.devdoyen.nemologic.scheduler;
 
 import com.devdoyen.nemologic.service.AiStageGenerator;
 import com.devdoyen.nemologic.service.StageService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DailyPuzzleScheduler {
+
+    private static final Logger log = LoggerFactory.getLogger(DailyPuzzleScheduler.class);
 
     private final AiStageGenerator aiStageGenerator;
     private final StageService stageService;
@@ -25,15 +29,25 @@ public class DailyPuzzleScheduler {
                 long targetBuffer = 5;
                 if (currentBuffer < targetBuffer) {
                     long needed = targetBuffer - currentBuffer;
-                    System.out.println("[Scheduler] Size " + size + "x" + size + " pool size is " + currentBuffer + ". Refilling " + needed + " puzzles...");
+                    log.info("[Scheduler] Size {}x{} pool size is {}. Refilling {} puzzles...", size, size, currentBuffer, needed);
                     for (int i = 0; i < needed; i++) {
                         aiStageGenerator.generateAndSaveStage(size, size, false);
+                        try {
+                            Thread.sleep(5000); // 5 seconds delay to prevent Gemini API rate limiting (15 RPM)
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                        }
                     }
                 } else {
-                    System.out.println("[Scheduler] Size " + size + "x" + size + " pool size is " + currentBuffer + " (sufficient).");
+                    log.info("[Scheduler] Size {}x{} pool size is {} (sufficient).", size, size, currentBuffer);
                 }
             } catch (Exception e) {
-                System.err.println("[Scheduler] Failed to verify/refill daily puzzle of size " + size + "x" + size + ": " + e.getMessage());
+                log.error("[Scheduler] Failed to verify/refill daily puzzle of size {}x{}: {}", size, size, e.getMessage(), e);
+            }
+            try {
+                Thread.sleep(5000); // 5 seconds delay between sizes
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
             }
         }
     }
