@@ -380,7 +380,7 @@
           </div>
 
           <!-- Canvas Area -->
-          <div v-else-if="board" class="canvas-wrapper-container">
+          <template v-else-if="board">
             <!-- Floating Stage Selector -->
             <div class="puzzle-selector-floating-container" v-if="currentActiveStage">
               <div class="active-stage-badge" @click="isStageListOpen = !isStageListOpen">
@@ -417,8 +417,9 @@
               </transition>
             </div>
 
-            <!-- Floating Size Selector (Bottom-Right) -->
-            <div class="play-size-filter-bar-floating" v-if="availablePlaySizes.length > 0">
+            <div class="canvas-wrapper-container">
+              <!-- Floating Size Selector (Bottom-Right) -->
+              <div class="play-size-filter-bar-floating" v-if="availablePlaySizes.length > 0">
               <div class="active-size-badge" @click.stop="isSizeListOpen = !isSizeListOpen">
                 <span class="active-size-badge-name">
                   {{ selectedPlaySizeFilter === 'All' ? 'All' : selectedPlaySizeFilter + 'x' + selectedPlaySizeFilter }}
@@ -474,6 +475,7 @@
               </transition>
             </div>
           </div>
+        </template>
 
           <div v-if="solved && allUnclearedStages.length === 0" class="celebration-overlay-container">
             <div class="all-cleared-card">
@@ -1999,10 +2001,9 @@ body {
 
 /* Floating Stage Selector */
 .puzzle-selector-floating-container {
-  position: absolute;
-  top: 25px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  margin-top: 15px;
+  margin-bottom: 5px;
   z-index: 100;
   display: flex;
   justify-content: center;
@@ -2017,7 +2018,7 @@ body {
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0.5rem 2.5rem;
+  padding: 0.35rem 2rem;
   border-radius: 9999px;
   cursor: pointer;
   box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.3);
@@ -2025,7 +2026,7 @@ body {
   white-space: nowrap;
   max-width: 90vw;
   box-sizing: border-box;
-  min-width: 240px;
+  min-width: 180px;
 }
 
 .active-stage-badge:hover {
@@ -2036,7 +2037,7 @@ body {
 
 .active-stage-badge-name {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: #f8fafc;
   white-space: nowrap;
   overflow: hidden;
@@ -2063,9 +2064,9 @@ body {
 
 .active-stage-arrow {
   position: absolute;
-  right: 1.25rem;
+  right: 0.85rem;
   color: #94a3b8;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   transition: transform 0.2s ease;
 }
 
