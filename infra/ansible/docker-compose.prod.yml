@@ -7,7 +7,7 @@ services:
     ports: []
 
   frontend:
-    image: ghcr.io/devdoyen/nemologic-frontend:${IMAGE_TAG:-latest}
+    image: nginx:alpine
     ports:
       - "80:80"
       - "443:443"

@@ -198,6 +198,13 @@ jobs:
           npm ci
           npm run build
 
+      - name: Upload Frontend Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 1
+
       - name: Set Image Tag env
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
@@ -216,13 +223,9 @@ jobs:
 
       - name: Build and Push Docker Images
         run: |
-          cp infra/ansible/nginx.prod.conf frontend/nginx.conf
           docker build -t ghcr.io/devdoyen/nemologic-backend:latest -t ghcr.io/devdoyen/nemologic-backend:$IMAGE_TAG ./backend
-          docker build -t ghcr.io/devdoyen/nemologic-frontend:latest -t ghcr.io/devdoyen/nemologic-frontend:$IMAGE_TAG ./frontend
           docker push ghcr.io/devdoyen/nemologic-backend:latest
           docker push ghcr.io/devdoyen/nemologic-backend:$IMAGE_TAG
-          docker push ghcr.io/devdoyen/nemologic-frontend:latest
-          docker push ghcr.io/devdoyen/nemologic-frontend:$IMAGE_TAG
 
 
   # 5. Deploy Staging Phase: Deploys to Staging Server
@@ -300,6 +303,38 @@ jobs:
           echo "nemologic-app-server ansible_host=$STAGING_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60" >> hosts.ini
           ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=stage"
 
+      - name: Download Frontend Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Deploy Frontend to S3 (Staging)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: "ap-northeast-2"
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            STAGE_BUCKET=$(aws s3 ls | grep rogic-frontend-stage | awk '{print $3}')
+            if [ -n "$STAGE_BUCKET" ]; then
+              echo "Syncing frontend to staging S3 bucket: $STAGE_BUCKET"
+              aws s3 sync frontend/dist/ s3://$STAGE_BUCKET/ --delete
+              
+              STAGE_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?@=='stage.rogic.io']].Id" --output text)
+              if [ -n "$STAGE_DIST_ID" ] && [ "$STAGE_DIST_ID" != "None" ]; then
+                echo "Invalidating staging CloudFront cache: $STAGE_DIST_ID"
+                aws cloudfront create-invalidation --distribution-id $STAGE_DIST_ID --paths "/*"
+              else
+                echo "CloudFront Distribution for stage.rogic.io not found."
+              fi
+            else
+              echo "S3 staging bucket not found."
+            fi
+          else
+            echo "Skipping S3 sync: AWS credentials not configured."
+          fi
+
   # 6. Deploy Production Phase: Deploys to Production Server (Requires Manual Approval Gate)
   deploy-production:
     name: Deploy to Production (Ansible)
@@ -353,6 +388,38 @@ jobs:
             ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=prod"
           else
             echo "Skipping Production Deploy: EC2_IP secret not set."
+          fi
+
+      - name: Download Frontend Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Deploy Frontend to S3 (Production)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: "ap-northeast-2"
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            PROD_BUCKET=$(aws s3 ls | grep rogic-frontend-prod | awk '{print $3}')
+            if [ -n "$PROD_BUCKET" ]; then
+              echo "Syncing frontend to production S3 bucket: $PROD_BUCKET"
+              aws s3 sync frontend/dist/ s3://$PROD_BUCKET/ --delete
+              
+              PROD_DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?@=='rogic.io']].Id" --output text)
+              if [ -n "$PROD_DIST_ID" ] && [ "$PROD_DIST_ID" != "None" ]; then
+                echo "Invalidating production CloudFront cache: $PROD_DIST_ID"
+                aws cloudfront create-invalidation --distribution-id $PROD_DIST_ID --paths "/*"
+              else
+                echo "CloudFront Distribution for rogic.io not found."
+              fi
+            else
+              echo "S3 production bucket not found."
+            fi
+          else
+            echo "Skipping S3 sync: AWS credentials not configured."
           fi
 
   # 7. Release Phase: GitHub Release 생성 및 패치노트 자동화
