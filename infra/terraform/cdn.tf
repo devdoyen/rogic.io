@@ -159,8 +159,8 @@ resource "aws_cloudfront_distribution" "prod_distribution" {
     target_origin_id       = "EC2-Backend"
     viewer_protocol_policy = "redirect-to-https"
 
-    cache_policy_id          = "4135ea2d-6df8-44a3-9896-b6b47ab827c7" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40b8-8a1a-d01a7b884a17" # Managed-AllViewerExceptHostHeader
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
   }
 
   # Backend Actuator Path Cache Behavior
@@ -171,8 +171,8 @@ resource "aws_cloudfront_distribution" "prod_distribution" {
     target_origin_id       = "EC2-Backend"
     viewer_protocol_policy = "redirect-to-https"
 
-    cache_policy_id          = "4135ea2d-6df8-44a3-9896-b6b47ab827c7" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40b8-8a1a-d01a7b884a17" # Managed-AllViewerExceptHostHeader
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
   }
 
   # HTML5 History API Routing fallback support
@@ -251,8 +251,8 @@ resource "aws_cloudfront_distribution" "stage_distribution" {
     target_origin_id       = "EC2-Backend"
     viewer_protocol_policy = "redirect-to-https"
 
-    cache_policy_id          = "4135ea2d-6df8-44a3-9896-b6b47ab827c7" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40b8-8a1a-d01a7b884a17" # Managed-AllViewerExceptHostHeader
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
   }
 
   # Backend Actuator Path Cache Behavior
@@ -263,8 +263,8 @@ resource "aws_cloudfront_distribution" "stage_distribution" {
     target_origin_id       = "EC2-Backend"
     viewer_protocol_policy = "redirect-to-https"
 
-    cache_policy_id          = "4135ea2d-6df8-44a3-9896-b6b47ab827c7" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40b8-8a1a-d01a7b884a17" # Managed-AllViewerExceptHostHeader
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
   }
 
   # HTML5 History API Routing fallback support
