@@ -7,9 +7,9 @@ provider "aws" {
 # --- ACM Certificates ---
 
 resource "aws_acm_certificate" "prod_cert" {
-  provider          = aws.us_east_1
-  domain_name       = "rogic.io"
-  validation_method = "DNS"
+  provider                  = aws.us_east_1
+  domain_name               = "rogic.io"
+  validation_method         = "DNS"
   subject_alternative_names = ["www.rogic.io"]
 
   lifecycle {
