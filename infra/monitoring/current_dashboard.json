@@ -1560,7 +1560,7 @@
           },
           "label": "Environment",
           "hide": "hideVariable",
-          "refresh": "onDashboardLoad",
+          "refresh": "onTimeRangeChanged",
           "skipUrlSync": false,
           "query": {
             "kind": "DataQuery",
@@ -1570,13 +1570,13 @@
               "uid": "${DS_PROMETHEUS}"
             },
             "spec": {
-              "__legacyStringValue": "label_values(jvm_classes_loaded_classes{scrape_job=\"$instance\"}, scrape_job)"
+              "__legacyStringValue": "label_values(up{scrape_job=\"$instance\"}, scrape_job)"
             }
           },
           "regex": "/springboot-(.*)/",
           "regexApplyTo": "value",
           "sort": "alphabeticalAsc",
-          "definition": "label_values(jvm_classes_loaded_classes{scrape_job=\"$instance\"}, scrape_job)",
+          "definition": "label_values(up{scrape_job=\"$instance\"}, scrape_job)",
           "options": [],
           "multi": false,
           "includeAll": false,
