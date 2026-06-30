@@ -204,6 +204,9 @@
           GRAFANA_CLOUD_PROM_TOKEN={{ lookup('env', 'GRAFANA_CLOUD_PROM_TOKEN') }}
           ADMIN_USERNAME={{ lookup('env', 'ADMIN_USERNAME') }}
           ADMIN_PASSWORD={{ lookup('env', 'ADMIN_PASSWORD') }}
+          DB_NAME=nemologic
+          DB_USER=postgres
+          DB_PASSWORD={{ lookup('env', 'DB_PASSWORD') }}
           IMAGE_TAG={{ image_tag }}
         dest: /opt/nemologic/.env
         owner: ubuntu
