@@ -23,6 +23,7 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
+      ansible: ${{ steps.filter.outputs.ansible }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,10 +36,13 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
+            ansible:
+              - 'infra/ansible/**'
 
   # 1. CI Phase: Run backend and frontend test suites
   ci:
     name: Run Verification Tests (CI)
+    needs: changes
     runs-on: ubuntu-latest
     concurrency:
       group: app-${{ github.event.pull_request.number || github.ref }}
@@ -48,6 +52,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
+        if: needs.changes.outputs.backend == 'true'
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -55,11 +60,13 @@ jobs:
           cache: 'gradle'
 
       - name: Run Backend Tests
+        if: needs.changes.outputs.backend == 'true'
         run: |
           cd backend
           ./gradlew test
 
       - name: Set up Node.js
+        if: needs.changes.outputs.frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -67,17 +74,22 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Run Frontend Tests
+        if: needs.changes.outputs.frontend == 'true'
         run: |
           cd frontend
           npm ci
           npm run test -- --run
 
       - name: Setup Ansible for Syntax Check
+        if: needs.changes.outputs.ansible == 'true'
         run: |
-          sudo apt-get update || true
-          sudo apt-get install -y ansible
+          if ! command -v ansible &> /dev/null; then
+            sudo apt-get update || true
+            sudo apt-get install -y ansible
+          fi
 
       - name: Validate Ansible Playbook Syntax (CI)
+        if: needs.changes.outputs.ansible == 'true'
         run: |
           cd infra/ansible
           ansible-playbook playbook.yml --syntax-check -i localhost,
@@ -326,7 +338,7 @@ jobs:
     name: Deploy to Staging (Ansible)
     needs: [build, infra-apply-staging, changes]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ansible == 'true')
     concurrency:
       group: app-${{ github.ref }}
       cancel-in-progress: true
@@ -356,8 +368,10 @@ jobs:
 
       - name: Setup Ansible
         run: |
-          sudo apt-get update || true
-          sudo apt-get install -y ansible rsync
+          if ! command -v ansible &> /dev/null; then
+            sudo apt-get update || true
+            sudo apt-get install -y ansible rsync
+          fi
 
       - name: Set up SSH Private Key
         run: |
@@ -443,7 +457,7 @@ jobs:
     name: Deploy to Production (Ansible)
     needs: [build, deploy-staging, infra-apply-production, changes]
     runs-on: ubuntu-latest
-    if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ansible == 'true')
     concurrency:
       group: app-${{ github.ref }}
       cancel-in-progress: true
@@ -453,8 +467,10 @@ jobs:
 
       - name: Setup Ansible
         run: |
-          sudo apt-get update || true
-          sudo apt-get install -y ansible rsync
+          if ! command -v ansible &> /dev/null; then
+            sudo apt-get update || true
+            sudo apt-get install -y ansible rsync
+          fi
 
       - name: Set up SSH Private Key
         run: |
