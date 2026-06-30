@@ -370,9 +370,9 @@
         chdir: /opt/nemologic
       become: true
 
-    - name: Reload Nginx configuration dynamically
+    - name: Restart Nginx container to apply configuration changes
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T frontend nginx -s reload || true
+        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml restart frontend
         chdir: /opt/nemologic
       become: true
 
