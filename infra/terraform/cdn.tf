@@ -35,6 +35,61 @@ resource "aws_acm_certificate" "stage_cert" {
   }
 }
 
+# --- DNS Validation (Route 53) ---
+
+data "aws_route53_zone" "rogic_io" {
+  name         = "rogic.io"
+  private_zone = false
+}
+
+resource "aws_route53_record" "prod_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.prod_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.rogic_io.zone_id
+}
+
+resource "aws_route53_record" "stage_cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.stage_cert.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.rogic_io.zone_id
+}
+
+# --- ACM Certificate Validation Waiter ---
+
+resource "aws_acm_certificate_validation" "prod_cert_validation" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.prod_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.prod_cert_validation : record.fqdn]
+}
+
+resource "aws_acm_certificate_validation" "stage_cert_validation" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.stage_cert.arn
+  validation_record_fqdns = [for record in aws_route53_record.stage_cert_validation : record.fqdn]
+}
+
 # --- S3 Buckets for Frontend ---
 
 resource "aws_s3_bucket" "frontend_prod_bucket" {
@@ -197,7 +252,7 @@ resource "aws_cloudfront_distribution" "prod_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.prod_cert.arn
+    acm_certificate_arn      = aws_acm_certificate_validation.prod_cert_validation.certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
@@ -289,7 +344,7 @@ resource "aws_cloudfront_distribution" "stage_distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.stage_cert.arn
+    acm_certificate_arn      = aws_acm_certificate_validation.stage_cert_validation.certificate_arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
