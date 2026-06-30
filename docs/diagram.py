@@ -48,10 +48,14 @@ with Diagram(
     with Cluster("☁️ AWS VPC (ap-northeast-2)"):
         igw = InternetGateway("🌐 Internet Gateway")
 
-        with Cluster("🛡️ Public Subnet"):
-            nginx = Nginx("🕸️ Nginx Proxy\n(Port 80/443)")
+        with Cluster("🛡️ Public Subnet (Single EC2 Host)"):
+            with Cluster("🐳 frontend-net (Docker Bridge)"):
+                nginx = Nginx("🕸️ Nginx Proxy\n(Port 80/443)")
+                
             spring = EC2("☕ Spring Boot\n(Backend App)")
-            db = Postgresql("🐘 PostgreSQL DB\n(Docker Container)")
+            
+            with Cluster("🐳 backend-net (Isolated Docker Bridge)"):
+                db = Postgresql("🐘 PostgreSQL DB\n(Docker Container)")
 
             nginx >> Edge(label="Port 8080") >> spring >> Edge(label="JPA/JDBC") >> db
 
