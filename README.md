@@ -77,6 +77,17 @@ graph TD
 * **Backend API**: Packaged into Docker containers and run on a single `Amazon EC2` virtual host under `Nginx` reverse proxy, configured with Let's Encrypt SSL/TLS.
 * **Telemetry**: Prometheus actuator endpoints are exposed securely via Nginx token authentication (`Authorization: Bearer`), allowing agentless metric scraping directly by Grafana Cloud.
 
+<details>
+<summary>🔍 Click to view Inframap Generated Resource Dependency Graphs</summary>
+
+#### Staging Environment Infrastructure Graph
+![Staging Infrastructure Graph](./docs/images/staging-infra.png)
+
+#### Production Environment Infrastructure Graph
+![Production Infrastructure Graph](./docs/images/production-infra.png)
+
+</details>
+
 ---
 
 ## 🚀 CI/CD & GitOps Pipeline
