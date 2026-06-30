@@ -27,51 +27,7 @@ This repository represents a fully production-grade, GitOps-driven full-stack ap
 
 The cloud hosting model utilizes strict subnetting and caching layers on AWS to deliver high availability and secure database isolation.
 
-```mermaid
-graph TD
-    subgraph Client [👥 User Environment]
-        Browser[🌐 Web Browser]
-    end
-
-    subgraph AWS [☁️ AWS Cloud Infrastructure]
-        subgraph Edge [📍 Edge Location]
-            CF[⚡ Amazon CloudFront CDN]
-        end
-        
-        subgraph PublicSubnet [🛡️ Public Subnet]
-            S3[🪣 Amazon S3 Frontend Bucket]
-            EC2[🖥️ Amazon EC2 Instance]
-            
-            subgraph Docker [🐳 Docker Engine]
-                Nginx[🕸️ Nginx Proxy Container]
-                SpringBoot[☕ Spring Boot Backend Container]
-                Postgres[🐘 PostgreSQL DB Container]
-            end
-        end
-    end
-
-    subgraph Monitoring [📊 Observability]
-        Grafana[📈 Grafana Cloud Dashboard]
-        CloudWatch[📝 AWS CloudWatch Logs]
-        SNS[🔔 AWS SNS Alert Topic]
-        Email[📧 Developer Email]
-    end
-
-    %% Client traffic
-    Browser -->|HTTPS / Static Assets| CF
-    CF -->|Origin Fetch| S3
-    Browser -->|HTTPS API Requests| Nginx
-    
-    %% Nginx proxying
-    Nginx -->|Reverse Proxy / port 8080| SpringBoot
-    SpringBoot -->|JPA / JDBC| Postgres
-    
-    %% Monitoring loops
-    Grafana -->|Agentless Pull /actuator/prometheus| Nginx
-    SpringBoot -->|AWS Logs Driver| CloudWatch
-    CloudWatch -->|Alarm / Pattern Match| SNS
-    SNS -->|Email Notification| Email
-```
+![System Architecture](./docs/images/aws-architecture.png)
 
 * **Frontend Hosting**: Static HTML/JS bundle compiled via Vite, hosted on `Amazon S3`, and distributed globally through `Amazon CloudFront` CDN with cache invalidation rules.
 * **Backend API**: Packaged into Docker containers and run on a single `Amazon EC2` virtual host under `Nginx` reverse proxy, configured with Let's Encrypt SSL/TLS.
