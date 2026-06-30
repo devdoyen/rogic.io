@@ -50,7 +50,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "avg by (instance) (rate(node_cpu_seconds_total{mode=\"iowait\", job=\"node-metrics-$env\"}[5m])) * 100",
+                        "expr": "avg by (instance) (rate(node_cpu_seconds_total{mode=\"iowait\", scrape_job=\"node-metrics-$env\"}[5m])) * 100",
                         "format": "time_series",
                         "legendFormat": "iowait",
                         "refId": "A"
@@ -71,7 +71,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\", job=\"node-metrics-$env\"}[5m])) * 100",
+                        "expr": "avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\", scrape_job=\"node-metrics-$env\"}[5m])) * 100",
                         "format": "time_series",
                         "legendFormat": "idle",
                         "refId": "B"
@@ -820,7 +820,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "100 * (1 - (node_filesystem_avail_bytes{mountpoint=\"/\", job=\"node-metrics-$env\"} / node_filesystem_size_bytes{mountpoint=\"/\", job=\"node-metrics-$env\"}))",
+                        "expr": "100 * (1 - (node_filesystem_avail_bytes{mountpoint=\"/\", scrape_job=\"node-metrics-$env\"} / node_filesystem_size_bytes{mountpoint=\"/\", scrape_job=\"node-metrics-$env\"}))",
                         "format": "time_series",
                         "legendFormat": "Disk Usage (%)"
                       }
@@ -1019,7 +1019,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "(node_memory_SwapTotal_bytes{job=\"node-metrics-$env\"} - node_memory_SwapFree_bytes{job=\"node-metrics-$env\"}) / 1024 / 1024",
+                        "expr": "(node_memory_SwapTotal_bytes{scrape_job=\"node-metrics-$env\"} - node_memory_SwapFree_bytes{scrape_job=\"node-metrics-$env\"}) / 1024 / 1024",
                         "format": "time_series",
                         "legendFormat": "Swap Used (MB)"
                       }
@@ -1039,7 +1039,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "(node_memory_MemTotal_bytes{job=\"node-metrics-$env\"} - node_memory_MemAvailable_bytes{job=\"node-metrics-$env\"}) / 1024 / 1024",
+                        "expr": "(node_memory_MemTotal_bytes{scrape_job=\"node-metrics-$env\"} - node_memory_MemAvailable_bytes{scrape_job=\"node-metrics-$env\"}) / 1024 / 1024",
                         "format": "time_series",
                         "legendFormat": "Mem Used (MB)"
                       }
