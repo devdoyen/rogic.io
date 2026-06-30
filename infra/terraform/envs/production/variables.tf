@@ -58,7 +58,3 @@ variable "grafana_cloudwatch_datasource_name" {
   type        = string
   default     = "CloudWatch"
 }
-
-
-
-

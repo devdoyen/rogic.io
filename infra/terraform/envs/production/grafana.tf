@@ -176,7 +176,7 @@ resource "grafana_dashboard" "sla_dashboard" {
   folder = grafana_folder.nemologic_folder[0].uid
   config_json = replace(
     replace(
-      file("${path.module}/../monitoring/current_dashboard.json"),
+      file("${path.module}/../../../monitoring/current_dashboard.json"),
       "\"$${DS_PROMETHEUS}\"",
       "\"${data.grafana_data_source.prometheus[0].uid}\""
     ),
@@ -192,6 +192,3 @@ resource "grafana_notification_policy" "nemologic_policy" {
   contact_point = grafana_contact_point.email_alerts[0].name
   group_by      = ["alertname", "grafana_folder"]
 }
-
-
-

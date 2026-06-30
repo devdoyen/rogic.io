@@ -62,14 +62,14 @@ jobs:
           cd infra/ansible
           ansible-playbook playbook.yml --syntax-check -i localhost,
 
-  # 2. Infra Plan Phase: Dry-run Terraform changes to see impact
-  infra-plan:
-    name: Terraform Dry-Run (Plan)
+  # 2. Staging Infra Plan Phase: Dry-run staging Terraform changes
+  infra-plan-staging:
+    name: Terraform Staging Dry-Run (Plan)
     needs: ci
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     concurrency:
-      group: infra-${{ github.event.pull_request.number || github.ref }}
+      group: infra-staging-${{ github.event.pull_request.number || github.ref }}
       cancel-in-progress: false
     steps:
       - name: Checkout repository
@@ -85,7 +85,51 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          cd infra/terraform
+          cd infra/terraform/envs/staging
+          terraform fmt -check
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            terraform init
+          else
+            terraform init -backend=false
+          fi
+
+      - name: Check Terraform Plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
+        run: |
+          cd infra/terraform/envs/staging
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
+            terraform plan
+          else
+            echo "Skipping plan: AWS credentials not configured."
+          fi
+
+  # 3. Production Infra Plan Phase: Dry-run production Terraform changes
+  infra-plan-production:
+    name: Terraform Production Dry-Run (Plan)
+    needs: ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    concurrency:
+      group: infra-production-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+
+      - name: Terraform Format & Init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd infra/terraform/envs/production
           terraform fmt -check
           if [ -n "$AWS_ACCESS_KEY_ID" ]; then
             terraform init
@@ -103,45 +147,54 @@ jobs:
           TF_VAR_grafana_sm_url: ${{ secrets.GRAFANA_SM_URL }}
           TF_VAR_grafana_sm_token: ${{ secrets.GRAFANA_SM_TOKEN }}
         run: |
-          cd infra/terraform
-          # Only run plan if AWS credentials are provided
+          cd infra/terraform/envs/production
           if [ -n "$AWS_ACCESS_KEY_ID" ]; then
             terraform plan
           else
-            echo "Skipping plan: AWS credentials not configured in secrets."
+            echo "Skipping plan: AWS credentials not configured."
           fi
 
-      - name: Generate Terraform Graph
+  # 4. Staging Infra Apply Phase (Auto-Apply)
+  infra-apply-staging:
+    name: Terraform Staging Apply (Auto-Apply)
+    needs: infra-plan-staging
+    runs-on: ubuntu-latest
+    if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
+    concurrency:
+      group: infra-staging-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+
+      - name: Terraform Init & Apply
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
         run: |
-          sudo apt-get update && sudo apt-get install -y graphviz
-          cd infra/terraform
+          cd infra/terraform/envs/staging
           if [ -n "$AWS_ACCESS_KEY_ID" ]; then
-            terraform graph | dot -Tpng > terraform-graph.png
+            terraform init
+            terraform apply -auto-approve
           else
-            # Generate a mock empty file or skip graph to avoid crash
-            echo "Skipping graph: AWS credentials not configured."
-            touch terraform-graph.png
+            echo "Skipping apply: AWS credentials not configured."
           fi
 
-      - name: Upload Terraform Graph
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-architecture-graph
-          path: infra/terraform/terraform-graph.png
-          retention-days: 7
-
-  # 3. Infra Apply Phase: Applies Terraform changes (Auto-Apply)
-  infra-apply:
-    name: Terraform Infrastructure Apply (Auto-Apply)
-    needs: infra-plan
+  # 5. Production Infra Apply Phase (Requires Manual Approval Gate)
+  infra-apply-production:
+    name: Terraform Production Apply (Manual Approval)
+    needs: [infra-plan-production, infra-apply-staging]
     runs-on: ubuntu-latest
     environment: production
     if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
     concurrency:
-      group: infra-${{ github.ref }}
+      group: infra-production-${{ github.ref }}
       cancel-in-progress: false
     steps:
       - name: Checkout repository
@@ -162,7 +215,7 @@ jobs:
           TF_VAR_grafana_sm_url: ${{ secrets.GRAFANA_SM_URL }}
           TF_VAR_grafana_sm_token: ${{ secrets.GRAFANA_SM_TOKEN }}
         run: |
-          cd infra/terraform
+          cd infra/terraform/envs/production
           if [ -n "$AWS_ACCESS_KEY_ID" ]; then
             terraform init
             terraform apply -auto-approve
@@ -242,7 +295,7 @@ jobs:
   # 5. Deploy Staging Phase: Deploys to Staging Server
   deploy-staging:
     name: Deploy to Staging (Ansible)
-    needs: [build, infra-apply]
+    needs: [build, infra-apply-staging]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     concurrency:
@@ -352,7 +405,7 @@ jobs:
   # 6. Deploy Production Phase: Deploys to Production Server (Requires Manual Approval Gate)
   deploy-production:
     name: Deploy to Production (Ansible)
-    needs: [build, deploy-staging]
+    needs: [build, deploy-staging, infra-apply-production]
     runs-on: ubuntu-latest
     environment: production
     if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
