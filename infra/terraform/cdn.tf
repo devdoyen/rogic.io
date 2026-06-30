@@ -394,3 +394,23 @@ resource "aws_route53_record" "stage_alias" {
     evaluate_target_health = false
   }
 }
+
+# --- Backend Dedicated DNS Records (Bypassing CloudFront for SSL handshake) ---
+
+resource "aws_route53_record" "stage_backend_dns" {
+  zone_id         = data.aws_route53_zone.rogic_io.zone_id
+  name            = "api.stage.rogic.io"
+  type            = "A"
+  ttl             = 300
+  records         = [aws_eip.nemologic_staging_eip.public_ip]
+  allow_overwrite = true
+}
+
+resource "aws_route53_record" "prod_backend_dns" {
+  zone_id         = data.aws_route53_zone.rogic_io.zone_id
+  name            = "api.rogic.io"
+  type            = "A"
+  ttl             = 300
+  records         = [aws_eip.nemologic_eip.public_ip]
+  allow_overwrite = true
+}

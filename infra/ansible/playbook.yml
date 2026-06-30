@@ -24,7 +24,7 @@
     ansible_become_timeout: 60
     env_name: "{{ env | default('prod') }}"
     cert_domain: "{{ 'rotagic.com' if env_name == 'prod' else 'stage.rogic.io' }}"
-    certbot_domains: "{{ 'rotagic.com -d www.rotagic.com -d rogic.io -d www.rogic.io' if env_name == 'prod' else 'stage.rogic.io' }}"
+    certbot_domains: "{{ 'rotagic.com -d www.rotagic.com -d rogic.io -d www.rogic.io -d api.rogic.io' if env_name == 'prod' else 'stage.rogic.io -d api.stage.rogic.io' }}"
     image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
   tasks:
     - name: Debug host resources
