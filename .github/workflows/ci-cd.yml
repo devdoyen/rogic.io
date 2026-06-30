@@ -452,6 +452,10 @@ jobs:
             echo "Skipping S3 sync: AWS credentials not configured."
           fi
 
+      - name: Run Automated Staging Integration Tests
+        run: |
+          bash infra/monitoring/verify_staging.sh
+
   # 6. Deploy Production Phase: Deploys to Production Server (Requires Manual Approval Gate)
   deploy-production:
     name: Deploy to Production (Ansible)
