@@ -423,3 +423,10 @@
         minute: "0"
         hour: "*/6"
         job: "/bin/bash /opt/nemologic/backups/backup_db.sh > /dev/null 2>&1"
+
+    - name: Set up Daily Cron Job for Docker Garbage Collection (Run daily at 3 AM)
+      cron:
+        name: "nemologic docker garbage collect"
+        minute: "0"
+        hour: "3"
+        job: "/usr/bin/docker system prune -af --volumes --filter 'until=72h' > /dev/null 2>&1"
