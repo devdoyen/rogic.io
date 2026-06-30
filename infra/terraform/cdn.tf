@@ -277,14 +277,14 @@ resource "aws_cloudfront_distribution" "stage_distribution" {
 
   # Backend Origin (EC2)
   origin {
-    domain_name = aws_eip.nemologic_staging_eip.public_dns
+    domain_name = "api.stage.rogic.io"
     origin_id   = "EC2-Backend"
 
     custom_origin_config {
       http_port              = 80
       https_port             = 443
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1.2"]
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2", "TLSv1.3"]
     }
   }
 
