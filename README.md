@@ -1,5 +1,9 @@
 # rogic.io (Rotate Logic Nonogram Puzzle)
 
+🚀 **Live Services**:
+- **Production Environment**: [rogic.io](https://rogic.io)
+- **Staging Environment**: [stage.rogic.io](https://stage.rogic.io)
+
 `rogic.io` is a next-generation Nonogram logic puzzle platform that introduces 3D-like sub-grid rotation dynamics. Players align cognitive patterns, rotate sections of the grid, and solve puzzles to reveal hidden drawings.
 
 This repository represents a fully production-grade, GitOps-driven full-stack application built with robust CI/CD automation, cloud infrastructure isolation, and telemetry metrics.
