@@ -481,7 +481,7 @@ resource "aws_cloudwatch_metric_alarm" "ec2_auto_recovery_alarm" {
   statistic           = "Minimum"
   threshold           = 0
   alarm_description   = "This alarm triggers system auto-recovery when the physical host status check fails."
-  alarm_actions       = [
+  alarm_actions = [
     "arn:aws:automate:${var.aws_region}:ec2:recover",
     aws_sns_topic.nemologic_alerts.arn
   ]
