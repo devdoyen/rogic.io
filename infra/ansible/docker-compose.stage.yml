@@ -15,6 +15,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - backend-net
 
   frontend:
     image: nginx:alpine
@@ -27,6 +29,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on: []
+    networks:
+      - frontend-net
 
   backend-blue:
     image: ghcr.io/devdoyen/nemologic-backend:${IMAGE_TAG:-latest}
@@ -45,6 +49,9 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - frontend-net
+      - backend-net
 
   backend-green:
     image: ghcr.io/devdoyen/nemologic-backend:${IMAGE_TAG:-latest}
@@ -63,8 +70,17 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - frontend-net
+      - backend-net
 
 volumes:
   postgres_data:
+
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
 
 
