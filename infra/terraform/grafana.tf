@@ -84,7 +84,6 @@ resource "grafana_rule_group" "nemologic_alerts" {
         expr          = "sum(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"})"
         intervalMs    = 15000
         maxDataPoints = 43200
-        refId         = "A"
       })
     }
 
