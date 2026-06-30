@@ -189,7 +189,7 @@ jobs:
   # 5. Production Infra Apply Phase (Requires Manual Approval Gate)
   infra-apply-production:
     name: Terraform Production Apply (Manual Approval)
-    needs: [infra-plan-production, infra-apply-staging]
+    needs: [infra-plan-production, deploy-staging]
     runs-on: ubuntu-latest
     environment: production
     if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
