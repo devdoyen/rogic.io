@@ -417,9 +417,9 @@
         group: ubuntu
         mode: "0755"
 
-    - name: Set up Daily Cron Job for DB Backups (Run daily at 3:00 AM)
+    - name: Set up Daily Cron Job for DB Backups (Run every 6 hours)
       cron:
         name: "nemologic db daily backup"
         minute: "0"
-        hour: "3"
+        hour: "*/6"
         job: "/bin/bash /opt/nemologic/backups/backup_db.sh > /dev/null 2>&1"

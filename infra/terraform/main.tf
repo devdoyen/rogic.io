@@ -450,5 +450,50 @@ resource "aws_cloudwatch_metric_alarm" "staging_ec2_status_check_alarm" {
   }
 }
 
+# --- S3 Backup Bucket Lifecycle Rule ---
+
+resource "aws_s3_bucket_lifecycle_configuration" "backup_lifecycle" {
+  bucket = aws_s3_bucket.backup_bucket.id
+
+  rule {
+    id     = "cleanup-old-backups"
+    status = "Enabled"
+
+    filter {
+      prefix = "postgres/"
+    }
+
+    expiration {
+      days = 30
+    }
+  }
+}
+
+# --- CloudWatch Metric Alarm for EC2 System Status Check Failed (Auto Recovery) ---
+
+resource "aws_cloudwatch_metric_alarm" "ec2_auto_recovery_alarm" {
+  alarm_name          = "nemologic-ec2-auto-recovery-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "StatusCheckFailed_System"
+  namespace           = "AWS/EC2"
+  period              = 60
+  statistic           = "Minimum"
+  threshold           = 0
+  alarm_description   = "This alarm triggers system auto-recovery when the physical host status check fails."
+  alarm_actions       = [
+    "arn:aws:automate:${var.aws_region}:ec2:recover",
+    aws_sns_topic.nemologic_alerts.arn
+  ]
+
+  dimensions = {
+    InstanceId = aws_instance.nemologic_server.id
+  }
+
+  tags = {
+    Name = "nemologic-ec2-auto-recovery-alarm"
+  }
+}
+
 
 
