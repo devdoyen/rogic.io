@@ -353,3 +353,44 @@ resource "aws_cloudfront_distribution" "stage_distribution" {
     Name = "rogic-stage-cloudfront"
   }
 }
+
+# --- Route 53 Domain Mapping to CloudFront (Alias Records) ---
+
+resource "aws_route53_record" "prod_alias" {
+  zone_id         = data.aws_route53_zone.rogic_io.zone_id
+  name            = "rogic.io"
+  type            = "A"
+  allow_overwrite = true
+
+  alias {
+    name                   = aws_cloudfront_distribution.prod_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.prod_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "prod_www_alias" {
+  zone_id         = data.aws_route53_zone.rogic_io.zone_id
+  name            = "www.rogic.io"
+  type            = "A"
+  allow_overwrite = true
+
+  alias {
+    name                   = aws_cloudfront_distribution.prod_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.prod_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "stage_alias" {
+  zone_id         = data.aws_route53_zone.rogic_io.zone_id
+  name            = "stage.rogic.io"
+  type            = "A"
+  allow_overwrite = true
+
+  alias {
+    name                   = aws_cloudfront_distribution.stage_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.stage_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
