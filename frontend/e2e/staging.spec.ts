@@ -19,7 +19,7 @@ test.describe('Staging Environment E2E Smoke Integration Test', () => {
 
     // Verify canvas board is rendered
     console.log('Verifying Nonogram Canvas board rendering...');
-    const canvas = page.locator('canvas');
+    const canvas = page.getByTestId('nonogram-canvas');
     await expect(canvas).toBeVisible({ timeout: 10000 });
 
     // Verify floating stage selector exists and displays the current stage name
