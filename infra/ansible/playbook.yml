@@ -23,8 +23,8 @@
   vars:
     ansible_become_timeout: 60
     env_name: "{{ env | default('prod') }}"
-    cert_domain: "{{ 'rotagic.com' if env_name == 'prod' else 'stage.rogic.io' }}"
-    certbot_domains: "{{ 'rotagic.com -d www.rotagic.com -d rogic.io -d www.rogic.io -d api.rogic.io' if env_name == 'prod' else 'stage.rogic.io -d api.stage.rogic.io' }}"
+    cert_domain: "{{ 'api.rogic.io' if env_name == 'prod' else 'api.stage.rogic.io' }}"
+    certbot_domains: "{{ 'api.rogic.io' if env_name == 'prod' else 'api.stage.rogic.io' }}"
     image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
   tasks:
     - name: Debug host resources
@@ -148,7 +148,7 @@
           {
             "log-driver": "awslogs",
             "log-opts": {
-              "awslogs-group": "/aws/ec2/nemologic",
+              "awslogs-group": "/aws/ec2/nemologic{{ '-staging' if env_name == 'stage' else '' }}",
               "awslogs-region": "ap-northeast-2",
               "awslogs-create-group": "true"
             }
@@ -396,7 +396,7 @@
         content: |
           #!/bin/bash
           # Find backup bucket name automatically from S3 list
-          BUCKET_NAME=$(aws s3 ls | grep nemologic-db-backup | head -n1 | awk '{print $3}')
+          BUCKET_NAME=$(aws s3 ls | grep nemologic-db-backup{{ '-stage' if env_name == 'stage' else '' }}{{ ' | grep -v stage' if env_name == 'prod' else '' }} | head -n1 | awk '{print $3}')
           if [ -z "$BUCKET_NAME" ]; then
               echo "Error: S3 Backup Bucket not found"
               exit 1
