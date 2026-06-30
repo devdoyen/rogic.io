@@ -16,6 +16,26 @@ env:
   AWS_REGION: "ap-northeast-2"
 
 jobs:
+  # 0. Detect File Changes to optimize pipeline execution
+  changes:
+    name: Detect File Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Path Filters
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
   # 1. CI Phase: Run backend and frontend test suites
   ci:
     name: Run Verification Tests (CI)
@@ -226,7 +246,7 @@ jobs:
   # 4. Build Phase: Compile GraalVM Native Image and Frontend Assets
   build:
     name: Build Application (GraalVM & Node)
-    needs: ci
+    needs: [ci, changes]
     runs-on: ubuntu-latest
     if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
     concurrency:
@@ -237,6 +257,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up GraalVM JDK 17
+        if: needs.changes.outputs.backend == 'true'
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '17'
@@ -245,11 +266,13 @@ jobs:
           cache: 'gradle'
 
       - name: Build Backend Native Image
+        if: needs.changes.outputs.backend == 'true'
         run: |
           cd backend
           ./gradlew nativeCompile
 
       - name: Set up Node.js
+        if: needs.changes.outputs.frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -257,12 +280,14 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Build Frontend Assets
+        if: needs.changes.outputs.frontend == 'true'
         run: |
           cd frontend
           npm ci
           npm run build
 
       - name: Upload Frontend Build Artifact
+        if: needs.changes.outputs.frontend == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
@@ -270,6 +295,7 @@ jobs:
           retention-days: 1
 
       - name: Set Image Tag env
+        if: needs.changes.outputs.backend == 'true'
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
@@ -278,6 +304,7 @@ jobs:
           fi
 
       - name: Log in to GitHub Container Registry (GHCR)
+        if: needs.changes.outputs.backend == 'true'
         run: |
           if [ -n "${{ secrets.GHCR_PAT }}" ]; then
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
@@ -286,16 +313,18 @@ jobs:
           fi
 
       - name: Build and Push Docker Images
+        if: needs.changes.outputs.backend == 'true'
         run: |
           docker build -t ghcr.io/devdoyen/nemologic-backend:latest -t ghcr.io/devdoyen/nemologic-backend:$IMAGE_TAG ./backend
           docker push ghcr.io/devdoyen/nemologic-backend:latest
           docker push ghcr.io/devdoyen/nemologic-backend:$IMAGE_TAG
 
 
+
   # 5. Deploy Staging Phase: Deploys to Staging Server
   deploy-staging:
     name: Deploy to Staging (Ansible)
-    needs: [build, infra-apply-staging]
+    needs: [build, infra-apply-staging, changes]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     concurrency:
@@ -338,10 +367,14 @@ jobs:
 
       - name: Set Image Tag env
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          if [ "${{ needs.changes.outputs.backend }}" = "true" ]; then
+            if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+              echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+            else
+              echo "IMAGE_TAG=sha-${{ github.sha }}" >> $GITHUB_ENV
+            fi
           else
-            echo "IMAGE_TAG=sha-${{ github.sha }}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
           fi
 
       - name: Run Ansible Playbook (Staging)
@@ -371,12 +404,14 @@ jobs:
           ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=stage"
 
       - name: Download Frontend Build Artifact
+        if: needs.changes.outputs.frontend == 'true'
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
 
       - name: Deploy Frontend to S3 (Staging)
+        if: needs.changes.outputs.frontend == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -405,7 +440,7 @@ jobs:
   # 6. Deploy Production Phase: Deploys to Production Server (Requires Manual Approval Gate)
   deploy-production:
     name: Deploy to Production (Ansible)
-    needs: [build, deploy-staging, infra-apply-production]
+    needs: [build, deploy-staging, infra-apply-production, changes]
     runs-on: ubuntu-latest
     environment: production
     if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && github.event_name == 'push'
@@ -429,10 +464,14 @@ jobs:
 
       - name: Set Image Tag env
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+          if [ "${{ needs.changes.outputs.backend }}" = "true" ]; then
+            if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+              echo "IMAGE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+            else
+              echo "IMAGE_TAG=sha-${{ github.sha }}" >> $GITHUB_ENV
+            fi
           else
-            echo "IMAGE_TAG=sha-${{ github.sha }}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=latest" >> $GITHUB_ENV
           fi
 
       - name: Run Ansible Playbook (Production)
@@ -461,12 +500,14 @@ jobs:
           fi
 
       - name: Download Frontend Build Artifact
+        if: needs.changes.outputs.frontend == 'true'
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
 
       - name: Deploy Frontend to S3 (Production)
+        if: needs.changes.outputs.frontend == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
