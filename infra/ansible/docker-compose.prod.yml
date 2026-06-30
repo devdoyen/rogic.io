@@ -1,10 +1,20 @@
 version: '3.8'
 
 services:
-  backend:
-    entrypoint: ["echo", "backend service disabled"]
-    restart: "no"
-    ports: []
+  db:
+    image: postgres:16-alpine
+    container_name: nemologic-db
+    environment:
+      POSTGRES_DB: nemologic
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nemologic"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   frontend:
     image: nginx:alpine
@@ -53,5 +63,8 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  postgres_data:
 
 

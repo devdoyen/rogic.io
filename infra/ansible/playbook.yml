@@ -227,7 +227,7 @@
 
     - name: Stop frontend container if running (for standalone certbot)
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml stop frontend || true
+        cmd: docker compose -f docker-compose.prod.yml stop frontend || true
         chdir: /opt/nemologic
       become: true
       when: not ssl_cert_check.stat.exists
@@ -257,7 +257,7 @@
       copy:
         content: |
           #!/bin/bash
-          docker compose -f /opt/nemologic/docker-compose.yml -f /opt/nemologic/docker-compose.prod.yml stop frontend
+          docker compose -f /opt/nemologic/docker-compose.prod.yml stop frontend
         dest: /etc/letsencrypt/renewal-hooks/pre/stop-frontend.sh
         owner: root
         group: root
@@ -267,7 +267,7 @@
       copy:
         content: |
           #!/bin/bash
-          docker compose -f /opt/nemologic/docker-compose.yml -f /opt/nemologic/docker-compose.prod.yml start frontend
+          docker compose -f /opt/nemologic/docker-compose.prod.yml start frontend
         dest: /etc/letsencrypt/renewal-hooks/post/start-frontend.sh
         owner: root
         group: root
@@ -275,7 +275,7 @@
 
     - name: Start Database service
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d db
+        cmd: docker compose -f docker-compose.prod.yml up -d db
         chdir: /opt/nemologic
       become: true
 
@@ -287,7 +287,7 @@
 
     - name: Pull Docker images
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+        cmd: docker compose -f docker-compose.prod.yml pull
         chdir: /opt/nemologic
       become: true
 
@@ -317,7 +317,7 @@
       block:
         - name: "Start backend-{{ deploy_to }}"
           shell:
-            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate backend-{{ deploy_to }}"
+            cmd: "docker compose -f docker-compose.prod.yml up -d --force-recreate backend-{{ deploy_to }}"
             chdir: /opt/nemologic
           become: true
 
@@ -333,7 +333,7 @@
       rescue:
         - name: Get new slot container logs on failure
           shell:
-            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml logs backend-{{ deploy_to }}"
+            cmd: "docker compose -f docker-compose.prod.yml logs backend-{{ deploy_to }}"
             chdir: /opt/nemologic
           register: container_logs_new
           become: true
@@ -344,7 +344,7 @@
 
         - name: Stop failed new slot
           shell:
-            cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-blue backend-green"
+            cmd: "docker compose -f docker-compose.prod.yml stop backend-blue backend-green"
             chdir: /opt/nemologic
           become: true
           ignore_errors: true
@@ -366,19 +366,19 @@
 
     - name: Start and rebuild frontend
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d frontend
+        cmd: docker compose -f docker-compose.prod.yml up -d frontend
         chdir: /opt/nemologic
       become: true
 
     - name: Restart Nginx container to apply configuration changes
       shell:
-        cmd: docker compose -f docker-compose.yml -f docker-compose.prod.yml restart frontend
+        cmd: docker compose -f docker-compose.prod.yml restart frontend
         chdir: /opt/nemologic
       become: true
 
     - name: Stop old backend slot after successful deployment
       shell:
-        cmd: "docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend-{{ stop_from }}"
+        cmd: "docker compose -f docker-compose.prod.yml stop backend-{{ stop_from }}"
         chdir: /opt/nemologic
       become: true
       when: stop_from != 'none'
