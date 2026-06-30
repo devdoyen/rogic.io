@@ -29,32 +29,32 @@ The cloud hosting model utilizes strict subnetting and caching layers on AWS to 
 
 ```mermaid
 graph TD
-    subgraph Client [User Environment]
-        Browser[Web Browser]
+    subgraph Client [👥 User Environment]
+        Browser[🌐 Web Browser]
     end
 
-    subgraph AWS [AWS Cloud Infrastructure]
-        subgraph Edge [Edge Location]
-            CF[Amazon CloudFront CDN]
+    subgraph AWS [☁️ AWS Cloud Infrastructure]
+        subgraph Edge [📍 Edge Location]
+            CF[⚡ Amazon CloudFront CDN]
         end
         
-        subgraph PublicSubnet [Public Subnet]
-            S3[Amazon S3 Frontend Bucket]
-            EC2[Amazon EC2 Instance]
+        subgraph PublicSubnet [🛡️ Public Subnet]
+            S3[🪣 Amazon S3 Frontend Bucket]
+            EC2[🖥️ Amazon EC2 Instance]
             
-            subgraph Docker [Docker Engine]
-                Nginx[Nginx Container]
-                SpringBoot[Spring Boot Backend Container]
-                Postgres[PostgreSQL DB Container]
+            subgraph Docker [🐳 Docker Engine]
+                Nginx[🕸️ Nginx Proxy Container]
+                SpringBoot[☕ Spring Boot Backend Container]
+                Postgres[🐘 PostgreSQL DB Container]
             end
         end
     end
 
-    subgraph Monitoring [Observability]
-        Grafana[Grafana Cloud Dashboard]
-        CloudWatch[AWS CloudWatch Logs]
-        SNS[AWS SNS Alert Topic]
-        Email[Developer Email]
+    subgraph Monitoring [📊 Observability]
+        Grafana[📈 Grafana Cloud Dashboard]
+        CloudWatch[📝 AWS CloudWatch Logs]
+        SNS[🔔 AWS SNS Alert Topic]
+        Email[📧 Developer Email]
     end
 
     %% Client traffic
@@ -96,29 +96,29 @@ The deployment pipeline ensures staging verification, automated QA gating, zero-
 
 ```mermaid
 graph TD
-    Push[Git Push to main] --> Changes[Detect File Changes]
+    Push[💻 Git Push to main] --> Changes[🔍 Detect File Changes]
     
-    subgraph CI [Continuous Integration]
-        Changes -->|Backend Change| Gradle[Run Gradle Unit Tests]
-        Changes -->|Frontend Change| Vitest[Run Vitest Unit Tests]
-        Changes -->|Ansible Change| Syntax[Validate Ansible Syntax]
+    subgraph CI [🧪 Continuous Integration]
+        Changes -->|Backend Change| Gradle[☕ Run Gradle Unit Tests]
+        Changes -->|Frontend Change| Vitest[⚡ Run Vitest Unit Tests]
+        Changes -->|Ansible Change| Syntax[📝 Validate Ansible Syntax]
     end
     
-    subgraph CD_Staging [Continuous Delivery: Staging]
-        Gradle & Vitest & Syntax --> Build[Build Native App & Frontend Assets]
-        Build --> TFStg[Terraform Apply Staging]
-        TFStg --> AnsStg[Deploy Staging via Ansible]
-        AnsStg --> Playwright[Run Playwright Browser E2E Tests]
+    subgraph CD_Staging [🚀 Continuous Delivery: Staging]
+        Gradle & Vitest & Syntax --> Build[📦 Build App & Frontend Assets]
+        Build --> TFStg[⚙️ Terraform Apply Staging]
+        TFStg --> AnsStg[🚚 Deploy Staging via Ansible]
+        AnsStg --> Playwright[🎭 Run Playwright E2E Tests]
     end
     
-    subgraph Approval [Approval Gate]
-        Playwright -->|Success| Pause[Pause for Admin Manual Approval]
+    subgraph Approval [🛑 Approval Gate]
+        Playwright -->|Success| Pause[⏳ Pause for Admin Manual Approval]
     end
     
-    subgraph CD_Prod [Continuous Deployment: Production]
-        Pause -->|Approved| TFProd[Terraform Apply Production]
-        TFProd --> AnsProd[Deploy Production via Ansible]
-        AnsProd --> Release[Auto-Generate SemVer Tag & GitHub Release]
+    subgraph CD_Prod [🏆 Continuous Deployment: Production]
+        Pause -->|Approved| TFProd[⚙️ Terraform Apply Production]
+        TFProd --> AnsProd[🚚 Deploy Production via Ansible]
+        AnsProd --> Release[🔖 Auto-SemVer Tag & GitHub Release]
     end
 ```
 
