@@ -236,7 +236,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"5..\"}[1m]))",
+                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"5..\"}[$__rate_interval]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "5xx - Server Errors"
@@ -257,7 +257,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"4..\"}[1m]))",
+                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"4..\"}[$__rate_interval]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "4xx - Client Errors"
@@ -278,7 +278,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"2..\"}[1m]))",
+                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"2..\"}[$__rate_interval]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "2xx - Success"
@@ -299,7 +299,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"3..\"}[1m]))",
+                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status=~\"3..\"}[$__rate_interval]))",
                         "format": "time_series",
                         "intervalFactor": 1,
                         "legendFormat": "3xx - Redirections"
@@ -454,7 +454,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "sum(rate(http_server_requests_seconds_sum{application=\"$application\", scrape_job=\"$instance\", status!~\"5..\"}[1m]))/sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status!~\"5..\"}[1m]))",
+                        "expr": "sum(rate(http_server_requests_seconds_sum{application=\"$application\", scrape_job=\"$instance\", status!~\"5..\"}[$__rate_interval]))/sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\", status!~\"5..\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "intervalFactor": 1,
@@ -1109,7 +1109,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\"}[1m]))",
+                        "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", scrape_job=\"$instance\"}[$__rate_interval]))",
                         "format": "time_series",
                         "instant": false,
                         "intervalFactor": 1,
