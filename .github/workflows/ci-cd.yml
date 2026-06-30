@@ -452,9 +452,12 @@ jobs:
             echo "Skipping S3 sync: AWS credentials not configured."
           fi
 
-      - name: Run Automated Staging Integration Tests
+      - name: Run Automated Staging E2E Integration Tests (Playwright)
         run: |
-          bash infra/monitoring/verify_staging.sh
+          cd frontend
+          npm ci
+          npx playwright install chromium --with-deps
+          PLAYWRIGHT_BASE_URL=https://stage.rogic.io npx playwright test
 
   # 6. Deploy Production Phase: Deploys to Production Server (Requires Manual Approval Gate)
   deploy-production:
