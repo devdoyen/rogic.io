@@ -85,7 +85,7 @@
   - **테마 동화 극대화**: 어두운 사각형 배경 가드를 제거하고 완전한 투명 배경 처리를 입혀, 브라우저가 라이트/다크 모드로 토글되더라도 로고 심볼이 일그러짐 없이 수려하게 떠 있도록 시각 품질을 일괄 조치함.
   - **레포지토리 대표 카드(Social Preview) 자산 제작**: GitHub 레포지토리 전용 1280x640 크기(2:1 비율)의 프리미엄 소셜 프리뷰 카드 이미지(github_social_preview.png)를 HTML/CSS 코드로 정밀 렌더링하고 스크린샷 캡처본을 확보하여 [github_social_preview.png](../docs/assets/github_social_preview.png) 경로에 적재 완료함.
   - **로컬 개발 가이드라인 보완 및 단일화**: 기존의 DB 격리 수동 3단계 기동 가이드 오타(`docker-compose.local.yml`)를 실제 파일명으로 일치 조치하고, 단 한 줄의 명령(`docker compose up --build`)만으로 DB-API-Client 전 서비스 삼각 편대를 로컬 컨테이너망 상에서 한방에 빌드 및 기동하도록 추천 1옵션을 설계하여 README.md의 편의성을 개선함.
-  - **README.md 문서 제목 구조화 및 & 연결자 소거**: 대제목 및 소제목들에 무분별하게 남발되어 가독성을 저해하던 엔드(`&`) 연결 제목 14개소를 단일 명확한 키워드(예: `Infrastructure`, `Observability`, `CI/CD`, `AI Engineering`, `Appendices` 등)로 명료하게 함축 및 교정하여 문서 시각 품질을 극대화함.
+  - **README.md 문서 제목 구조화 및 & 연결자 소거**: 대제목 및 소제목들에 무분별하게 남발되어 가독성을 저해하던 엔드(`&`) 연결 제목 14개소를 단일 명확한 키워드(예: `Infrastructure`, `Observability`, `CI/CD`, `AI Engineering`, `Appendices` 등)로 명료하게 함축 및 교정하여 문서 시각 품질을 극대화하고, 해당 가독성 정책을 거버넌스 규칙 문서 [documentation-guidelines.md](../.agents/rules/documentation-guidelines.md)에 공식 신설하여 반영 완료함.
 
 ---
 
