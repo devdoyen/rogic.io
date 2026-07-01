@@ -579,96 +579,6 @@
           }
         }
       },
-      "panel-1003": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1003,
-          "title": "30-Day Service Availability",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "avg_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) * 100",
-                        "format": "time_series",
-                        "legendFormat": "__auto",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "gauge",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "mean"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showThresholdLabels": false,
-                "showThresholdMarkers": true,
-                "text": {}
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "thresholds"
-                  },
-                  "mappings": [],
-                  "max": 100,
-                  "min": 0,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "red",
-                        "value": null
-                      },
-                      {
-                        "color": "yellow",
-                        "value": 95
-                      },
-                      {
-                        "color": "green",
-                        "value": 99
-                      }
-                    ]
-                  },
-                  "unit": "percent"
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
       "panel-10": {
         "kind": "Panel",
         "spec": {
@@ -1465,99 +1375,11 @@
           }
         }
       },
-      "panel-2004": {
-        "kind": "Panel",
-        "spec": {
-          "id": 2004,
-          "title": "24-Hour Incident Count",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) / 2",
-                        "format": "time_series",
-                        "legendFormat": "__auto",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "thresholds"
-                  },
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "orange",
-                        "value": 1
-                      },
-                      {
-                        "color": "red",
-                        "value": 3
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
       "panel-2005": {
         "kind": "Panel",
         "spec": {
           "id": 2005,
-          "title": "7-Day Incident Count",
+          "title": "Incident Count",
           "description": "",
           "links": [],
           "data": {
@@ -1575,95 +1397,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) / 2",
-                        "format": "time_series",
-                        "legendFormat": "__auto",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "thresholds"
-                  },
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      },
-                      {
-                        "color": "orange",
-                        "value": 1
-                      },
-                      {
-                        "color": "red",
-                        "value": 3
-                      }
-                    ]
-                  }
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-2006": {
-        "kind": "Panel",
-        "spec": {
-          "id": 2006,
-          "title": "30-Day Incident Count",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) / 2",
+                        "expr": "changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[$__range]) / 2",
                         "format": "time_series",
                         "legendFormat": "__auto",
                         "instant": true,
@@ -1733,7 +1467,7 @@
         "kind": "Panel",
         "spec": {
           "id": 1007,
-          "title": "24-Hour Service Availability",
+          "title": "Service Availability",
           "description": "",
           "links": [],
           "data": {
@@ -1751,97 +1485,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "avg_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) * 100",
-                        "format": "time_series",
-                        "legendFormat": "__auto",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "gauge",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "mean"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "showThresholdLabels": false,
-                "showThresholdMarkers": true,
-                "text": {}
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "thresholds"
-                  },
-                  "mappings": [],
-                  "max": 100,
-                  "min": 0,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "red",
-                        "value": null
-                      },
-                      {
-                        "color": "yellow",
-                        "value": 95
-                      },
-                      {
-                        "color": "green",
-                        "value": 99
-                      }
-                    ]
-                  },
-                  "unit": "percent"
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-1008": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1008,
-          "title": "7-Day Service Availability",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "avg_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) * 100",
+                        "expr": "avg_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[$__range]) * 100",
                         "format": "time_series",
                         "legendFormat": "__auto",
                         "instant": true,
@@ -1913,7 +1557,7 @@
         "kind": "Panel",
         "spec": {
           "id": 1005,
-          "title": "24-Hour MTTR",
+          "title": "Mean Time To Recovery (MTTR)",
           "description": "",
           "links": [],
           "data": {
@@ -1931,169 +1575,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) - sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) / 2, 1)",
-                        "format": "time_series",
-                        "legendFormat": "{{probe}}",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      }
-                    ]
-                  },
-                  "unit": "s"
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-1011": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1011,
-          "title": "7-Day MTTR",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) - sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) / 2, 1)",
-                        "format": "time_series",
-                        "legendFormat": "{{probe}}",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      }
-                    ]
-                  },
-                  "unit": "s"
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-1012": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1012,
-          "title": "30-Day MTTR",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) - sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) / 2, 1)",
+                        "expr": "((count_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[$__range]) - sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[$__range])) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[$__range]) / 2, 1)",
                         "format": "time_series",
                         "legendFormat": "{{probe}}",
                         "instant": true,
@@ -2156,7 +1638,7 @@
         "kind": "Panel",
         "spec": {
           "id": 1006,
-          "title": "24-Hour MTBF",
+          "title": "Mean Time Between Failures (MTBF)",
           "description": "",
           "links": [],
           "data": {
@@ -2174,169 +1656,7 @@
                         "uid": "${DS_PROMETHEUS}"
                       },
                       "spec": {
-                        "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[24h]) / 2, 1)",
-                        "format": "time_series",
-                        "legendFormat": "{{probe}}",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      }
-                    ]
-                  },
-                  "unit": "s"
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-1013": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1013,
-          "title": "7-Day MTBF",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[7d]) / 2, 1)",
-                        "format": "time_series",
-                        "legendFormat": "{{probe}}",
-                        "instant": true,
-                        "range": false,
-                        "editorMode": "code"
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "stat",
-            "version": "13.1.0-27335746580",
-            "spec": {
-              "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                  "calcs": [
-                    "lastNotNull"
-                  ],
-                  "fields": "",
-                  "values": false
-                },
-                "textMode": "auto"
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "mappings": [],
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": null
-                      }
-                    ]
-                  },
-                  "unit": "s"
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-1014": {
-        "kind": "Panel",
-        "spec": {
-          "id": 1014,
-          "title": "30-Day MTBF",
-          "description": "",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "uid": "${DS_PROMETHEUS}"
-                      },
-                      "spec": {
-                        "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[30d]) / 2, 1)",
+                        "expr": "(sum_over_time(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[$__range]) * 60) / clamp_min(changes(probe_success{job=\"nemologic-api-health\", instance=\"https://rogic.io/actuator/health\"}[$__range]) / 2, 1)",
                         "format": "time_series",
                         "legendFormat": "{{probe}}",
                         "instant": true,
@@ -2440,7 +1760,7 @@
                       "spec": {
                         "x": 0,
                         "y": 4,
-                        "width": 8,
+                        "width": 6,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -2451,48 +1771,9 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 8,
+                        "x": 6,
                         "y": 4,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1008"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 16,
-                        "y": 4,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1003"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 0,
-                        "y": 8,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-2004"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 8,
-                        "y": 8,
-                        "width": 8,
+                        "width": 6,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -2503,22 +1784,9 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 16,
-                        "y": 8,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-2006"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 0,
-                        "y": 12,
-                        "width": 8,
+                        "x": 12,
+                        "y": 4,
+                        "width": 6,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -2529,65 +1797,13 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 8,
-                        "y": 12,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1011"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 16,
-                        "y": 12,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1012"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 0,
-                        "y": 16,
-                        "width": 8,
+                        "x": 18,
+                        "y": 4,
+                        "width": 6,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-1006"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 8,
-                        "y": 16,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1013"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 16,
-                        "y": 16,
-                        "width": 8,
-                        "height": 4,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-1014"
                         }
                       }
                     },
