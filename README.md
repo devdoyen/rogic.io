@@ -1,12 +1,9 @@
 # rogic.io (Rotate Logic Nonogram Puzzle)
 
-[![CI/CD Pipeline Status](https://github.com/devdoyen/rogic.io/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/devdoyen/rogic.io/actions/workflows/ci-cd.yml)
-
-🚀 **Live Services**:
-- **Production Environment**<br>
-  [rogic.io](https://rogic.io)
-- **Staging Environment**<br>
-  [stage.rogic.io](https://stage.rogic.io)
+| Service Environment | Live URL | Deployment Status |
+| :--- | :--- | :--- |
+| 🚀 **Production** | [rogic.io](https://rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-brightgreen) |
+| 🧪 **Staging** | [stage.rogic.io](https://stage.rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-blue) |
 
 `rogic.io`는 3차원 서브 그리드 회전 역학을 도입한 차세대 노노그램 논리 퍼즐 플랫폼입니다. 플레이어는 그리드의 특정 섹션을 회전하고 패턴을 맞추어 숨겨진 그림을 찾아냅니다.
 
