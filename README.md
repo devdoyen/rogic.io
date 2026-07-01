@@ -220,13 +220,13 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적
 | 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
 | :--- | :--- | :--- | :--- |
 | **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>Staging: `CloudWatchAgentServerPolicy` (관리형)<br>Production: `nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화, CloudWatch 로그 실시간 포워딩(Staging/Production 별 정책 차등 적용), DB 백업 S3 업로드 권한 제어 |
-| **CI/CD Runner (GitHub)** | AWS OIDC (Keyless) | `AdministratorAccess` (커스텀 IAM Role 연임)* | `sts:AssumeRoleWithWebIdentity`를 통해 GitHub Actions OIDC 토큰으로 1회용 단기 자격 증명을 획득하여 Terraform 및 배포 수행 (Secret Key 하드코딩 배제) |
+| **CI/CD Runner (GitHub)** | AWS OIDC (Keyless) | `nemologic-staging-github-policy`<br>`nemologic-production-github-policy` (커스텀)* | `sts:AssumeRoleWithWebIdentity`를 통해 GitHub Actions OIDC 토큰으로 1회용 단기 자격 증명을 획득하여 Terraform 및 배포 수행 (Secret Key 하드코딩 배제 및 최소 권한 수립) |
 
 ##### 1.4.2.2.1. OIDC 무키(Keyless) 인증 설계<br>
   하드코딩된 AWS API Access Key 사용을 지양하고, GitHub OIDC(OpenID Connect) 연동을 수립하여 매 빌드 및 배포 시점에 AWS Security Token Service(STS)로부터 1회용 단기 자격 증명을 획득(AssumeRole)합니다. 이로써 자격 증명 유출 경로를 원천 차단하고 보안 안전성을 확보했습니다.
 
-##### 1.4.2.2.2. CI/CD 권한 최소화 로드맵<br>
-  현재 GitHub Actions OIDC Role에는 Terraform을 통한 전체 리소스 배포(VPC, EC2, S3, DynamoDB, IAM Role 등) 및 제어를 위해 `AdministratorAccess` 권한이 부여되어 있습니다. 향후 스프린트에서 인프라 리소스 범위에 상응하는 세분화된 최소 권한 정책(IAM Policy)으로 권한을 타이트하게 제한할 예정입니다.
+##### 1.4.2.2.2. 서비스 범위 최소 권한 정책<br>
+  기존 GitHub Actions OIDC 역할에 일괄 연결되어 있던 `AdministratorAccess` 정책을 회수하고, 테라폼 및 Ansible 배포 범위에 정확히 부합하는 서비스 수준 최소 권한 정책(Staging/Production 별 커스텀 IAM Policy)을 바인딩했습니다. 이를 통해 허용 서비스(EC2, S3, DynamoDB, IAM, CloudWatch, SNS, SSM, CloudFront, ACM, Route 53) 이외의 타 서비스 자원(예: RDS, Lambda, KMS 등) 관리를 원천 차단하여 Least Privilege 통제를 완결했습니다.
 
 #### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
