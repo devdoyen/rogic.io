@@ -82,13 +82,6 @@ resource "aws_security_group" "nemologic_sg" {
   description = "Allow SSH, HTTP backend, and HTTP frontend access"
   vpc_id      = aws_vpc.nemologic_vpc.id
 
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   ingress {
     description = "Frontend HTTP"

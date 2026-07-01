@@ -504,6 +504,11 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/nemologic-key.pem
           chmod 400 ~/.ssh/nemologic-key.pem
 
+      - name: Install AWS Session Manager Plugin
+        run: |
+          curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
+          sudo dpkg -i session-manager-plugin.deb
+
       - name: Set Image Tag env
         run: |
           if [ "${{ needs.changes.outputs.backend }}" = "true" ]; then
@@ -535,8 +540,17 @@ jobs:
         run: |
           cd infra/ansible
           if [ -n "${{ secrets.EC2_IP }}" ]; then
-            echo "[nemologic_servers]" > hosts.ini
-            echo "nemologic-app-server ansible_host=${{ secrets.EC2_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60" >> hosts.ini
+            # Query EC2 Instance ID for SSM Tunneling
+            PROD_INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=nemologic-server" "Name=instance-state-name,Values=stopped,running" --query "Reservations[*].Instances[*].InstanceId" --output text)
+            if [ -n "$PROD_INSTANCE_ID" ] && [ "$PROD_INSTANCE_ID" != "None" ]; then
+              echo "Found Production EC2 Instance: $PROD_INSTANCE_ID. Deploying via SSM Tunneling."
+              echo "[nemologic_servers]" > hosts.ini
+              echo "nemologic-app-server ansible_host=$PROD_INSTANCE_ID ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60 ansible_ssh_common_args='-o ProxyCommand=\"aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p\"'" >> hosts.ini
+            else
+              echo "Production EC2 Instance ID not found. Fallback to direct IP: ${{ secrets.EC2_IP }}"
+              echo "[nemologic_servers]" > hosts.ini
+              echo "nemologic-app-server ansible_host=${{ secrets.EC2_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60" >> hosts.ini
+            fi
             ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=prod"
           else
             echo "Skipping Production Deploy: EC2_IP secret not set."

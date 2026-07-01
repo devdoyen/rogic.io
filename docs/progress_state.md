@@ -98,8 +98,13 @@
   - **SSM 접속 방법론 서술**: Windows/macOS 로컬 PC 개발자 기기에서 AWS CLI 세션 매니저를 통해 접속할 수 있도록 `session-manager-plugin` 의존성 도구 링크 및 SSH Config 프록시 구성 방안을 README.md 끝단에 명료하게 가이드화함.
   - **CI/CD 배포 파이프라인 SSM 연동 복구**: 22포트 차단 후 GitHub Actions 러너가 SSH 직접 연결 타임아웃 장애를 일으켰던 문제를 복구하기 위해, 워크플로우(`ci-cd.yml`) 내에 `session-manager-plugin` 의존성 설치 단계를 추가하고 동적 인스턴스 ID와 SSM ProxyCommand 기반으로 `hosts.ini`를 생성하여 러너가 터널을 통과해 Ansible 배포를 완수하도록 파이프라인을 고도화함.
 
+### AWS SSM Session Manager Production 순차 적용 및 22포트 차단 (Step 40) - 완료
+- **해결 내역**:
+  - **운영(Production) 환경 보안 그룹 22포트 차단**: Production 환경 테라폼([main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf))의 인바운드 보안 그룹에서 포트 22(SSH) 접근 규칙을 삭제(차단)하여 보안을 강화함.
+  - **CI/CD 배포 파이프라인 SSM 연동**: [.github/workflows/ci-cd.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/ci-cd.yml) 내의 `deploy-production` 작업에 `session-manager-plugin` 의존성 설치 단계를 추가하고, 동적 인스턴스 ID 조회를 거쳐 SSM ProxyCommand 기반의 `hosts.ini`를 사용하여 배포를 수행하도록 파이프라인을 고도화함.
+  - **테라폼 구성 검증**: `terraform init -backend=false` 및 `terraform validate` 명령어로 Production 환경의 테라폼 형상 설정에 오류가 없음을 정상 성공 검증함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **Production 환경 인바운드 22포트 차단 순차 적용**: Staging 환경에서 세션 매니저를 경유한 Ansible 배포 및 관리 동작 정합성이 완벽히 검증되면, 순차 배포 지침을 바탕으로 Production 환경 테라폼(`infra/terraform/envs/production/main.tf`)의 포트 22 차단 작업과 반영을 진행함.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
