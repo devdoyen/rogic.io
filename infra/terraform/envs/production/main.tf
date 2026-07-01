@@ -411,12 +411,8 @@ resource "aws_dynamodb_table" "tfstate_lock" {
   }
 }
 
-# --- AWS OIDC Identity Provider for GitHub Actions ---
-resource "aws_iam_openid_connect_provider" "github" {
-  url             = "https://token.actions.githubusercontent.com"
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1", "1c58a3a8516e874905f126c0d89283f64e4604e3"]
-}
+# --- AWS Caller Identity Data Source ---
+data "aws_caller_identity" "current" {}
 
 # --- IAM Role for GitHub Actions (Production) ---
 resource "aws_iam_role" "github_actions_production" {
@@ -428,7 +424,7 @@ resource "aws_iam_role" "github_actions_production" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = aws_iam_openid_connect_provider.github.arn
+          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
