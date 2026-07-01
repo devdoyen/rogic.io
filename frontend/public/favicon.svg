@@ -4,10 +4,18 @@
       <stop offset="0%" stop-color="#38bdf8" />
       <stop offset="100%" stop-color="#818cf8" />
     </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="1.2" flood-color="#38bdf8" flood-opacity="0.5"/>
+    </filter>
   </defs>
-  <rect width="32" height="32" rx="6" fill="#0f172a" />
-  <rect x="2" y="2" width="13" height="13" rx="2" fill="url(#cellGrad)" stroke="#6366f1" stroke-width="1.2" />
-  <rect x="17" y="2" width="13" height="13" rx="2" fill="#1e293b" stroke="#334155" stroke-width="1" />
-  <rect x="2" y="17" width="13" height="13" rx="2" fill="#1e293b" stroke="#334155" stroke-width="1" />
-  <rect x="17" y="17" width="13" height="13" rx="2" fill="url(#cellGrad)" stroke="#6366f1" stroke-width="1.2" />
+  <g transform="rotate(45 16 16)">
+    <!-- Cell 1 (Filled, Top-Left) -->
+    <rect x="5" y="5" width="10" height="10" rx="2" fill="url(#cellGrad)" stroke="#6366f1" stroke-width="1" filter="url(#glow)" />
+    <!-- Cell 2 (Empty, Top-Right) -->
+    <rect x="17" y="5" width="10" height="10" rx="2" fill="#1e293b" stroke="rgba(255, 255, 255, 0.15)" stroke-width="0.8" />
+    <!-- Cell 3 (Empty, Bottom-Left) -->
+    <rect x="5" y="17" width="10" height="10" rx="2" fill="#1e293b" stroke="rgba(255, 255, 255, 0.15)" stroke-width="0.8" />
+    <!-- Cell 4 (Filled, Bottom-Right) -->
+    <rect x="17" y="17" width="10" height="10" rx="2" fill="url(#cellGrad)" stroke="#6366f1" stroke-width="1" filter="url(#glow)" />
+  </g>
 </svg>
