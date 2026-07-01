@@ -276,6 +276,17 @@
         group: root
         mode: "0755"
 
+    - name: Force disconnect active backend containers from backend-net to resolve docker network migration locks
+      shell: |
+        for container in nemologic-backend-blue nemologic-backend-green nemologic-backend-stage nemologic-db; do
+          if docker ps -q --filter "name=$container" | grep -q .; then
+            echo "Disconnecting $container from backend-net"
+            docker network disconnect -f nemologic_backend-net $container || true
+          fi
+        done
+      failed_when: false
+      become: true
+
     - name: Start Database service
       shell:
         cmd: docker compose -f docker-compose.prod.yml up -d db
