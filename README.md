@@ -113,9 +113,9 @@ graph TD
 
 ### 1-2. Cost Optimization & Technical Trade-offs
 * **인프라 월간 운영 비용 분석 (Monthly Billing Summary)**<br>
-  자원 다중화 및 관리형 DB 서비스 대신 가상 컨테이너 기술과 복구 지향형 설계를 연동하여 **월 약 $5.26 수준(기존 대비 약 90% 비용 절감)**의 상용 인프라 운영을 달성했습니다.
-  * **기존 구성 예상 비용**: 약 $55/월 (ALB $20, RDS PostgreSQL $15, t3.micro EC2 $20 등)
-  * **최적화 구성 실제 비용**: 약 $5.26/월 (t3a.nano EC2 및 10GB GP3 EBS Storage $5.26, S3/DynamoDB/CloudFront는 Free Tier 충족으로 $0.00 청구)
+  자원 다중화 및 관리형 DB 서비스 대신 가상 컨테이너 기술과 복구 지향형 설계를 연동하여 **월 $11.45 (세후 실청구액 기준, 기존 대비 약 80% 비용 절감)**의 상용 인프라 운영을 달성했습니다.
+  * **기존 구성 예상 비용**: 약 $55.00/월 (ALB $20, RDS PostgreSQL $15, t3.micro EC2 $20 등)
+  * **최적화 구성 실제 비용 (2026년 6월 청구 기준)**: 총 $11.45/월 (t3a.nano 인스턴스/EBS $5.50, 퍼블릭 IPv4 주소 사용료 $3.70, Route 53 호스팅 $1.04, 데이터 전송 및 기타 $1.21)
 
 #### 1-2-1. Compute Resource Downsizing
 * **t3a.nano/t4g.nano (512MB RAM) 타겟팅**<br>
