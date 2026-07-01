@@ -176,9 +176,7 @@ C4Container
 * **SSH over SSM 터널링을 통한 Ansible 배포**<br>
   22포트가 차단된 가혹한 조건에서도 로컬 개발자 머신의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 구성에 매핑해 두어, 인프라 배포를 맡은 Ansible Playbook이 안전하게 암호화 터널을 통과해 호스트를 관리할 수 있도록 구성했습니다.
 
-#### [부록] Host Access & IAM Security Specification
-
-##### 1) 인바운드 보안 그룹 (Security Group) 허용 규칙
+#### 1.4.2.1. 인바운드 보안 그룹 (Security Group) 허용 규칙
 외부로부터의 직접적인 터미널 접속 및 비정상 요청을 방지하기 위해 SSH 22번 포트 인바운드를 전면 배제하고 최소한의 포트만을 허용합니다.
 
 | 환경 (Environment) | 프로토콜 (Protocol) | 포트 대역 (Ports) | 소스 (Source) | 목적 (Purpose) |
@@ -189,7 +187,7 @@ C4Container
 | **Common** | TCP | 5173 | `0.0.0.0/0` | Frontend HTTP 접속 (Vite Dev Server 호환용) |
 | **Production / Staging** | - | **22** | **Blocked** | **인바운드 SSH 완전 차단 (SSM Proxy 사용)** |
 
-##### 2) IAM 최소 권한 (Least Privilege) 설계
+#### 1.4.2.2. IAM 최소 권한 (Least Privilege) 설계
 EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 필요한 최소한의 관리형 IAM 정책(Managed Policy)만을 매핑하여 보안 위협을 경감했습니다.
 
 | 주체 (Principal) | 권한 유형 (Type) | 연결된 IAM 정책 (IAM Policies) | 주요 역할 (Key Role) |
@@ -197,7 +195,7 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 필요한 
 | **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>`CloudWatchAgentServerPolicy` | Session Manager 터널링 기동 및 CloudWatch 로그 실시간 포워딩 |
 | **CI/CD Role (GitHub)** | Trust Relationship (OIDC) | `sts:AssumeRoleWithWebIdentity` | 하드코딩된 크레덴셜(비밀키) 없이 임시 자격 증명을 연임하여 인프라를 배포 |
 
-##### 3) SSM 터널링 Ansible 접속 구성 명세
+#### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
 
 ```ini
