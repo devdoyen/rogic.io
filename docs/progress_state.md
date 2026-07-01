@@ -103,6 +103,7 @@
   - **운영(Production) 환경 보안 그룹 22포트 차단**: Production 환경 테라폼([main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf))의 인바운드 보안 그룹에서 포트 22(SSH) 접근 규칙을 삭제(차단)하여 보안을 강화함.
   - **CI/CD 배포 파이프라인 SSM 연동**: [.github/workflows/ci-cd.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/ci-cd.yml) 내의 `deploy-production` 작업에 `session-manager-plugin` 의존성 설치 단계를 추가하고, 동적 인스턴스 ID 조회를 거쳐 SSM ProxyCommand 기반의 `hosts.ini`를 사용하여 배포를 수행하도록 파이프라인을 고도화함.
   - **테라폼 구성 검증**: `terraform init -backend=false` 및 `terraform validate` 명령어로 Production 환경의 테라폼 형상 설정에 오류가 없음을 정상 성공 검증함.
+  - **인프라 명세 및 포트폴리오 서술 동기화 (Readme Review Report 반영)**: [README.md](file:///c:/Users/82107/dev/project/nemologic/README.md) 내 인프라 보안 그룹 명세, IAM 권한 매핑 불일치, OOM 복구 인시던트 참조 오류 등을 정정하고 CI/CD 권한 보안 로드맵 및 Staging EC2 기동/정지 비용 최적화 전략을 보완 기술함. 또한 운영 테라폼 코드의 보안 그룹 설명(`description`)을 실제 개방 포트 상태에 부합하도록 현행화함.
 
 ---
 

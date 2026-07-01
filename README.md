@@ -103,6 +103,12 @@ C4Context
 * **S3 정기 백업 및 Lifecycle 제어**<br>
   6시간 주기로 DB dump 데이터를 S3로 업로드하는 쉘 스크립트와 Cron을 배포하고, S3 백업 버킷에 30일 경과 백업 자동 파기 정책을 적용했습니다.
 
+### 1.2.4. Staging Resource Stop/Start Scheduling
+* **Staging 인스턴스 평시 정지**<br>
+  개발/검증 환경인 Staging EC2 인스턴스는 불필요한 컴퓨팅 비용 낭비를 막기 위해 평시에 중지(Stopped) 상태를 유지합니다.
+* **CI/CD 파이프라인 연동 기동**<br>
+  GitHub Actions 워크플로우 실행 시 `deploy-staging` 작업 내에서 AWS CLI를 통해 인스턴스를 자동으로 기동(Start)하고, 배포 및 검증(Playwright E2E)을 마친 뒤 별도의 스케줄 및 정책을 통해 비용 효율성을 극대화합니다.
+
 ---
 
 ## 1.3. Technical Trade-offs
@@ -172,9 +178,9 @@ C4Container
 
 ### 1.4.2. Access Control & Host Security
 * **SSM Session Manager 및 SSH(22) 포트 완전 차단**<br>
-  EC2 호스트 터미널 접근 경로의 무작위 대입 공격과 SSH 키 유출 리스크를 제거하기 위해 인바운드 보안 그룹에서 SSH(22) 포트를 완전히 차단했습니다. 대신 호스트에 SSM Agent를 기동하고 IAM 권한을 바인딩하여, AWS 콘솔 및 CLI 환경에서 IAM 자격 증명만으로 보안 세션을 수립하도록 설계했습니다.
-* **SSH over SSM 터널링을 통한 Ansible 배포**<br>
-  22포트가 차단된 가혹한 조건에서도 로컬 개발자 머신의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 구성에 매핑해 두어, 인프라 배포를 맡은 Ansible Playbook이 안전하게 암호화 터널을 통과해 호스트를 관리할 수 있도록 구성했습니다.
+  EC2 호스트 터미널 접근 경로의 무작위 대입 공격과 SSH 키 유출 리스크를 제거하기 위해 인바운드 보안 그룹에서 SSH(22) 포트를 완전히 차단했습니다. 외부 직접 접속은 거부하고 IAM 자격 증명 기반의 AWS System Manager 세션을 경유해서만 터미널 접근이 가능하도록 구성했습니다.
+* **SSM 터널 캡슐화를 통한 Ansible SSH 인증**<br>
+  인스턴스의 인바운드 22포트를 막아두는 대신, 로컬 및 러너 환경의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 터널로 삼아 캡슐화했습니다. 이 터널 내부에서 기존 SSH 인증 키(PEM)를 활용한 2차 인증을 거치도록 구성하여 Ansible Playbook을 통한 무작위 SSH 노출 리스크를 차단하고 안전하게 호스트를 관리합니다.
 
 #### 1.4.2.1. 보안 그룹 (Security Group) 설정 및 허용 규칙
 본 프로젝트에서는 Staging 및 Production 환경 모두 별도의 SSH 포트(22)를 개방하지 않으며, 서비스 운영과 헬스체크 수집에 필요한 최소한의 포트만 인바운드로 허용합니다. 아웃바운드는 외부 의존성(API 및 패키지 다운로드 등) 통신을 위해 전체 개방되어 있습니다.
@@ -187,6 +193,10 @@ C4Container
 | 8080 | TCP | `0.0.0.0/0` | Spring Boot API 엔진 직접 접속 및 텔레메트리 스크래핑 |
 | 5173 | TCP | `0.0.0.0/0` | Vite Frontend 개발 서버 임시 프록시 허용 |
 
+> [!NOTE]
+> * **8080 포트 전체 허용**: Grafana Cloud Mimir의 원격 프로메테우스 수집기(Prometheus Pull)가 가변 IP 대역에서 직접 엔드포인트를 호출할 수 있도록 임시 개방되어 있습니다. 향후 보안 강화를 위해 Grafana Cloud 공식 IP 대역만 허용하도록 소스 화이트리스팅을 도입할 계획입니다.
+> * **5173 포트 허용**: Staging 환경 내에서의 프론트엔드 Vite Dev Proxy 연동 및 테스트 환경 일관성 정렬을 위해 공통 SG에 설정되어 있습니다.
+
 ##### 아웃바운드 (Egress) 규칙
 | 허용 포트 (Port) | 프로토콜 (Protocol) | 대상 (Destination) | 비고 |
 | :---: | :---: | :---: | :--- |
@@ -197,8 +207,11 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적
 
 | 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
 | :--- | :--- | :--- | :--- |
-| **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>`nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화 및 CloudWatch 실시간 로그 포워딩, DB 백업 S3 업로드 권한 제어 |
-| **CI/CD User (GitHub)** | IAM User Credentials | `AdministratorAccess` (또는 인프라 구축 권한) | GitHub Secrets(`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) 자격 증명을 주입받아 Terraform 리소스 관리 및 S3 동기화 실행 |
+| **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>Staging: `CloudWatchAgentServerPolicy` (관리형)<br>Production: `nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화, CloudWatch 로그 실시간 포워딩(Staging/Production 별 정책 차등 적용), DB 백업 S3 업로드 권한 제어 |
+| **CI/CD User (GitHub)** | IAM User Credentials | `AdministratorAccess` (또는 인프라 구축 권한)* | GitHub Secrets(`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) 자격 증명을 주입받아 Terraform 리소스 관리 및 S3 동기화 실행 |
+
+> [!WARNING]
+> \* **CI/CD 권한 거버넌스 로드맵**: 현재 GitHub Actions 러너에는 Terraform을 통한 리소스 전체 배포(VPC, EC2, S3, DynamoDB, IAM Role 등)를 위해 `AdministratorAccess`급 권한이 임시 부여되어 있어 완전한 최소 권한 설계와 거리가 있습니다. 향후 스프린트에서 인프라 변경 범위에 부합하도록 IAM Policy를 세분화하여 제한하고, 하드코딩된 Secret 키가 필요 없는 OIDC 역할 연임 방식(AssumeRole)으로 전환할 예정입니다.
 
 #### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
@@ -334,7 +347,7 @@ $$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\
 * **개발자 회고 (Retrospective)**<br>
   - 이 문제 해결 과정에서 코딩 AI 에이전트는 `t3a.nano` 환경의 리소스 임계치를 근거로 인스턴스 스케일업(micro/small로 업그레이드) 및 표준 관리형 아키텍처(ALB, RDS) 도입을 강력히 권장했습니다.
   - 물론 정석적인 모범 사례(Best Practice)에 따르는 편이 쉬운 길이었겠으나, **극단적인 비용 효율화와 한계 최적화**라는 프로젝트의 기술적 지향점을 지키기 위해 기술적 수단을 집요하게 모색했습니다.
-  - 그 결과, 메트릭 수집 방식을 Push에서 Pull로 전환하고 GraalVM 메모리 풋프린트를 30MB 이하로 튜닝하는 등 깊이 있는 시스템 최적화 경험을 축적할 수 있었습니다. 도구(AI)의 제안을 맹신하지 않고, 프로젝트 상황에 맞게 주도적으로 아키텍처의 트레이드오프를 결정하는 역량의 중요성을 깨닫게 해준 값진 트러블슈팅 사례입니다. (자세한 인시던트 과정은 [Incident Report 2026-07-01](./docs/incidents/20260701_daily_puzzle_generation_failure.md) 참고)
+  - 그 결과, 메트릭 수집 방식을 Push에서 Pull로 전환하고 GraalVM 메모리 풋프린트를 30MB 이하로 튜닝하는 등 깊이 있는 시스템 최적화 경험을 축적할 수 있었습니다. 도구(AI)의 제안을 맹신하지 않고, 프로젝트 상황에 맞게 주도적으로 아키텍처의 트레이드오프를 결정하는 역량의 중요성을 깨닫게 해준 값진 트러블슈팅 사례입니다.
 
 ---
 
