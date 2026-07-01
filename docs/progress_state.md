@@ -96,6 +96,7 @@
   - **보안 그룹 22포트 차단**: Staging 환경 테라폼(`infra/terraform/envs/staging/main.tf`)의 인바운드 보안 그룹에서 포트 22(SSH) 접근 규칙을 영구히 삭제(차단)하여 무단 접근 표면을 제거함.
   - **Ansible SSM 터널링 구성 예제 기술**: 포트 22가 전면 차단된 환경에서 Ansible Playbook의 호스트 기동 관리를 정상 지원하기 위해, `infra/ansible/hosts.ini`에 EC2 인스턴스 ID 매핑 및 `ProxyCommand`를 결합한 `ansible_ssh_common_args` 예시를 주석으로 이식함.
   - **SSM 접속 방법론 서술**: Windows/macOS 로컬 PC 개발자 기기에서 AWS CLI 세션 매니저를 통해 접속할 수 있도록 `session-manager-plugin` 의존성 도구 링크 및 SSH Config 프록시 구성 방안을 README.md 끝단에 명료하게 가이드화함.
+  - **CI/CD 배포 파이프라인 SSM 연동 복구**: 22포트 차단 후 GitHub Actions 러너가 SSH 직접 연결 타임아웃 장애를 일으켰던 문제를 복구하기 위해, 워크플로우(`ci-cd.yml`) 내에 `session-manager-plugin` 의존성 설치 단계를 추가하고 동적 인스턴스 ID와 SSM ProxyCommand 기반으로 `hosts.ini`를 생성하여 러너가 터널을 통과해 Ansible 배포를 완수하도록 파이프라인을 고도화함.
 
 ---
 
