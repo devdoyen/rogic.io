@@ -79,7 +79,7 @@ resource "aws_route_table_association" "nemologic_rta" {
 # Security Group Configuration
 resource "aws_security_group" "nemologic_sg" {
   name        = "nemologic-sg"
-  description = "Allow HTTP/HTTPS Nginx access"
+  description = "Allow SSH, HTTP backend, and HTTP frontend access"
   vpc_id      = aws_vpc.nemologic_vpc.id
 
 
