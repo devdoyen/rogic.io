@@ -374,7 +374,7 @@ resource "aws_iam_policy" "github_actions_staging_policy" {
       {
         Effect   = "Allow"
         Action   = ["logs:*"]
-        Resource = "arn:aws:logs:ap-northeast-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/ec2/nemologic*"
+        Resource = "*"
       },
       {
         Effect   = "Allow"
@@ -393,7 +393,17 @@ resource "aws_iam_policy" "github_actions_staging_policy" {
       },
       {
         Effect   = "Allow"
+        Action   = ["acm:*"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
         Action   = ["cloudfront:*"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["route53:*"]
         Resource = "*"
       }
     ]
