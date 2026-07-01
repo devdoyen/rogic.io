@@ -82,5 +82,6 @@ networks:
     driver: bridge
   backend-net:
     driver: bridge
+    internal: true
 
 
