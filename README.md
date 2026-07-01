@@ -170,9 +170,14 @@ C4Container
 * **물리 격리형 VPC 구성**<br>
   Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 상호 간의 간섭을 완전히 격리했습니다.
 
-### 1.4.2. Access Control
-* **보안 그룹 최소화 권장**<br>
-  SSH(22), Nginx HTTP/S(80/443), Spring(8080) 이외의 외부 불필요한 포트 인바운드를 SG 방화벽 규칙을 통해 원천적으로 차단했습니다.
+### 1.4.2. Access Control & Host Security
+* **SSM Session Manager 및 SSH(22) 포트 완전 차단**<br>
+  EC2 호스트 터미널 접근 경로의 무작위 대입 공격과 SSH 키 유출 리스크를 제거하기 위해 인바운드 보안 그룹에서 SSH(22) 포트를 완전히 차단했습니다. 대신 호스트에 SSM Agent를 기동하고 IAM 권한을 바인딩하여, AWS 콘솔 및 CLI 환경에서 IAM 자격 증명만으로 보안 세션을 수립하도록 설계했습니다.
+* **SSH over SSM 터널링을 통한 Ansible 배포**<br>
+  22포트가 차단된 가혹한 조건에서도 로컬 개발자 머신의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 구성에 매핑해 두어, 인프라 배포를 맡은 Ansible Playbook이 안전하게 암호화 터널을 통과해 호스트를 관리할 수 있도록 구성했습니다.
+* **IAM 최소 권한(Least Privilege) 설계**<br>
+  - **EC2 호스트 역할**: 인스턴스가 SSM 터널 구성 및 애플리케이션 로그 수집에 필요한 관리형 권한(`AmazonSSMManagedInstanceCore`, `CloudWatchAgentServerPolicy`)만을 할당한 Instance Profile을 부착했습니다.
+  - **CI/CD 배포 역할**: GitHub Actions 러너가 테라폼 인프라 구성 및 정적 자산 반영을 진행할 때 하드코딩된 API Key 사용을 전면 금지하고, 임시 토큰 기반의 **OIDC(OpenID Connect) 연임 역할(AssumeRole)**을 매핑하여 가동하도록 구현했습니다.
 
 ### 1.4.3. SSL/TLS Certificate Management
 * **Let's Encrypt 및 Certbot 갱신**<br>
