@@ -5,22 +5,26 @@
 [1.1.](#11-system-architecture) System Architecture<br>
 [1.1.1.](#111-high-level-diagram) High-Level Diagram<br>
 [1.1.2.](#112-component-specification) Component Specification<br>
-[1.2.](#12-cost-optimization--technical-trade-offs) Cost Optimization & Technical Trade-offs<br>
+[1.2.](#12-cost-optimization) Cost Optimization<br>
 [1.2.1.](#121-compute-resource-downsizing) Compute Resource Downsizing<br>
 [1.2.2.](#122-high-availability--load-balancer-elimination) High Availability & Load Balancer Elimination<br>
 [1.2.3.](#123-database-cost-minimization--replication) Database Cost Minimization & Replication<br>
-[1.3.](#13-network--security-architecture) Network & Security Architecture<br>
-[1.3.1.](#131-network-isolation) Network Isolation<br>
-[1.3.2.](#132-access-control) Access Control<br>
-[1.3.3.](#133-ssltls-certificate-management) SSL/TLS Certificate Management<br>
-[1.3.4.](#134-state-management-security) State Management Security<br>
-[1.4.](#14-observability--sre-site-reliability-engineering) Observability & SRE (Site Reliability Engineering)<br>
-[1.4.1.](#141-metric-collection--scraping) Metric Collection & Scraping<br>
-[1.4.2.](#142-centralized-log-management) Centralized Log Management<br>
-[1.4.3.](#143-alerting--notification) Alerting & Notification<br>
-[1.4.4.](#144-slo-service-level-objective-visualization) SLO (Service Level Objective) Visualization<br>
-[1.5.](#15-troubleshooting) Troubleshooting<br>
-[1.5.1.](#151-t3anano512mb-ram-환경-내-메모리-스레싱thrashing-및-oom-장애-해결) t3a.nano(512MB RAM) 환경 내 메모리 스레싱(Thrashing) 및 OOM 장애 해결<br>
+[1.3.](#13-technical-trade-offs--mitigations) Technical Trade-offs & Mitigations<br>
+[1.3.1.](#131-build-resource-constraints) Build Resource Constraints<br>
+[1.3.2.](#132-single-point-of-failure-spof) Single Point of Failure (SPOF)<br>
+[1.3.3.](#133-recovery-indicators-rto--rpo) Recovery Indicators (RTO / RPO)<br>
+[1.4.](#14-network--security-architecture) Network & Security Architecture<br>
+[1.4.1.](#141-network-isolation) Network Isolation<br>
+[1.4.2.](#142-access-control) Access Control<br>
+[1.4.3.](#143-ssltls-certificate-management) SSL/TLS Certificate Management<br>
+[1.4.4.](#144-state-management-security) State Management Security<br>
+[1.5.](#15-observability--sre-site-reliability-engineering) Observability & SRE (Site Reliability Engineering)<br>
+[1.5.1.](#151-metric-collection--scraping) Metric Collection & Scraping<br>
+[1.5.2.](#152-centralized-log-management) Centralized Log Management<br>
+[1.5.3.](#153-alerting--notification) Alerting & Notification<br>
+[1.5.4.](#154-slo-service-level-objective-visualization) SLO (Service Level Objective) Visualization<br>
+[1.6.](#16-troubleshooting) Troubleshooting<br>
+[1.6.1.](#161-t3anano512mb-ram-환경-내-메모리-스레싱thrashing-및-oom-장애-해결) t3a.nano(512MB RAM) 환경 내 메모리 스레싱(Thrashing) 및 OOM 장애 해결<br>
 [2.](#2-continuous-integration--delivery-cicd) Continuous Integration & Delivery (CI/CD)<br>
 [2.1.](#21-pipeline-workflow) Pipeline Workflow<br>
 [2.1.1.](#211-gitops-flowchart) GitOps Flowchart<br>
@@ -102,7 +106,7 @@ C4Context
 
 ---
 
-## 1.2. Cost Optimization & Technical Trade-offs
+## 1.2. Cost Optimization
 * **인프라 월간 운영 비용 분석 (Monthly Billing Summary)**<br>
   자원 다중화 및 관리형 DB 서비스 대신 가상 컨테이너 기술과 복구 지향형 설계를 연동하여 월 $11.45 (세후 실청구액 기준, 기존 대비 약 80% 비용 절감)의 상용 인프라 운영을 달성했습니다.
 
@@ -124,39 +128,47 @@ C4Context
     Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
 * **Docker Garbage Collection 자동화**<br>
   디스크 용량 고갈 장애 예방을 위해 새벽 3시마다 72시간 경과 도커 리소스를 강제 소거하는 prune 스크립트를 크론탭으로 자동 배치했습니다.
-* **기술적 타협 (Trade-offs) & 완화 방안 (Mitigations)**<br>
-  * **빌드 리소스 제약 (Trade-off)**<br>
-    t3a.nano 호스트의 512MB 메모리 제약으로 인해 서버 내에서 직접 GraalVM 컴파일 빌드가 불가능하며, 빌드 속도 또한 JVM 컴파일에 비해 10배 이상 오래 소요됩니다.
-  * **외부 컴퓨팅 오프로딩 (Mitigation)**<br>
-    CI/CD 파이프라인에서 GitHub Actions가 제공하는 외부 빌드 인프라(2 Core, 7GB RAM)에 컴파일 연산 부하를 위임하고, 운영 서버 호스트는 30MB 수준의 무부하 바이너리 구동만 전담하도록 분리 구조화했습니다.
 
 ### 1.2.2. High Availability & Load Balancer Elimination
 * **ALB 제거 및 고정 EIP 구성**<br>
   월 $20 상당의 AWS ALB를 배제하고 DNS 도메인(Route 53)과 고정 Elastic IP를 매핑했습니다.
 * **EC2 Auto Recovery 및 복구 지향 아키텍처(ROA)**<br>
   ALB 부재에 따른 장애 전파를 줄이기 위해 시스템 알람 연동 호스트 자동 복구(Auto Recovery)를 결합하고, 재해 복구 시 IaC 코드를 활용해 5분 이내 인프라를 복원하도록 구성했습니다.
-* **기술적 타협 (Trade-offs) & 완화 방안 (Mitigations)**<br>
-  * **단일 장애점 (SPOF) 발생 (Trade-off)**<br>
-    AWS Load Balancer(ALB) 배제로 인해 다중 가용구역(Multi-AZ) 무중단 이중화 및 롤링 배포를 달성할 수 없으며, 호스트 물리 장애 시 전체 정전이 발생하는 단일 장애점(SPOF)을 노출하게 됩니다.
-  * **호스트 자동 복구 결합 (Mitigation)**<br>
-    AWS CloudWatch Status Check Metric Alarms를 결합해 물리 하드웨어 결함 발생 시 1분 이내에 인스턴스를 정상 물리 호스트로 자동 복원(Auto Recovery)하여 EIP를 바인딩하도록 인프라 복원력을 강화했습니다.
 
 ### 1.2.3. Database Cost Minimization & Replication
 * **Self-hosted PostgreSQL 컨테이너**<br>
   월 $15~20 이상의 RDS 비용을 아끼기 위해 EC2에 DB 컨테이너를 기동했습니다.
 * **S3 정기 백업 및 Lifecycle 제어**<br>
   6시간 주기로 DB dump 데이터를 S3로 업로드하는 쉘 스크립트와 Cron을 배포하고, S3 백업 버킷에 30일 경과 백업 자동 파기 정책을 적용했습니다.
-* **기술적 타협 (Trade-offs) & 완화 방안 (Mitigations)**<br>
-  * **복구 시간(RTO) 및 복구 시점(RPO)의 지연 (Trade-off)**<br>
-    AWS RDS의 완전관리형 이중화 복구(RTO 0초 타겟) 및 시점 복구(RPO 5분 이내 PITR) 편의성을 누릴 수 없으며, 재해 복구 시 백업 덤프 수동 복원이 필요하므로 RTO/RPO 지표가 수 분에서 최대 6시간 수준으로 후퇴합니다.
-  * **복구 지향 아키텍처(ROA) 구현 (Mitigation)**<br>
-    인프라를 코드로 구성(Terraform/Ansible)하여 재설치 과정을 자동화하고, 6시간 주기 백업 덤프 자산을 독립 버킷 S3에 안전하게 보관하여 전체 데이터 유실 및 가상 머신 소멸 시에도 5분 이내 수동 복구 가능한 절차를 수립했습니다.
 
 ---
 
-## 1.3. Network & Security Architecture
+## 1.3. Technical Trade-offs & Mitigations
+비용 최적화를 달성하기 위해 포기한 기술적 혜택(Trade-offs)과 이를 극복하기 위해 설계한 완화 대책(Mitigations)을 명시적으로 투명하게 공개합니다.
 
-### 1.3.1. Network Isolation
+### 1.3.1. Build Resource Constraints
+* **물리 메모리 고갈에 따른 컴파일 리스크 (Trade-off)**<br>
+  t3a.nano(512MB RAM) 환경에서는 메모리 제약으로 인해 서버 내에서 직접 GraalVM 컴파일 빌드가 불가능하며, 빌드 속도 또한 JVM 컴파일에 비해 10배 이상 오래 소요됩니다.
+* **외부 컴퓨팅 오프로딩 (Mitigation)**<br>
+  CI/CD 파이프라인에서 GitHub Actions가 제공하는 외부 빌드 인프라(2 Core, 7GB RAM)에 컴파일 연산 부하를 위임하고, 운영 서버 호스트는 30MB 수준의 무부하 바이너리 구동만 전담하도록 분리 구조화했습니다.
+
+### 1.3.2. Single Point of Failure (SPOF)
+* **다중 AZ 로드밸런싱 포기 (Trade-off)**<br>
+  AWS Load Balancer(ALB) 배제로 인해 다중 가용구역(Multi-AZ) 무중단 이중화 및 롤링 배포를 달성할 수 없으며, 호스트 물리 장애 시 전체 정전이 발생하는 단일 장애점(SPOF)을 노출하게 됩니다.
+* **호스트 자동 복구 결합 (Mitigation)**<br>
+  AWS CloudWatch Status Check Metric Alarms를 결합해 물리 하드웨어 결함 발생 시 1분 이내에 인스턴스를 정상 물리 호스트로 자동 복원(Auto Recovery)하여 EIP를 바인딩하도록 인프라 복원력을 강화했습니다.
+
+### 1.3.3. Recovery Indicators (RTO / RPO)
+* **관리형 DB Failover 및 시점 복구 상실 (Trade-off)**<br>
+  AWS RDS의 완전관리형 이중화 복구(RTO 0초 타겟) 및 시점 복구(RPO 5분 이내 PITR) 편의성을 누릴 수 없으며, 재해 복구 시 백업 덤프 수동 복원이 필요하므로 RTO/RPO 지표가 수 분에서 최대 6시간 수준으로 후퇴합니다.
+* **복구 지향 아키텍처(ROA) 구현 (Mitigation)**<br>
+  인프라를 코드로 구성(Terraform/Ansible)하여 재설치 과정을 자동화하고, 6시간 주기 백업 덤프 자산을 독립 버킷 S3에 안전하게 보관하여 전체 데이터 유실 및 가상 머신 소멸 시에도 5분 이내 수동 복구 가능한 절차를 수립했습니다.
+
+---
+
+## 1.4. Network & Security Architecture
+
+### 1.4.1. Network Isolation
 ```mermaid
 C4Container
     title Container Diagram for rogic.io (Level 2: Network & Containers)
@@ -196,23 +208,23 @@ C4Container
 * **물리 격리형 VPC 구성**<br>
   Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 상호 간의 간섭을 완전히 격리했습니다.
 
-### 1.3.2. Access Control
+### 1.4.2. Access Control
 * **보안 그룹 최소화 권장**<br>
   SSH(22), Nginx HTTP/S(80/443), Spring(8080) 이외의 외부 불필요한 포트 인바운드를 SG 방화벽 규칙을 통해 원천적으로 차단했습니다.
 
-### 1.3.3. SSL/TLS Certificate Management
+### 1.4.3. SSL/TLS Certificate Management
 * **Let's Encrypt 및 Certbot 갱신**<br>
   HTTPS(443) 통신 및 HTTP(80) 301 리다이렉트 정책을 구현하였으며, 3개월 만료 인증서 자동 갱신을 지원하는 pre/post 쉘 스크립트 훅을 Certbot 데몬에 바인딩했습니다.
 
-### 1.3.4. State Management Security
+### 1.4.4. State Management Security
 * **테라폼 원격 상태 잠금**<br>
   AWS S3 버킷과 DynamoDB 테이블(`LockID`)을 Backend로 연동해 개발자 배포 시 형상 관리(State)의 동시 수정 충돌을 원천 방지했습니다.
 
 ---
 
-## 1.4. Observability & SRE (Site Reliability Engineering)
+## 1.5. Observability & SRE (Site Reliability Engineering)
 
-### 1.4.1. Metric Collection & Scraping
+### 1.5.1. Metric Collection & Scraping
 ```mermaid
 C4Container
     title Telemetry Diagram for rogic.io (Level 3: Observability & Alerting)
@@ -245,15 +257,15 @@ C4Container
 * **Agentless Pull 아키텍처**<br>
   호스트 리소스를 소모하는 수집기(Alloy) 대신, Nginx 프록시가 `Authorization: Bearer` 헤더 토큰을 대조 검증하는 가상 경로를 열고 외부 Grafana Cloud Mimir가 직접 긁어가도록 구조화했습니다.
 
-### 1.4.2. Centralized Log Management
+### 1.5.2. Centralized Log Management
 * **awslogs Docker 드라이버 연동**<br>
   컨테이너 출력을 AWS CloudWatch Logs(`/aws/ec2/nemologic`)로 실시간 포워딩하여 디스크 점유율을 줄였으며, 헬스체크 및 메트릭 수집 API 경로는 Nginx Access Log에서 제외(off) 처리했습니다.
 
-### 1.4.3. Alerting & Notification
+### 1.5.3. Alerting & Notification
 * **장애 감지 경보 연동**<br>
   CloudWatch Logs Metric Filter 오류 발생 시 AWS SNS를 경유해 개발자 메일로 상황이 실시간 통보되며, 도쿄·싱가포르·시드니 리전에서 동시에 `/actuator/health` 헬스체크 실패가 감지되면 Grafana 경보가 트리거됩니다.
 
-### 1.4.4. SLO (Service Level Objective) Visualization
+### 1.5.4. SLO (Service Level Objective) Visualization
 * **통합 관제 SLA 대시보드 ([current_dashboard.json](infra/monitoring/current_dashboard.json))**<br>
   SRE 핵심 품질 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 복구 탑재하여 3열 카드 레이아웃에 맞춰 배치했습니다.
 * **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)**<br>
@@ -281,9 +293,9 @@ C4Container
 
 ---
 
-## 1.5. Troubleshooting
+## 1.6. Troubleshooting
 
-### 1.5.1. t3a.nano(512MB RAM) 환경 내 메모리 스레싱(Thrashing) 및 OOM 장애 해결
+### 1.6.1. t3a.nano(512MB RAM) 환경 내 메모리 스레싱(Thrashing) 및 OOM 장애 해결
 * **배경**<br>
   인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
 * **해결 방안**<br>
