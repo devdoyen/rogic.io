@@ -105,7 +105,7 @@
   - **테라폼 구성 검증**: `terraform init -backend=false` 및 `terraform validate` 명령어로 Production 환경의 테라폼 형상 설정에 오류가 없음을 정상 성공 검증함.
   - **인프라 명세 및 포트폴리오 서술 동기화 (Readme Review Report 반영)**: [README.md](file:///c:/Users/82107/dev/project/nemologic/README.md) 내 인프라 보안 그룹 명세, IAM 권한 매핑 불일치, OOM 복구 인시던트 참조 오류 등을 정정하고 CI/CD 권한 보안 로드맵 및 Staging EC2 기동/정지 비용 최적화 전략을 보완 기술함. 또한 운영 테라폼 코드의 보안 그룹 설명(`description`)을 실제 개방 포트 상태에 부합하도록 현행화함.
   - **보안 그룹 추가 폐쇄 (8080 & 5173 차단)**: 인바운드 보안 그룹의 최소 개방 원칙에 따라, Staging 및 Production 환경 테라폼 설정에서 8080(Spring Boot API) 및 5173(Vite Dev Server) 포트를 완전히 차단함. 모든 모니터링 메트릭 수집 및 API 트래픽은 Nginx(80/443)의 검증 프록시 경로를 거쳐 내부 통신하도록 단일화하여 인프라 보안 위협 표면을 최소화함.
-  - **다계층 도커 브리지 네트워크 격리 문서화**: [docker-compose.prod.yml](file:///c:/Users/82107/dev/project/nemologic/infra/ansible/docker-compose.prod.yml)에 기구축되어 운영 중인 frontend-net 및 backend-net 격리 구조와 침투 시 횡적 이동(Lateral Movement)을 막는 심층 방어 전략 및 보안 로드맵을 [README.md](file:///c:/Users/82107/dev/project/nemologic/README.md)에 사실 위주로 콤팩트하게 문서화함.
+  - **다계층 도커 브리지 네트워크 격리 문서화**: [docker-compose.prod.yml](file:///c:/Users/82107/dev/project/nemologic/infra/ansible/docker-compose.prod.yml)에 기구축되어 운영 중인 frontend-net 및 backend-net 격리 구조와 침투 시 횡적 이동(Lateral Movement)을 막는 심층 방어 전략 및 보안 로드맵을 [README.md](file:///c:/Users/82107/dev/project/nemologic/README.md)에 사실 위주로 콤팩트하게 문서화함. (1.4.1 C4 Container Diagram에 nested boundary 시각화 반영 완료)
 
 ---
 

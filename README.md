@@ -146,21 +146,33 @@ C4Container
     System_Boundary(aws, "AWS Cloud (ap-northeast-2)") {
         
         System_Boundary(vpc_prod, "Production VPC (10.0.0.0/16)") {
-            Container(nginx, "Nginx Reverse Proxy", "Docker Container", "SSL/TLS termination, API routing, and Bearer token auth validation.")
-            Container(spring, "Spring Boot App", "Docker Container (GraalVM)", "Handles business logic, daily puzzle scheduling, rating, and XP leaderboard.")
-            ContainerDb(postgres, "PostgreSQL Database", "Docker Container", "Persists puzzle templates, user logs, clear history, and user stats.")
+            System_Boundary(fnet_prod, "frontend-net (Docker Bridge)") {
+                Container(nginx, "Nginx Reverse Proxy", "Docker Container", "SSL/TLS termination, API routing, and Bearer token auth validation.")
+            }
             
-            Rel(nginx, spring, "Proxy API requests", "HTTP / Port 8080")
-            Rel(spring, postgres, "Reads/Writes state", "JPA & JDBC / Port 5432")
+            System_Boundary(bnet_prod, "backend-net (Docker Bridge)") {
+                ContainerDb(postgres, "PostgreSQL Database", "Docker Container", "Persists puzzle templates, user logs, clear history, and user stats.")
+            }
+            
+            Container(spring, "Spring Boot App", "Docker Container (GraalVM)", "Handles business logic, daily puzzle scheduling, rating, and XP leaderboard.")
+            
+            Rel(nginx, spring, "Proxy API requests", "HTTP / Port 8080 [frontend-net]")
+            Rel(spring, postgres, "Reads/Writes state", "JPA & JDBC / Port 5432 [backend-net]")
         }
         
         System_Boundary(vpc_stage, "Staging VPC (10.1.0.0/16)") {
-            Container(nginx_stg, "Nginx Reverse Proxy (Stage)", "Docker Container", "Staging SSL/TLS termination and API routing.")
-            Container(spring_stg, "Spring Boot App (Stage)", "Docker Container (JVM)", "Staging application runtime environment.")
-            ContainerDb(postgres_stg, "PostgreSQL Database (Stage)", "Docker Container", "Persists isolated staging state.")
+            System_Boundary(fnet_stg, "frontend-net (Stage Bridge)") {
+                Container(nginx_stg, "Nginx Reverse Proxy (Stage)", "Docker Container", "Staging SSL/TLS termination and API routing.")
+            }
             
-            Rel(nginx_stg, spring_stg, "Proxy API requests", "HTTP / Port 8080")
-            Rel(spring_stg, postgres_stg, "Reads/Writes state", "JPA & JDBC / Port 5432")
+            System_Boundary(bnet_stg, "backend-net (Stage Bridge)") {
+                ContainerDb(postgres_stg, "PostgreSQL Database (Stage)", "Docker Container", "Persists isolated staging state.")
+            }
+            
+            Container(spring_stg, "Spring Boot App (Stage)", "Docker Container (JVM)", "Staging application runtime environment.")
+            
+            Rel(nginx_stg, spring_stg, "Proxy API requests", "HTTP / Port 8080 [frontend-net]")
+            Rel(spring_stg, postgres_stg, "Reads/Writes state", "JPA & JDBC / Port 5432 [backend-net]")
         }
 
         Container(cloudfront, "Amazon CloudFront", "AWS CDN", "Distributes static web assets with low latency.")
