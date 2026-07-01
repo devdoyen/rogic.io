@@ -75,24 +75,8 @@ resource "aws_route_table_association" "nemologic_staging_rta" {
 # Security Group Configuration
 resource "aws_security_group" "nemologic_staging_sg" {
   name        = "nemologic-staging-sg"
-  description = "Allow SSH, HTTP backend, and HTTP/HTTPS Nginx access"
+  description = "Allow HTTP/HTTPS Nginx access"
   vpc_id      = aws_vpc.nemologic_staging_vpc.id
-
-  ingress {
-    description = "Frontend HTTP"
-    from_port   = 5173
-    to_port     = 5173
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Backend HTTP"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   ingress {
     description = "HTTP Nginx"

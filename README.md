@@ -183,19 +183,17 @@ C4Container
   인스턴스의 인바운드 22포트를 막아두는 대신, 로컬 및 러너 환경의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 터널로 삼아 캡슐화했습니다. 이 터널 내부에서 기존 SSH 인증 키(PEM)를 활용한 2차 인증을 거치도록 구성하여 Ansible Playbook을 통한 무작위 SSH 노출 리스크를 차단하고 안전하게 호스트를 관리합니다.
 
 #### 1.4.2.1. 보안 그룹 (Security Group) 설정 및 허용 규칙
-본 프로젝트에서는 Staging 및 Production 환경 모두 별도의 SSH 포트(22)를 개방하지 않으며, 서비스 운영과 헬스체크 수집에 필요한 최소한의 포트만 인바운드로 허용합니다. 아웃바운드는 외부 의존성(API 및 패키지 다운로드 등) 통신을 위해 전체 개방되어 있습니다.
+본 프로젝트에서는 Staging 및 Production 환경 모두 별도의 SSH 포트(22), Spring Boot 포트(8080), Vite Frontend 개발 포트(5173)를 개방하지 않으며, 외부 접근이 필요한 최소한의 Nginx 포트(80, 443)만 인바운드로 허용합니다. 아웃바운드는 외부 의존성(API 및 패키지 다운로드 등) 통신을 위해 전체 개방되어 있습니다.
 
 ##### 인바운드 (Ingress) 규칙
 | 허용 포트 (Port) | 프로토콜 (Protocol) | 소스 (Source) | 목적 및 대상 서비스 |
 | :---: | :---: | :---: | :--- |
 | 80 | TCP | `0.0.0.0/0` | Nginx HTTP 웹 서버 (HTTPS 301 리다이렉트용) |
-| 443 | TCP | `0.0.0.0/0` | Nginx HTTPS 보안 웹 서비스 및 API 통신 |
-| 8080 | TCP | `0.0.0.0/0` | Spring Boot API 엔진 직접 접속 및 텔레메트리 스크래핑 |
-| 5173 | TCP | `0.0.0.0/0` | Vite Frontend 개발 서버 임시 프록시 허용 |
+| 443 | TCP | `0.0.0.0/0` | Nginx HTTPS 보안 웹 서비스 및 API 통신 (모니터링 스크래핑 포함) |
 
 > [!NOTE]
-> * **8080 포트 전체 허용**: Grafana Cloud Mimir의 원격 프로메테우스 수집기(Prometheus Pull)가 가변 IP 대역에서 직접 엔드포인트를 호출할 수 있도록 임시 개방되어 있습니다. 향후 보안 강화를 위해 Grafana Cloud 공식 IP 대역만 허용하도록 소스 화이트리스팅을 도입할 계획입니다.
-> * **5173 포트 허용**: Staging 환경 내에서의 프론트엔드 Vite Dev Proxy 연동 및 테스트 환경 일관성 정렬을 위해 공통 SG에 설정되어 있습니다.
+> * **내부 포트 격리 (8080 & 5173 차단)**: Spring Boot API 서버(8080)와 Vite Frontend 개발 서버는 보안 그룹 상의 허용 목록에서 완전히 배제되어 인터넷 직접 노출이 불가능합니다.
+> * **모니터링 트래픽의 Nginx 우회 수집**: Grafana Cloud Mimir의 원격 프로메테우스 수집기(Prometheus Pull) 역시 외부 8080 포트 직접 접속 대신, Nginx HTTPS(443)를 경유하고 Bearer 토큰 보안 검증을 통과한 뒤 내부 루프백망을 통해 Spring Boot Actuator 지표를 안전하게 수집합니다.
 
 ##### 아웃바운드 (Egress) 규칙
 | 허용 포트 (Port) | 프로토콜 (Protocol) | 대상 (Destination) | 비고 |
