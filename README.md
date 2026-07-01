@@ -1,5 +1,7 @@
-[0.](#0-project-overview) Project Overview<br>
-[1.](#1-infrastructure--cloud-engineering) Infrastructure & Cloud Engineering<br>
+<div style="font-size: 14px; line-height: 1.6;">
+
+**[0.](#0-project-overview) Project Overview**<br>
+**[1.](#1-infrastructure--cloud-engineering) Infrastructure & Cloud Engineering**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[1.1.](#11-system-architecture) System Architecture<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.1.1.](#111-high-level-diagram) High-Level Diagram<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.1.2.](#112-component-specification) Component Specification<br>
@@ -18,7 +20,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.4.2.](#142-centralized-log-management) Centralized Log Management<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.4.3.](#143-alerting--notification) Alerting & Notification<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.4.4.](#144-slo-service-level-objective-visualization) SLO (Service Level Objective) Visualization<br>
-[2.](#2-continuous-integration--delivery-cicd) Continuous Integration & Delivery (CI/CD)<br>
+**[2.](#2-continuous-integration--delivery-cicd) Continuous Integration & Delivery (CI/CD)**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[2.1.](#21-pipeline-workflow) Pipeline Workflow<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.1.1.](#211-gitops-flowchart) GitOps Flowchart<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.1.2.](#212-pipeline-trigger-optimization) Pipeline Trigger Optimization<br>
@@ -29,7 +31,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.3.1.](#231-automated-end-to-end-testing) Automated End-to-End Testing<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.3.2.](#232-deployment-gate--approvals) Deployment Gate & Approvals<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.3.3.](#233-automated-versioning) Automated Versioning<br>
-[3.](#3-ai-engineering--intelligent-systems) AI Engineering & Intelligent Systems<br>
+**[3.](#3-ai-engineering--intelligent-systems) AI Engineering & Intelligent Systems**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[3.1.](#31-ai-puzzle-generator--logical-validation-pipeline) AI Puzzle Generator & Logical Validation Pipeline<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.1.](#311-model-integration--scheduler) Model Integration & Scheduler<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.2.](#312-automated-validation-pipeline) Automated Validation Pipeline<br>
@@ -37,9 +39,11 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.2.1.](#321-client-side-rating-system) Client-Side Rating System<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.2.2.](#322-backoffice-monitoring--cascading-deletes) Backoffice Monitoring & Cascading Deletes<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.2.3.](#323-ai-agentic-development--governance) AI Agentic Development & Governance<br>
-[4.](#4-appendices--local-setup) Appendices & Local Setup<br>
+**[4.](#4-appendices--local-setup) Appendices & Local Setup**<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[4.1.](#41-technology-stack) Technology Stack<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[4.2.](#42-local-development-setup) Local Development Setup
+
+</div>
 ---
 
 # 0. Project Overview
