@@ -1,13 +1,25 @@
 # 0. Project Overview
 
+`rogic.io`는 출제 시점에 임의의 각도로 회전된 퍼즐을 해결하면, 완료되는 순간 원래 방향으로 자동 회전 복원되며 완성된 패턴을 보여주는 변형 노노그램 퍼즐 게임입니다.
+
+본 저장소는 프로젝트 빌드 및 배포에 필요한 CI/CD 파이프라인, IaC 기반 인프라 구성 코드(Terraform/Ansible), 그리고 모니터링 환경의 구축 명세를 담고 있습니다.
+
+## 0.1. Service Environments
+
 | Service Environment | Live URL | Deployment Status |
 | :--- | :--- | :--- |
 | 🚀 **Production** | [rogic.io](https://rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-brightgreen) |
 | 🧪 **Staging** | [stage.rogic.io](https://stage.rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-blue) |
 
-`rogic.io`는 출제 시점에 임의의 각도로 회전된 퍼즐을 해결하면, 완료되는 순간 원래 방향으로 자동 회전 복원되며 완성된 패턴을 보여주는 변형 노노그램 퍼즐 게임입니다.
-
-본 저장소는 프로젝트 빌드 및 배포에 필요한 CI/CD 파이프라인, IaC 기반 인프라 구성 코드(Terraform/Ansible), 그리고 모니터링 환경의 구축 명세를 담고 있습니다.
+## 0.2. Technology Stack
+| Category | Technologies | Description |
+| :--- | :--- | :--- |
+| **Frontend** | `Vue 3`, `TypeScript`, `HTML5 Canvas API`, `Axios` | Client app with decoupled pure TS game engine. |
+| **Backend** | `Java 17`, `Spring Boot`, `Spring Data JPA` | REST API layer for stage state, history, and users. |
+| **Database** | `PostgreSQL 16` | Relational storage for user logs, clear history, and stages. |
+| **Infra & IaC** | `AWS`, `Terraform`, `Ansible`, `Docker Compose` | Code-defined AWS resources & automated config deployment. |
+| **CI/CD** | `GitHub Actions`, `Vitest`, `Playwright` | Path-filtered tests, browser E2E validation, auto-SemVer. |
+| **Telemetry** | `Prometheus`, `Grafana Cloud`, `CloudWatch` | Agentless scraping, log alarms, SNS email alerting. |
 
 ---
 
@@ -421,17 +433,7 @@ stateDiagram-v2
 
 # 4. Appendices & Local Setup
 
-## 4.1. Technology Stack
-| Category | Technologies | Description |
-| :--- | :--- | :--- |
-| **Frontend** | `Vue 3`, `TypeScript`, `HTML5 Canvas API`, `Axios` | Client app with decoupled pure TS game engine. |
-| **Backend** | `Java 17`, `Spring Boot`, `Spring Data JPA` | REST API layer for stage state, history, and users. |
-| **Database** | `PostgreSQL 16` | Relational storage for user logs, clear history, and stages. |
-| **Infra & IaC** | `AWS`, `Terraform`, `Ansible`, `Docker Compose` | Code-defined AWS resources & automated config deployment. |
-| **CI/CD** | `GitHub Actions`, `Vitest`, `Playwright` | Path-filtered tests, browser E2E validation, auto-SemVer. |
-| **Telemetry** | `Prometheus`, `Grafana Cloud`, `CloudWatch` | Agentless scraping, log alarms, SNS email alerting. |
-
-## 4.2. Local Development Setup
+## 4.1. Local Development Setup
 To run `rogic.io` on your local workstation:
 
 ### Prerequisites
