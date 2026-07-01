@@ -12,7 +12,6 @@
 ---
 
 ## 📋 Table of Contents
-[0](#0-technology-stack). Technology Stack<br>
 [1](#1-infrastructure--cloud-engineering). Infrastructure & Cloud Engineering<br>
 &nbsp;&nbsp;&nbsp;&nbsp;[1-1](#1-1-system-architecture). System Architecture<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-1-1](#1-1-1-high-level-diagram). High-Level Diagram<br>
@@ -51,21 +50,12 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-1](#3-2-1-client-side-rating-system). Client-Side Rating System<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-2](#3-2-2-backoffice-monitoring--cascading-deletes). Backoffice Monitoring & Cascading Deletes<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-3](#3-2-3-ai-agentic-development--governance). AI Agentic Development & Governance<br>
-[4](#4-local-development-setup). Local Development Setup
+[4](#4-appendices--local-setup). Appendices & Local Setup<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[4-1](#4-1-technology-stack). Technology Stack<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[4-2](#4-2-local-development-setup). Local Development Setup
 ---
 
-## 0. Technology Stack
 
-| Category | Technologies | Description |
-| :--- | :--- | :--- |
-| **Frontend** | `Vue 3`, `TypeScript`, `HTML5 Canvas API`, `Axios` | Client app with decoupled pure TS game engine. |
-| **Backend** | `Java 17`, `Spring Boot`, `Spring Data JPA` | REST API layer for stage state, history, and users. |
-| **Database** | `PostgreSQL 16` | Relational storage for user logs, clear history, and stages. |
-| **Infra & IaC** | `AWS`, `Terraform`, `Ansible`, `Docker Compose` | Code-defined AWS resources & automated config deployment. |
-| **CI/CD** | `GitHub Actions`, `Vitest`, `Playwright` | Path-filtered tests, browser E2E validation, auto-SemVer. |
-| **Telemetry** | `Prometheus`, `Grafana Cloud`, `CloudWatch` | Agentless scraping, log alarms, SNS email alerting. |
-
----
 
 ## 1. Infrastructure & Cloud Engineering
 
@@ -343,8 +333,19 @@ stateDiagram-v2
 
 ---
 
-## 4. Local Development Setup
+## 4. Appendices & Local Setup
 
+### 4-1. Technology Stack
+| Category | Technologies | Description |
+| :--- | :--- | :--- |
+| **Frontend** | `Vue 3`, `TypeScript`, `HTML5 Canvas API`, `Axios` | Client app with decoupled pure TS game engine. |
+| **Backend** | `Java 17`, `Spring Boot`, `Spring Data JPA` | REST API layer for stage state, history, and users. |
+| **Database** | `PostgreSQL 16` | Relational storage for user logs, clear history, and stages. |
+| **Infra & IaC** | `AWS`, `Terraform`, `Ansible`, `Docker Compose` | Code-defined AWS resources & automated config deployment. |
+| **CI/CD** | `GitHub Actions`, `Vitest`, `Playwright` | Path-filtered tests, browser E2E validation, auto-SemVer. |
+| **Telemetry** | `Prometheus`, `Grafana Cloud`, `CloudWatch` | Agentless scraping, log alarms, SNS email alerting. |
+
+### 4-2. Local Development Setup
 To run `rogic.io` on your local workstation:
 
 ### Prerequisites
@@ -371,4 +372,4 @@ cd frontend
 npm install
 npm run dev
 ```
-* Frontend app will run on: `http://localhost:5173`
+* Frontend app will run on: `http://localhost:5173`
