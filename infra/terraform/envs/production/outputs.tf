@@ -44,3 +44,9 @@ output "frontend_prod_bucket" {
   description = "Name of the S3 bucket created for production frontend assets"
   value       = aws_s3_bucket.frontend_prod_bucket.id
 }
+
+output "github_actions_role_arn" {
+  description = "IAM Role ARN for GitHub Actions OIDC"
+  value       = aws_iam_role.github_actions_production.arn
+}
+

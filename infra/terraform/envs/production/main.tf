@@ -410,3 +410,47 @@ resource "aws_dynamodb_table" "tfstate_lock" {
     Name = "nemologic-tfstate-lock"
   }
 }
+
+# --- AWS OIDC Identity Provider Data Source (Created in Staging) ---
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+# --- IAM Role for GitHub Actions (Production) ---
+resource "aws_iam_role" "github_actions_production" {
+  name = "nemologic-production-github-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = data.aws_iam_openid_connect_provider.github.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = [
+              "repo:devdoyen/rogic.io:ref:refs/heads/main",
+              "repo:devdoyen/rogic.io:ref:refs/tags/v*"
+            ]
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "nemologic-production-github-role"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_production_admin" {
+  role       = aws_iam_role.github_actions_production.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
