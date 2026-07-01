@@ -114,6 +114,7 @@
   - **GitHub Actions 연동 IAM Role 매핑**: 환경별로 격리된 IAM Role을 생성하고 assume policy를 바인딩함. Staging Role은 전체 sub 대역을 허용하며, Production Role은 `refs/heads/main` 브랜치 및 `refs/tags/v*` 릴리즈 태그 배포 시에만 가동되도록 sub 대역을 타이트하게 제한함.
   - **역할 ARN 출력(Outputs) 정의**: [staging/outputs.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/outputs.tf) 및 [production/outputs.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/outputs.tf)에 생성된 IAM Role ARN of output 출력을 기재하고 두 환경의 `terraform validate` 검증을 통과함.
   - **CI/CD 파이프라인 OIDC 전환 (Phase 2)**: [.github/workflows/ci-cd.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/ci-cd.yml)에서 전역 `permissions` 권한(`id-token: write`, `contents: read`)을 선언하여 OIDC JWT 발급 자격을 활성화함. 또한 모든 인프라 plan/apply 및 애플리케이션 deploy 잡(총 6개 잡)의 초반부에 `aws-actions/configure-aws-credentials` 단계를 이식하여 동적으로 1회용 STS 임시 보안 토큰을 AssumeRole하도록 스위칭함. 이에 따라 전역 및 개별 스텝에 하드코딩 주입되던 `AWS_ACCESS_KEY_ID` 및 `AWS_SECRET_ACCESS_KEY` 환경 변수를 파이프라인에서 완전히 Pruning 처리함.
+  - **수동 배포 수립 및 더미 커밋 제거**: 소스 주석 수정으로 빌드를 트리거하는 임시방편(안티패턴)을 완전 극복하기 위해 `workflow_dispatch` 수동 기동 이벤트를 추가함. 수동 기동 시(`github.event_name == 'workflow_dispatch'`)에는 경로 감지(paths-filter) 조건과 관계없이 빌드, Docker 패키징, Staging/Production S3 동기화 및 호스트 배포 전 구간이 OIDC를 통해 강제 구동(Bypass)되도록 워크플로우 분기 로직을 리팩토링함.
 
 ---
 
