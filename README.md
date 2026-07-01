@@ -176,16 +176,21 @@ C4Container
 * **SSH over SSM 터널링을 통한 Ansible 배포**<br>
   22포트가 차단된 가혹한 조건에서도 로컬 개발자 머신의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 구성에 매핑해 두어, 인프라 배포를 맡은 Ansible Playbook이 안전하게 암호화 터널을 통과해 호스트를 관리할 수 있도록 구성했습니다.
 
-#### 1.4.2.1. 인바운드 보안 그룹 (Security Group) 허용 규칙
-외부로부터의 직접적인 터미널 접속 및 비정상 요청을 방지하기 위해 SSH 22번 포트 인바운드를 전면 배제하고 최소한의 포트만을 허용합니다.
+#### 1.4.2.1. 보안 그룹 (Security Group) 설정 및 허용 규칙
+본 프로젝트에서는 Staging 및 Production 환경 모두 별도의 SSH 포트(22)를 개방하지 않으며, 서비스 운영과 헬스체크 수집에 필요한 최소한의 포트만 인바운드로 허용합니다. 아웃바운드는 외부 의존성(API 및 패키지 다운로드 등) 통신을 위해 전체 개방되어 있습니다.
 
-| 환경 (Environment) | 프로토콜 (Protocol) | 포트 대역 (Ports) | 소스 (Source) | 목적 (Purpose) |
-| :--- | :---: | :---: | :---: | :--- |
-| **Common** | TCP | 80 | `0.0.0.0/0` | HTTP Nginx 접속 (HTTPS 리다이렉트용) |
-| **Common** | TCP | 443 | `0.0.0.0/0` | HTTPS Nginx 보안 웹 접속 |
-| **Common** | TCP | 8080 | `0.0.0.0/0` | Spring Boot Actuator 및 API Endpoint 직접 호출 |
-| **Common** | TCP | 5173 | `0.0.0.0/0` | Frontend HTTP 접속 (Vite Dev Server 호환용) |
-| **Production / Staging** | - | **22** | **Blocked** | **인바운드 SSH 완전 차단 (SSM Proxy 사용)** |
+##### 인바운드 (Ingress) 규칙
+| 허용 포트 (Port) | 프로토콜 (Protocol) | 소스 (Source) | 목적 및 대상 서비스 |
+| :---: | :---: | :---: | :--- |
+| 80 | TCP | `0.0.0.0/0` | Nginx HTTP 웹 서버 (HTTPS 301 리다이렉트용) |
+| 443 | TCP | `0.0.0.0/0` | Nginx HTTPS 보안 웹 서비스 및 API 통신 |
+| 8080 | TCP | `0.0.0.0/0` | Spring Boot API 엔진 직접 접속 및 텔레메트리 스크래핑 |
+| 5173 | TCP | `0.0.0.0/0` | Vite Frontend 개발 서버 임시 프록시 허용 |
+
+##### 아웃바운드 (Egress) 규칙
+| 허용 포트 (Port) | 프로토콜 (Protocol) | 대상 (Destination) | 비고 |
+| :---: | :---: | :---: | :--- |
+| All | All | `0.0.0.0/0` | 패키지 업데이트, 외부 API 호출 및 DB 백업 S3 업로드용 |
 
 #### 1.4.2.2. IAM 최소 권한 (Least Privilege) 설계
 EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 필요한 최소한의 관리형 IAM 정책(Managed Policy)만을 매핑하여 보안 위협을 경감했습니다.
