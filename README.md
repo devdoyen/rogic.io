@@ -262,7 +262,7 @@ C4Container
 * **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)**<br>
   레이아웃 구성 예시용 퍼블릭 링크 (보안 정책 상 실제 메트릭 데이터 대신 구조 확인용 임의 지표가 노출됩니다.)
 
-#### [부록 1] SLA 지표 PromQL 연산 수식
+#### 1.5.4.1. SLA 지표 PromQL 연산 수식
 > [!NOTE]
 > 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다.
 
@@ -306,7 +306,7 @@ $$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\
 (sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
 ```
 
-#### [부록 2] 가용성 및 재해 복구 지표 비교표
+#### 1.5.4.2. 가용성 및 재해 복구 지표 비교표
 | 지표 | 현재 사양 (단일 EC2 + S3 백업) | 향후 개선 목표 (Multi-AZ ALB + ECS/RDS) |
 | :--- | :--- | :--- |
 | **RPO (복구 시점)** | **6시간** (하루 4회 S3 백업 소산) | **5분 이내** (RDS Multi-AZ 및 PITR 자동 활성화) |
@@ -488,8 +488,8 @@ stateDiagram-v2
 ## 4.1. Local Development Setup
 To run `rogic.io` on your local workstation, select one of the options below:
 
-### Option 1: Docker Compose (Single-Command Spin Up - Recommended)
-If you want to build and spin up the entire application stack (Database, Backend, and Frontend) immediately:
+### 4.1.1. Option 1: Docker Compose 기반 일괄 기동 (추천)
+전체 애플리케이션 스택(Database, Backend, Frontend)을 한 번에 빌드하고 기동하려는 경우 아래 옵션을 선택합니다.
 
 ```bash
 # In the project root, compile, build and start all container services
@@ -497,50 +497,56 @@ docker compose up --build
 ```
 * **Frontend Web Client**: `http://localhost:5173`
 * **Backend REST API**: `http://localhost:8080`
-* **Prerequisites**: Docker & Docker Compose installed.
+* **Prerequisites**: Docker & Docker Compose 설치 필요.
 
 ---
 
-### Option 2: Hybrid Local Setup (For Hot-Reloading Development)
-If you want to modify code on the fly and take advantage of live hot-reloading (Vite dev server):
+### 4.1.2. Option 2: 로컬 및 컨테이너 하이브리드 기동 (개발 환경)
+코드 수정 시 즉각적인 라이브 반영 및 핫 리로딩(Vite dev server)을 원하는 경우 아래 단계별로 서비스를 기동합니다.
 
-#### Step 1: Start PostgreSQL Database
+#### 4.1.2.1. Step 1: PostgreSQL 데이터베이스 기동
 ```bash
 # Start only the database container in the background
 docker compose up -d db
 ```
 
-#### Step 2: Run Backend API
+#### 4.1.2.2. Step 2: 백엔드 API 서버 실행
 ```bash
 cd backend
 ./gradlew bootRun
 ```
-* API Server will run on: `http://localhost:8080`
-* **Prerequisites**: Java 17 JDK installed.
+* API Server 구동 주소: `http://localhost:8080`
+* **Prerequisites**: Java 17 JDK 설치 필요.
 
-#### Step 3: Run Frontend Client
+#### 4.1.2.3. Step 3: 프론트엔드 클라이언트 실행
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-* Frontend app will run on: `http://localhost:5173`
-* **Prerequisites**: Node.js 20+ installed.
+* Frontend Client 구동 주소: `http://localhost:5173`
+* **Prerequisites**: Node.js 20+ 설치 필요.
 
-### Option 3: AWS SSM Session Manager & SSH Tunneling Setup
-* **AWS CLI 및 Session Manager Plugin 설치**<br>
-  로컬 기기에 AWS CLI를 최신 상태로 유지하고, SSH 터널링을 지원하기 위해 AWS 공식 [session-manager-plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)을 설치합니다.
-* **로컬 SSH Config 설정 (~/.ssh/config)**<br>
-  보안 그룹에서 SSH(22) 포트가 폐쇄되었더라도 호스트의 SSM 에이전트를 프록시로 삼아 SSH 터널을 수립할 수 있도록 아래 설정을 로컬 SSH 환경 파일에 등록합니다:
-  ```ssh
-  # SSH over SSM Tunnel Configuration
-  Host i-* mi-*
-      ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p
-  ```
-* **EC2 호스트 원격 접속 명령어**<br>
-  인스턴스 ID와 기존 SSH 인증 키를 사용해 22포트 방화벽 차단을 우회하여 쉘 세션을 안전하게 수립합니다:
-  ```bash
-  ssh -i ~/.ssh/nemologic-key.pem ubuntu@i-xxxxxxxxxxxxxxxxx
-  ```
+---
+
+### 4.1.3. Option 3: AWS SSM Session Manager 및 SSH 터널링 설정
+보안 그룹 22번 포트 폐쇄 환경 하에서 원격 EC2 인스턴스 터미널에 접속하거나 Ansible 터널을 설정하는 방법입니다.
+
+#### 4.1.3.1. AWS CLI 및 Session Manager Plugin 설치
+로컬 기기에 AWS CLI를 최신 상태로 유지하고, SSH 터널링을 지원하기 위해 AWS 공식 [session-manager-plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)을 설치합니다.
+
+#### 4.1.3.2. 로컬 SSH Config 설정 (~/.ssh/config)
+보안 그룹에서 SSH(22) 포트가 폐쇄되었더라도 호스트의 SSM 에이전트를 프록시로 삼아 SSH 터널을 수립할 수 있도록 아래 설정을 로컬 SSH 환경 파일에 등록합니다.
+```ssh
+# SSH over SSM Tunnel Configuration
+Host i-* mi-*
+    ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p
+```
+
+#### 4.1.3.3. EC2 호스트 원격 접속 명령어
+인스턴스 ID와 기존 SSH 인증 키를 사용해 22포트 방화벽 차단을 우회하여 쉘 세션을 안전하게 수립합니다.
+```bash
+ssh -i ~/.ssh/nemologic-key.pem ubuntu@i-xxxxxxxxxxxxxxxxx
+```
 
 
