@@ -12,50 +12,49 @@
 ---
 
 ## 📋 Table of Contents
-🛠 [Technology Stack](#-technology-stack)<br>
-[1.](#1-infrastructure--cloud-engineering) Infrastructure & Cloud Engineering<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1-1.](#1-1-system-architecture) System Architecture<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-1-1.](#1-1-1-high-level-diagram) High-Level Diagram<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-1-2.](#1-1-2-component-specification) Component Specification<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-1-3.](#1-1-3-resource-dependency-graph) Resource Dependency Graph<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1-2.](#1-2-cost-optimization--technical-trade-offs) Cost Optimization & Technical Trade-offs<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-2-1.](#1-2-1-compute-resource-downsizing) Compute Resource Downsizing<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-2-2.](#1-2-2-high-availability--load-balancer-elimination) High Availability & Load Balancer Elimination<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-2-3.](#1-2-3-database-cost-minimization--replication) Database Cost Minimization & Replication<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1-3.](#1-3-network--security-architecture) Network & Security Architecture<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-1.](#1-3-1-network-isolation) Network Isolation<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-2.](#1-3-2-access-control) Access Control<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-3.](#1-3-3-ssltls-certificate-management) SSL/TLS Certificate Management<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-4.](#1-3-4-state-management-security) State Management Security<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1-4.](#1-4-observability--sre-site-reliability-engineering) Observability & SRE (Site Reliability Engineering)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-1.](#1-4-1-metric-collection--scraping) Metric Collection & Scraping<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-2.](#1-4-2-centralized-log-management) Centralized Log Management<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-3.](#1-4-3-alerting--notification) Alerting & Notification<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-4.](#1-4-4-slo-service-level-objective-visualization) SLO (Service Level Objective) Visualization<br>
-[2.](#2-continuous-integration--delivery-cicd) Continuous Integration & Delivery (CI/CD)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[2-1.](#2-1-pipeline-workflow) Pipeline Workflow<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-1-1.](#2-1-1-gitops-flowchart) GitOps Flowchart<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-1-2.](#2-1-2-pipeline-trigger-optimization) Pipeline Trigger Optimization<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[2-2.](#2-2-build--artifact-management) Build & Artifact Management<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-2-1.](#2-2-1-compute-offloading) Compute Offloading<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-2-2.](#2-2-2-static-asset-delivery) Static Asset Delivery<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[2-3.](#2-3-quality-gate--release-automation) Quality Gate & Release Automation<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-3-1.](#2-3-1-automated-end-to-end-testing) Automated End-to-End Testing<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-3-2.](#2-3-2-deployment-gate--approvals) Deployment Gate & Approvals<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-3-3.](#2-3-3-automated-versioning) Automated Versioning<br>
-[3.](#3-ai-engineering--intelligent-systems) AI Engineering & Intelligent Systems<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[3-1.](#3-1-ai-puzzle-generator--logical-validation-pipeline) AI Puzzle Generator & Logical Validation Pipeline<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-1-1.](#3-1-1-model-integration--scheduler) Model Integration & Scheduler<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-1-2.](#3-1-2-automated-validation-pipeline) Automated Validation Pipeline<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[3-2.](#3-2-user-feedback-loop--governance-system) User Feedback Loop & Governance System<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-1.](#3-2-1-client-side-rating-system) Client-Side Rating System<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-2.](#3-2-2-backoffice-monitoring--cascading-deletes) Backoffice Monitoring & Cascading Deletes<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-3.](#3-2-3-ai-agentic-development--governance) AI Agentic Development & Governance<br>
-💻 [Local Development Setup](#-local-development-setup)
-
+[0](#0-technology-stack). Technology Stack<br>
+[1](#1-infrastructure--cloud-engineering). Infrastructure & Cloud Engineering<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[1-1](#1-1-system-architecture). System Architecture<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-1-1](#1-1-1-high-level-diagram). High-Level Diagram<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-1-2](#1-1-2-component-specification). Component Specification<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-1-3](#1-1-3-resource-dependency-graph). Resource Dependency Graph<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[1-2](#1-2-cost-optimization--technical-trade-offs). Cost Optimization & Technical Trade-offs<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-2-1](#1-2-1-compute-resource-downsizing). Compute Resource Downsizing<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-2-2](#1-2-2-high-availability--load-balancer-elimination). High Availability & Load Balancer Elimination<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-2-3](#1-2-3-database-cost-minimization--replication). Database Cost Minimization & Replication<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[1-3](#1-3-network--security-architecture). Network & Security Architecture<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-1](#1-3-1-network-isolation). Network Isolation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-2](#1-3-2-access-control). Access Control<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-3](#1-3-3-ssltls-certificate-management). SSL/TLS Certificate Management<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-3-4](#1-3-4-state-management-security). State Management Security<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[1-4](#1-4-observability--sre-site-reliability-engineering). Observability & SRE (Site Reliability Engineering)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-1](#1-4-1-metric-collection--scraping). Metric Collection & Scraping<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-2](#1-4-2-centralized-log-management). Centralized Log Management<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-3](#1-4-3-alerting--notification). Alerting & Notification<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1-4-4](#1-4-4-slo-service-level-objective-visualization). SLO (Service Level Objective) Visualization<br>
+[2](#2-continuous-integration--delivery-cicd). Continuous Integration & Delivery (CI/CD)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[2-1](#2-1-pipeline-workflow). Pipeline Workflow<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-1-1](#2-1-1-gitops-flowchart). GitOps Flowchart<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-1-2](#2-1-2-pipeline-trigger-optimization). Pipeline Trigger Optimization<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[2-2](#2-2-build--artifact-management). Build & Artifact Management<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-2-1](#2-2-1-compute-offloading). Compute Offloading<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-2-2](#2-2-2-static-asset-delivery). Static Asset Delivery<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[2-3](#2-3-quality-gate--release-automation). Quality Gate & Release Automation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-3-1](#2-3-1-automated-end-to-end-testing). Automated End-to-End Testing<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-3-2](#2-3-2-deployment-gate--approvals). Deployment Gate & Approvals<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2-3-3](#2-3-3-automated-versioning). Automated Versioning<br>
+[3](#3-ai-engineering--intelligent-systems). AI Engineering & Intelligent Systems<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[3-1](#3-1-ai-puzzle-generator--logical-validation-pipeline). AI Puzzle Generator & Logical Validation Pipeline<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-1-1](#3-1-1-model-integration--scheduler). Model Integration & Scheduler<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-1-2](#3-1-2-automated-validation-pipeline). Automated Validation Pipeline<br>
+&nbsp;&nbsp;&nbsp;&nbsp;[3-2](#3-2-user-feedback-loop--governance-system). User Feedback Loop & Governance System<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-1](#3-2-1-client-side-rating-system). Client-Side Rating System<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-2](#3-2-2-backoffice-monitoring--cascading-deletes). Backoffice Monitoring & Cascading Deletes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3-2-3](#3-2-3-ai-agentic-development--governance). AI Agentic Development & Governance<br>
+[4](#4-local-development-setup). Local Development Setup
 ---
 
-## 🛠 Technology Stack
+## 0. Technology Stack
 
 | Category | Technologies | Description |
 | :--- | :--- | :--- |
@@ -344,7 +343,7 @@ stateDiagram-v2
 
 ---
 
-## 💻 Local Development Setup
+## 4. Local Development Setup
 
 To run `rogic.io` on your local workstation:
 
