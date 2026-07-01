@@ -226,7 +226,20 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적
   하드코딩된 AWS API Access Key 사용을 지양하고, GitHub OIDC(OpenID Connect) 연동을 수립하여 매 빌드 및 배포 시점에 AWS Security Token Service(STS)로부터 1회용 단기 자격 증명을 획득(AssumeRole)합니다. 이로써 자격 증명 유출 경로를 원천 차단하고 보안 안전성을 확보했습니다.
 
 ##### 1.4.2.2.2. 서비스 범위 최소 권한 정책<br>
-  기존 GitHub Actions OIDC 역할에 일괄 연결되어 있던 `AdministratorAccess` 정책을 회수하고, 테라폼 및 Ansible 배포 범위에 정확히 부합하는 서비스 수준 최소 권한 정책(Staging/Production 별 커스텀 IAM Policy)을 바인딩했습니다. 이를 통해 허용 서비스(EC2, S3, DynamoDB, IAM, CloudWatch, SNS, SSM, CloudFront, ACM, Route 53) 이외의 타 서비스 자원(예: RDS, Lambda, KMS 등) 관리를 원천 차단하여 Least Privilege 통제를 완결했습니다.
+  테라폼 및 Ansible 배포 범위에 정확히 부합하는 서비스 수준 최소 권한 정책(Staging/Production 별 커스텀 IAM Policy)을 바인딩했습니다. 이를 통해 허용 서비스 이외의 타 서비스 자원(예: RDS, Lambda, KMS 등) 관리를 원천 차단하여 Least Privilege 통제를 완결했습니다.
+
+  * **허용 서비스 및 리소스 구성 명세**<br>
+    - **EC2 및 VPC (`ec2:*`)**: 모든 리소스 (`*` - VPC, 서브넷, 보안 그룹, 인스턴스 및 EIP 등의 동적 관리 요건)
+    - **S3 (`s3:*`)**: `arn:aws:s3:::nemologic-*` 및 `arn:aws:s3:::rogic-*` 버킷군 (상태 파일, 로그 및 백업 관리)
+    - **DynamoDB (`dynamodb:*`)**: `arn:aws:dynamodb:*:*:table/nemologic-tfstate-lock` 테이블 (테라폼 상태 잠금 제어)
+    - **IAM (`iam:*`)**: `arn:aws:iam::*:role/nemologic-*` 등 관련 리소스 (OIDC 역할 및 EC2 인스턴스 프로필 수명주기 관리)
+    - **CloudWatch Logs (`logs:*`)**: 모든 리소스 (`*` - 로그 그룹 메타데이터 설명 및 조회 요건)
+    - **CloudWatch Alarms (`cloudwatch:*`)**: `arn:aws:cloudwatch:*:*:alarm:nemologic-*` 알람군
+    - **SNS (`sns:*`)**: `arn:aws:sns:*:*:nemologic-*` 토픽군
+    - **SSM (`ssm:*`)**: 모든 리소스 (`*` - SSM Session Manager 터널링 세션 연결 요건)
+    - **CloudFront (`cloudfront:*`)**: 모든 리소스 (`*` - CDN 배포판 조회 및 캐시 무효화 요건)
+    - **ACM (`acm:*`)**: 모든 리소스 (`*` - SSL 인증서 검증 및 us-east-1 인증서 조회 요건)
+    - **Route 53 (`route53:*`)**: 모든 리소스 (`*` - DNS 네임서버 레코드 정보 관리 요건)
 
 #### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
