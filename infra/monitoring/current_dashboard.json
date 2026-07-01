@@ -1558,7 +1558,7 @@
         "spec": {
           "id": 1005,
           "title": "Mean Time To Recovery (MTTR)",
-          "description": "",
+          "description": "SLA Mean Time To Recovery (MTTR) metric in seconds",
           "links": [],
           "data": {
             "kind": "QueryGroup",
