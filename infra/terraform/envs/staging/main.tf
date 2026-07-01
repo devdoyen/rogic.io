@@ -349,8 +349,8 @@ resource "aws_iam_policy" "github_actions_staging_policy" {
         Resource = "*"
       },
       {
-        Effect   = "Allow"
-        Action   = ["s3:*"]
+        Effect = "Allow"
+        Action = ["s3:*"]
         Resource = [
           "arn:aws:s3:::nemologic-*",
           "arn:aws:s3:::rogic-*"
@@ -362,8 +362,8 @@ resource "aws_iam_policy" "github_actions_staging_policy" {
         Resource = "arn:aws:dynamodb:ap-northeast-2:${data.aws_caller_identity.current.account_id}:table/nemologic-tfstate-lock"
       },
       {
-        Effect   = "Allow"
-        Action   = ["iam:*"]
+        Effect = "Allow"
+        Action = ["iam:*"]
         Resource = [
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/nemologic-*",
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/nemologic-*",
