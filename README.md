@@ -175,6 +175,8 @@ C4Container
 
 * **물리 격리형 VPC 구성**<br>
   Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 상호 간의 간섭을 완전히 격리했습니다.
+* **다계층 도커 브리지 네트워크 격리**<br>
+  단일 EC2 인스턴스 내부 컨테이너 통신 시, 인터넷 개방점인 Nginx(`frontend-net`에만 소속)가 데이터베이스(`backend-net`에만 소속)에 직접 접근할 수 없도록 가상 네트워크를 이중 분리했습니다. 백엔드 API 컨테이너가 양쪽 네트워크의 다리 역할을 수행함으로써, Nginx 침투 시 DB에 직접 가해지는 SQL 주입 및 무작위 접속(횡적 이동, Lateral Movement) 위험을 구조적으로 제한합니다. (보안 로드맵: 향후 컨테이너 이미지의 Non-root User 실행 및 Read-Only root 파일시스템 제한 적용 예정)
 
 ### 1.4.2. Access Control & Host Security
 * **SSM Session Manager 및 SSH(22) 포트 완전 차단**<br>
