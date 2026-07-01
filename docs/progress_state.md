@@ -127,8 +127,16 @@
     3. `Force disconnect` 대상 컨테이너 루프에서 `nemologic-db`를 영구 제외하고, Docker Compose의 자체 제어(stop/recreate) 범위 내에서 네트워크 차단 및 갱신이 정상 처리되도록 고도화함.
     4. Staging 환경의 `nemologic-db` 컨테이너 상태를 수동 복원(SSM 명령어를 통한 기존 컨테이너 강제 소거 및 `docker compose up -d db` 재생성)하여 `internal: true` 네트워크 격리가 무사히 정합성을 유지하도록 복원 완료함.
 
+### 운영(Production) 환경 OIDC AssumeRole 권한 에러 해결 (Step 43) - 완료
+- **해결 내역**:
+  - **현상**: GitHub Actions의 `Terraform Production Apply (Manual Approval)` 작업에서 OIDC를 통한 AWS IAM 역할(`nemologic-production-github-role`) 인수 과정 중 `Not authorized to perform sts:AssumeRoleWithWebIdentity` 에러가 발생함.
+  - **원인 분석**: `infra-apply-production` 작업은 `production` 환경(`environment: production`) 내에서 작동하므로 OIDC 토큰의 `sub` 클레임이 `repo:devdoyen/rogic.io:environment:production` 형식을 갖게 됨. 기존 IAM 역할의 신뢰 정책(Trust Policy)은 `repo:devdoyen/rogic.io:ref:refs/*` 패턴만 허용하여 인증 실패가 유발됨.
+  - **해결 조치**:
+    1. [production/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf) 내의 `github_actions_production` IAM 역할의 `AssumeRolePolicyDocument` 신뢰 정책에서 `sub` 클레임 조건에 일반 Git 참조 패턴(`ref:refs/*`) 및 환경 명세 패턴(`environment:production`)을 동시에 포함하도록 리스트 형식으로 확장함.
+    2. GitHub Actions 러너가 아직 이 역할을 획득할 수 없는 상태이므로, 로컬 개발자 PC의 관리자(admin) 자격 증명을 사용하여 대상 리소스를 타겟 지정(`terraform apply -target=aws_iam_role.github_actions_production`)함으로써 AWS에 신뢰 관계 변경 정책을 안전하게 선반영함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **AWS IAM 최소 권한(Least Privilege) 수립 (Step 43)**: 생성된 Staging/Production GitHub OIDC IAM Role에 부착된 `AdministratorAccess` 전권 정책을 회수하고, Terraform 및 배포에 필요한 실제 최소 자원 권한으로 타이트하게 격하하는 커스텀 정책(IAM Policy) 설계 및 적용.
+- **AWS IAM 최소 권한(Least Privilege) 수립 (Step 44)**: 생성된 Staging/Production GitHub OIDC IAM Role에 부착된 `AdministratorAccess` 전권 정책을 회수하고, Terraform 및 배포에 필요한 실제 최소 자원 권한으로 타이트하게 격하하는 커스텀 정책(IAM Policy) 설계 및 적용.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
