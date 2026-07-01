@@ -91,9 +91,14 @@
   - **AI Engineering 섹션 경량화 및 군더더기 배제**: 포트폴리오의 과장을 막고 엔지니어링 본질에 주안점을 두기 위해, AI 단순 기능(알고리즘 구현부, UI 위젯 CSS 디테일, CRUD 위주의 스키마 설명)에 해당하는 장황한 텍스트들을 걷어내고 명세형 아웃라인 위주로 압축하여 README.md의 핵심 정보 밀도를 조율함. 또한 3.1, 3.2, 3.3 하위 내의 모든 서술식 제목 요소들도 예외 없이 가이드라인 규칙([documentation-guidelines.md](../.agents/rules/documentation-guidelines.md))에 맞춰 직후 콜론 한 줄 작성을 제거하고 `<br>` 개행 및 아랫줄 들여쓰기로 완전히 교정함.
   - **호스트 보안 및 권한 정책 명세 반영**: 인바운드 22포트 완전 차단 및 SSM Session Manager 기반 제어 정책, SSH over SSM을 결합한 Ansible 터널링, 그리고 EC2 및 CI/CD(OIDC 연동) IAM 최소 권한(Least Privilege) 설계 구조를 README.md 보안 섹션에 투명하게 기술하여 포트폴리오의 보안 신뢰성을 강화함.
 
+### AWS SSM Session Manager 도입 및 Staging 22포트 차단 (Step 39) - 완료
+- **해결 내역**:
+  - **보안 그룹 22포트 차단**: Staging 환경 테라폼(`infra/terraform/envs/staging/main.tf`)의 인바운드 보안 그룹에서 포트 22(SSH) 접근 규칙을 영구히 삭제(차단)하여 무단 접근 표면을 제거함.
+  - **Ansible SSM 터널링 구성 예제 기술**: 포트 22가 전면 차단된 환경에서 Ansible Playbook의 호스트 기동 관리를 정상 지원하기 위해, `infra/ansible/hosts.ini`에 EC2 인스턴스 ID 매핑 및 `ProxyCommand`를 결합한 `ansible_ssh_common_args` 예시를 주석으로 이식함.
+  - **SSM 접속 방법론 서술**: Windows/macOS 로컬 PC 개발자 기기에서 AWS CLI 세션 매니저를 통해 접속할 수 있도록 `session-manager-plugin` 의존성 도구 링크 및 SSH Config 프록시 구성 방안을 README.md 끝단에 명료하게 가이드화함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
+- **Production 환경 인바운드 22포트 차단 순차 적용**: Staging 환경에서 세션 매니저를 경유한 Ansible 배포 및 관리 동작 정합성이 완벽히 검증되면, 순차 배포 지침을 바탕으로 Production 환경 테라폼(`infra/terraform/envs/production/main.tf`)의 포트 22 차단 작업과 반영을 진행함.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
-- **격리된 환경 안정성 모니터링**: 개별 VPC 대역에서 구동 중인 Staging/Production 각 서비스의 동작 이상 유무 및 데이터베이스 접속, 네트워크 보안 그룹 연동 정합성 관찰.
-- **주기적인 백업 및 도커 프룬 작동 확인**: 백업 및 도커 청소 크론탭 스케줄러가 예정된 시간에 정상 트리거되어 리포지토리에 영향 없이 잘 구동되는지 로그 확인.

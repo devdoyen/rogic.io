@@ -79,14 +79,6 @@ resource "aws_security_group" "nemologic_staging_sg" {
   vpc_id      = aws_vpc.nemologic_staging_vpc.id
 
   ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
     description = "Frontend HTTP"
     from_port   = 5173
     to_port     = 5173

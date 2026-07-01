@@ -503,4 +503,20 @@ npm run dev
 * Frontend app will run on: `http://localhost:5173`
 * **Prerequisites**: Node.js 20+ installed.
 
+### Option 3: AWS SSM Session Manager & SSH Tunneling Setup
+* **AWS CLI 및 Session Manager Plugin 설치**<br>
+  로컬 기기에 AWS CLI를 최신 상태로 유지하고, SSH 터널링을 지원하기 위해 AWS 공식 [session-manager-plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)을 설치합니다.
+* **로컬 SSH Config 설정 (~/.ssh/config)**<br>
+  보안 그룹에서 SSH(22) 포트가 폐쇄되었더라도 호스트의 SSM 에이전트를 프록시로 삼아 SSH 터널을 수립할 수 있도록 아래 설정을 로컬 SSH 환경 파일에 등록합니다:
+  ```ssh
+  # SSH over SSM Tunnel Configuration
+  Host i-* mi-*
+      ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p
+  ```
+* **EC2 호스트 원격 접속 명령어**<br>
+  인스턴스 ID와 기존 SSH 인증 키를 사용해 22포트 방화벽 차단을 우회하여 쉘 세션을 안전하게 수립합니다:
+  ```bash
+  ssh -i ~/.ssh/nemologic-key.pem ubuntu@i-xxxxxxxxxxxxxxxxx
+  ```
+
 
