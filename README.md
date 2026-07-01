@@ -1,49 +1,53 @@
-<div style="font-size: 14px; line-height: 1.6;">
+<div style="line-height: 1.6;">
 
-**[0.](#0-project-overview) Project Overview**<br>
-**[1.](#1-infrastructure--cloud-engineering) Infrastructure & Cloud Engineering**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1.1.](#11-system-architecture) System Architecture<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.1.1.](#111-high-level-diagram) High-Level Diagram<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.1.2.](#112-component-specification) Component Specification<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.1.3.](#113-resource-dependency-graph) Resource Dependency Graph<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1.2.](#12-cost-optimization--technical-trade-offs) Cost Optimization & Technical Trade-offs<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.2.1.](#121-compute-resource-downsizing) Compute Resource Downsizing<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.2.2.](#122-high-availability--load-balancer-elimination) High Availability & Load Balancer Elimination<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.2.3.](#123-database-cost-minimization--replication) Database Cost Minimization & Replication<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1.3.](#13-network--security-architecture) Network & Security Architecture<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.3.1.](#131-network-isolation) Network Isolation<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.3.2.](#132-access-control) Access Control<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.3.3.](#133-ssltls-certificate-management) SSL/TLS Certificate Management<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.3.4.](#134-state-management-security) State Management Security<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[1.4.](#14-observability--sre-site-reliability-engineering) Observability & SRE (Site Reliability Engineering)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.4.1.](#141-metric-collection--scraping) Metric Collection & Scraping<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.4.2.](#142-centralized-log-management) Centralized Log Management<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.4.3.](#143-alerting--notification) Alerting & Notification<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[1.4.4.](#144-slo-service-level-objective-visualization) SLO (Service Level Objective) Visualization<br>
-**[2.](#2-continuous-integration--delivery-cicd) Continuous Integration & Delivery (CI/CD)**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[2.1.](#21-pipeline-workflow) Pipeline Workflow<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.1.1.](#211-gitops-flowchart) GitOps Flowchart<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.1.2.](#212-pipeline-trigger-optimization) Pipeline Trigger Optimization<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[2.2.](#22-build--artifact-management) Build & Artifact Management<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.2.1.](#221-compute-offloading) Compute Offloading<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.2.2.](#222-static-asset-delivery) Static Asset Delivery<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[2.3.](#23-quality-gate--release-automation) Quality Gate & Release Automation<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.3.1.](#231-automated-end-to-end-testing) Automated End-to-End Testing<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.3.2.](#232-deployment-gate--approvals) Deployment Gate & Approvals<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[2.3.3.](#233-automated-versioning) Automated Versioning<br>
-**[3.](#3-ai-engineering--intelligent-systems) AI Engineering & Intelligent Systems**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[3.1.](#31-ai-puzzle-generator--logical-validation-pipeline) AI Puzzle Generator & Logical Validation Pipeline<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.1.](#311-model-integration--scheduler) Model Integration & Scheduler<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.2.](#312-automated-validation-pipeline) Automated Validation Pipeline<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[3.2.](#32-user-feedback-loop--governance-system) User Feedback Loop & Governance System<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.2.1.](#321-client-side-rating-system) Client-Side Rating System<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.2.2.](#322-backoffice-monitoring--cascading-deletes) Backoffice Monitoring & Cascading Deletes<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.2.3.](#323-ai-agentic-development--governance) AI Agentic Development & Governance<br>
-**[4.](#4-appendices--local-setup) Appendices & Local Setup**<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[4.1.](#41-technology-stack) Technology Stack<br>
-&nbsp;&nbsp;&nbsp;&nbsp;[4.2.](#42-local-development-setup) Local Development Setup
+[0.](#0-project-overview) Project Overview<br>
+[1.](#1-infrastructure--cloud-engineering) Infrastructure & Cloud Engineering<br>
+[1.1.](#11-system-architecture) System Architecture<br>
+[1.1.1.](#111-high-level-diagram) High-Level Diagram<br>
+[1.1.2.](#112-component-specification) Component Specification<br>
+[1.2.](#12-cost-optimization--technical-trade-offs) Cost Optimization & Technical Trade-offs<br>
+[1.2.1.](#121-compute-resource-downsizing) Compute Resource Downsizing<br>
+[1.2.2.](#122-high-availability--load-balancer-elimination) High Availability & Load Balancer Elimination<br>
+[1.2.3.](#123-database-cost-minimization--replication) Database Cost Minimization & Replication<br>
+[1.3.](#13-network--security-architecture) Network & Security Architecture<br>
+[1.3.1.](#131-network-isolation) Network Isolation<br>
+[1.3.2.](#132-access-control) Access Control<br>
+[1.3.3.](#133-ssltls-certificate-management) SSL/TLS Certificate Management<br>
+[1.3.4.](#134-state-management-security) State Management Security<br>
+[1.4.](#14-observability--sre-site-reliability-engineering) Observability & SRE (Site Reliability Engineering)<br>
+[1.4.1.](#141-metric-collection--scraping) Metric Collection & Scraping<br>
+[1.4.2.](#142-centralized-log-management) Centralized Log Management<br>
+[1.4.3.](#143-alerting--notification) Alerting & Notification<br>
+[1.4.4.](#144-slo-service-level-objective-visualization) SLO (Service Level Objective) Visualization<br>
+[1.5.](#15-troubleshooting) Troubleshooting<br>
+[1.5.1.](#151-t3anano512mb-ram-환경-내-메모리-스레싱thrashing-및-oom-장애-해결) t3a.nano(512MB RAM) 환경 내 메모리 스레싱(Thrashing) 및 OOM 장애 해결<br>
+[2.](#2-continuous-integration--delivery-cicd) Continuous Integration & Delivery (CI/CD)<br>
+[2.1.](#21-pipeline-workflow) Pipeline Workflow<br>
+[2.1.1.](#211-gitops-flowchart) GitOps Flowchart<br>
+[2.1.2.](#212-pipeline-trigger-optimization) Pipeline Trigger Optimization<br>
+[2.2.](#22-build--artifact-management) Build & Artifact Management<br>
+[2.2.1.](#221-compute-offloading) Compute Offloading<br>
+[2.2.2.](#222-static-asset-delivery) Static Asset Delivery<br>
+[2.3.](#23-quality-gate--release-automation) Quality Gate & Release Automation<br>
+[2.3.1.](#231-automated-end-to-end-testing) Automated End-to-End Testing<br>
+[2.3.2.](#232-deployment-gate--approvals) Deployment Gate & Approvals<br>
+[2.3.3.](#233-automated-versioning) Automated Versioning<br>
+[2.4.](#24-troubleshooting) Troubleshooting<br>
+[2.4.1.](#241-staging-production-파이프라인-강결합-및-배포-동시성-제어-오류-극복) Staging-Production 파이프라인 강결합 및 배포 동시성 제어 오류 극복<br>
+[3.](#3-ai-engineering--intelligent-systems) AI Engineering & Intelligent Systems<br>
+[3.1.](#31-ai-puzzle-generator--logical-validation-pipeline) AI Puzzle Generator & Logical Validation Pipeline<br>
+[3.1.1.](#311-model-integration--scheduler) Model Integration & Scheduler<br>
+[3.1.2.](#312-automated-validation-pipeline) Automated Validation Pipeline<br>
+[3.2.](#32-user-feedback-loop--governance-system) User Feedback Loop & Governance System<br>
+[3.2.1.](#321-client-side-rating-system) Client-Side Rating System<br>
+[3.2.2.](#322-backoffice-monitoring--cascading-deletes) Backoffice Monitoring & Cascading Deletes<br>
+[3.2.3.](#323-ai-agentic-development--governance) AI Agentic Development & Governance<br>
+[3.3.](#33-troubleshooting) Troubleshooting<br>
+[3.3.1.](#331-gemini-초경량-모델의-데이터-생략js-array-초기화-표현식으로-인한-json-역직렬화-장애-대응) Gemini 초경량 모델의 데이터 생략(JS Array 초기화 표현식)으로 인한 JSON 역직렬화 장애 대응<br>
+[4.](#4-appendices--local-setup) Appendices & Local Setup<br>
+[4.1.](#41-technology-stack) Technology Stack<br>
+[4.2.](#42-local-development-setup) Local Development Setup
 
-</div>
 ---
 
 # 0. Project Overview
@@ -65,31 +69,27 @@
 
 ### 1.1.1. High-Level Diagram
 ```mermaid
-graph TD
-    subgraph "AWS Cloud (ap-northeast-2)"
-        subgraph "VPC (10.0.0.0/16)"
-            subgraph "Public Subnet (10.0.1.0/24)"
-                EIP[Elastic IP] <--> EC2[EC2 Instance: t3a.nano]
-                subgraph "Docker Compose Environment"
-                    Nginx[Nginx Container: Port 80/443] <--> Spring[Spring Boot Container: Port 8080]
-                    Spring <--> Postgres[(PostgreSQL Container: Port 5432)]
-                end
-                NodeExporter[Node Exporter: Port 9100]
-                Nginx <-->|Proxy metrics| NodeExporter
-            end
-        end
-        
-        EC2 -->|Log Driver: awslogs| CWL[CloudWatch Log Group]
-        CWL -->|Metric Filter| CWA[CloudWatch Alarm]
-        CWA -->|Trigger| SNS[SNS Topic]
-        SNS -->|Email Subscription| DevEmail([개발자 수신함])
-        
-        EC2 -->|6-Hour cron| S3B[S3 Backup Bucket]
-        TFS[(DynamoDB & S3)] <-->|State Locking| TF[Terraform Engine]
-    end
+C4Context
+    title System Context Diagram for rogic.io (Level 1: System Context)
+
+    Person(player, "Player / User", "Accesses the puzzle game through a web browser.")
     
-    GC[(Grafana Cloud Prometheus/Mimir)] -->|Agentless Pull: Bearer Auth| Nginx
-    GC_CW[(Grafana Cloud CloudWatch DS)] -->|Pull logs| CWL
+    System_Boundary(dns_cdn, "Global Edge Delivery") {
+        System_Ext(route53, "Route 53", "DNS management mapping domains to CloudFront/EC2.")
+        System_Ext(cloudfront, "Amazon CloudFront", "CDN distributing static web assets globally.")
+        System(s3, "Amazon S3 Bucket", "Stores Vite-built Vue static compilation files.")
+    }
+
+    System_Boundary(backend, "Core API Server") {
+        System(api, "rogic.io REST API", "Spring Boot backend handling gameplay, XP levels, and leadership stats.")
+        SystemDb(postgres, "PostgreSQL DB", "Relational database storing user logs, statistics, and stage metadata.")
+    }
+
+    Rel(player, route53, "Queries DNS entries", "DNS Protocol")
+    Rel(player, cloudfront, "Requests static assets (HTML/JS/CSS)", "HTTPS / Port 443")
+    Rel(cloudfront, s3, "Pulls origin static files", "S3 Protocol")
+    Rel(player, api, "Calls REST API services", "HTTPS / Port 443")
+    Rel(api, postgres, "Reads/Writes game state", "JDBC & JPA / Port 5432")
 ```
 
 ### 1.1.2. Component Specification
@@ -100,24 +100,20 @@ graph TD
 * **Telemetry Proxy**<br>
   수집 데몬(Alloy) 설치를 배제하고 Nginx Bearer 토큰 검증을 이용해 Prometheus Actuator 엔드포인트를 외부에 간접 노출하여 수집 부하를 제거했습니다.
 
-### 1.1.3. Resource Dependency Graph
-<details>
-<summary>🔍 Click to view Inframap Generated Resource Dependency Graphs</summary>
-
-* **Staging Environment Infrastructure Graph**
-  ![Staging Infrastructure Graph](./docs/images/staging-infra.png)
-* **Production Environment Infrastructure Graph**
-  ![Production Infrastructure Graph](./docs/images/production-infra.png)
-
-</details>
-
 ---
 
 ## 1.2. Cost Optimization & Technical Trade-offs
 * **인프라 월간 운영 비용 분석 (Monthly Billing Summary)**<br>
-  자원 다중화 및 관리형 DB 서비스 대신 가상 컨테이너 기술과 복구 지향형 설계를 연동하여 **월 $11.45 (세후 실청구액 기준, 기존 대비 약 80% 비용 절감)**의 상용 인프라 운영을 달성했습니다.
-  * **기존 구성 예상 비용**: 약 $55.00/월 (ALB $20, RDS PostgreSQL $15, t3.micro EC2 $20 등)
-  * **최적화 구성 실제 비용 (2026년 6월 청구 기준)**: 총 $11.45/월 (t3a.nano 인스턴스/EBS $5.50, 퍼블릭 IPv4 주소 사용료 $3.70, Route 53 호스팅 $1.04, 데이터 전송 및 기타 $1.21)
+  자원 다중화 및 관리형 DB 서비스 대신 가상 컨테이너 기술과 복구 지향형 설계를 연동하여 월 $11.45 (세후 실청구액 기준, 기존 대비 약 80% 비용 절감)의 상용 인프라 운영을 달성했습니다.
+
+  | 구분 (Category) | 기존 구성 예상 비용 (Estimated) | 최적화 구성 실제 비용 (2026년 6월) | 주요 비고 (Key Notes) |
+  | :--- | :--- | :--- | :--- |
+  | **컴퓨팅 및 스토리지** | $20.00 / 월 (t3.micro) | $5.50 / 월 (t3a.nano + EBS) | GraalVM 네이티브 컨테이너화를 통해 메모리 스레싱 극복 |
+  | **로드 밸런서** | $20.00 / 월 (AWS ALB) | $0.00 / 월 (Self-hosted Nginx) | ALB 제거 후 Route 53 고정 EIP 다이렉트 매핑 |
+  | **데이터베이스** | $15.00 / 월 (RDS PostgreSQL) | $0.00 / 월 (PostgreSQL Container) | EC2 호스트 내부 Docker Compose 환경 가동 |
+  | **네트워크 & 도메인** | - | $4.74 / 월 (IP 주소 + Route 53) | 퍼블릭 IPv4 사용료 ($3.70) + 호스팅 영역 ($1.04) |
+  | **기타 (데이터 전송 등)** | - | $1.21 / 월 | 데이터 트래픽 전송 및 유틸리티 자원 비용 |
+  | **합계 (Total)** | **약 $55.00 / 월** | **총 $11.45 / 월** | **기존 대비 약 80% 비용 절감 달성 (세후 실청구액)** |
 
 ### 1.2.1. Compute Resource Downsizing
 * **t3a.nano/t4g.nano (512MB RAM) 타겟팅**<br>
@@ -128,24 +124,75 @@ graph TD
     Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
 * **Docker Garbage Collection 자동화**<br>
   디스크 용량 고갈 장애 예방을 위해 새벽 3시마다 72시간 경과 도커 리소스를 강제 소거하는 prune 스크립트를 크론탭으로 자동 배치했습니다.
+* **기술적 타협 (Trade-offs) & 완화 방안 (Mitigations)**<br>
+  * **빌드 리소스 제약 (Trade-off)**<br>
+    t3a.nano 호스트의 512MB 메모리 제약으로 인해 서버 내에서 직접 GraalVM 컴파일 빌드가 불가능하며, 빌드 속도 또한 JVM 컴파일에 비해 10배 이상 오래 소요됩니다.
+  * **외부 컴퓨팅 오프로딩 (Mitigation)**<br>
+    CI/CD 파이프라인에서 GitHub Actions가 제공하는 외부 빌드 인프라(2 Core, 7GB RAM)에 컴파일 연산 부하를 위임하고, 운영 서버 호스트는 30MB 수준의 무부하 바이너리 구동만 전담하도록 분리 구조화했습니다.
 
 ### 1.2.2. High Availability & Load Balancer Elimination
 * **ALB 제거 및 고정 EIP 구성**<br>
   월 $20 상당의 AWS ALB를 배제하고 DNS 도메인(Route 53)과 고정 Elastic IP를 매핑했습니다.
 * **EC2 Auto Recovery 및 복구 지향 아키텍처(ROA)**<br>
   ALB 부재에 따른 장애 전파를 줄이기 위해 시스템 알람 연동 호스트 자동 복구(Auto Recovery)를 결합하고, 재해 복구 시 IaC 코드를 활용해 5분 이내 인프라를 복원하도록 구성했습니다.
+* **기술적 타협 (Trade-offs) & 완화 방안 (Mitigations)**<br>
+  * **단일 장애점 (SPOF) 발생 (Trade-off)**<br>
+    AWS Load Balancer(ALB) 배제로 인해 다중 가용구역(Multi-AZ) 무중단 이중화 및 롤링 배포를 달성할 수 없으며, 호스트 물리 장애 시 전체 정전이 발생하는 단일 장애점(SPOF)을 노출하게 됩니다.
+  * **호스트 자동 복구 결합 (Mitigation)**<br>
+    AWS CloudWatch Status Check Metric Alarms를 결합해 물리 하드웨어 결함 발생 시 1분 이내에 인스턴스를 정상 물리 호스트로 자동 복원(Auto Recovery)하여 EIP를 바인딩하도록 인프라 복원력을 강화했습니다.
 
 ### 1.2.3. Database Cost Minimization & Replication
 * **Self-hosted PostgreSQL 컨테이너**<br>
   월 $15~20 이상의 RDS 비용을 아끼기 위해 EC2에 DB 컨테이너를 기동했습니다.
 * **S3 정기 백업 및 Lifecycle 제어**<br>
   6시간 주기로 DB dump 데이터를 S3로 업로드하는 쉘 스크립트와 Cron을 배포하고, S3 백업 버킷에 30일 경과 백업 자동 파기 정책을 적용했습니다.
+* **기술적 타협 (Trade-offs) & 완화 방안 (Mitigations)**<br>
+  * **복구 시간(RTO) 및 복구 시점(RPO)의 지연 (Trade-off)**<br>
+    AWS RDS의 완전관리형 이중화 복구(RTO 0초 타겟) 및 시점 복구(RPO 5분 이내 PITR) 편의성을 누릴 수 없으며, 재해 복구 시 백업 덤프 수동 복원이 필요하므로 RTO/RPO 지표가 수 분에서 최대 6시간 수준으로 후퇴합니다.
+  * **복구 지향 아키텍처(ROA) 구현 (Mitigation)**<br>
+    인프라를 코드로 구성(Terraform/Ansible)하여 재설치 과정을 자동화하고, 6시간 주기 백업 덤프 자산을 독립 버킷 S3에 안전하게 보관하여 전체 데이터 유실 및 가상 머신 소멸 시에도 5분 이내 수동 복구 가능한 절차를 수립했습니다.
 
 ---
 
 ## 1.3. Network & Security Architecture
 
 ### 1.3.1. Network Isolation
+```mermaid
+C4Container
+    title Container Diagram for rogic.io (Level 2: Network & Containers)
+
+    Person(player, "Player / User", "Accesses the puzzle game through a web browser.")
+
+    System_Boundary(aws, "AWS Cloud (ap-northeast-2)") {
+        
+        System_Boundary(vpc_prod, "Production VPC (10.0.0.0/16)") {
+            Container(nginx, "Nginx Reverse Proxy", "Docker Container", "SSL/TLS termination, API routing, and Bearer token auth validation.")
+            Container(spring, "Spring Boot App", "Docker Container (GraalVM)", "Handles business logic, daily puzzle scheduling, rating, and XP leaderboard.")
+            ContainerDb(postgres, "PostgreSQL Database", "Docker Container", "Persists puzzle templates, user logs, clear history, and user stats.")
+            
+            Rel(nginx, spring, "Proxy API requests", "HTTP / Port 8080")
+            Rel(spring, postgres, "Reads/Writes state", "JPA & JDBC / Port 5432")
+        }
+        
+        System_Boundary(vpc_stage, "Staging VPC (10.1.0.0/16)") {
+            Container(nginx_stg, "Nginx Reverse Proxy (Stage)", "Docker Container", "Staging SSL/TLS termination and API routing.")
+            Container(spring_stg, "Spring Boot App (Stage)", "Docker Container (JVM)", "Staging application runtime environment.")
+            ContainerDb(postgres_stg, "PostgreSQL Database (Stage)", "Docker Container", "Persists isolated staging state.")
+            
+            Rel(nginx_stg, spring_stg, "Proxy API requests", "HTTP / Port 8080")
+            Rel(spring_stg, postgres_stg, "Reads/Writes state", "JPA & JDBC / Port 5432")
+        }
+
+        Container(cloudfront, "Amazon CloudFront", "AWS CDN", "Distributes static web assets with low latency.")
+        Container(s3, "Amazon S3", "AWS Bucket Storage", "Hosts Vite/Vue built static files (HTML, JS, CSS).")
+    }
+
+    Rel(player, cloudfront, "Fetches static web pages", "HTTPS / Port 443")
+    Rel(cloudfront, s3, "Refreshes cache from origin", "S3 Protocol")
+    Rel(player, nginx, "Calls API endpoints", "HTTPS / Port 443")
+    Rel(player, nginx_stg, "Calls API endpoints (Stage)", "HTTPS / Port 443")
+```
+
 * **물리 격리형 VPC 구성**<br>
   Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 상호 간의 간섭을 완전히 격리했습니다.
 
@@ -166,6 +213,35 @@ graph TD
 ## 1.4. Observability & SRE (Site Reliability Engineering)
 
 ### 1.4.1. Metric Collection & Scraping
+```mermaid
+C4Container
+    title Telemetry Diagram for rogic.io (Level 3: Observability & Alerting)
+
+    System_Boundary(host, "AWS EC2 Instance (Target Host)") {
+        Container(nginx, "Nginx Reverse Proxy", "Docker", "Bearer Token Authentication Endpoint.")
+        Container(spring, "Spring Boot Backend", "Docker (GraalVM)", "Exposes Prometheus Actuator Metrics.")
+        Rel(nginx, spring, "Forwards prometheus scraping requests", "Port 8080")
+    }
+
+    System_Boundary(grafana_cloud, "Grafana Cloud Platform") {
+        Container(grafana, "Grafana Dashboards", "SaaS Dashboard", "Visualizes SLA metrics, CPU, Memory, and log groups.")
+        Container(prometheus, "Prometheus / Mimir", "SaaS TSDB", "Scrapes metrics via Agentless Pull architecture.")
+        Rel(grafana, prometheus, "Queries metrics data")
+    }
+
+    System_Boundary(observability, "AWS Management & Alerting") {
+        Container(cw, "Amazon CloudWatch", "AWS Logging", "Collects application stdout log streams via awslogs driver.")
+        Container(sns, "AWS SNS Topic", "AWS Alerting", "Triggers notifications based on metric filter threshold alarms.")
+        Person(sre, "SRE Developer", "Receives real-time incident warning emails.")
+        
+        Rel(cw, sns, "Metric Filter Threshold Alarmed")
+        Rel(sns, sre, "Sends warning email notification")
+    }
+
+    Rel(prometheus, nginx, "Scrapes metrics (Agentless Pull)", "HTTPS Bearer Auth / Port 443")
+    Rel(spring, cw, "Streams application logs", "awslogs driver")
+```
+
 * **Agentless Pull 아키텍처**<br>
   호스트 리소스를 소모하는 수집기(Alloy) 대신, Nginx 프록시가 `Authorization: Bearer` 헤더 토큰을 대조 검증하는 가상 경로를 열고 외부 Grafana Cloud Mimir가 직접 긁어가도록 구조화했습니다.
 
@@ -202,6 +278,23 @@ graph TD
 | **RTO (복구 시간)** | **약 20분** (Terraform 프로비저닝 복구 및 DB 덤프 복원) | **1분 이내** (ALB 액티브 백업 및 컨테이너 무중단 교체) |
 | **MTBF (평균 고장 간격)** | **낮음** (t3a.nano 노드 리소스 병목 리스크 존재) | **매우 높음** (컴퓨팅 자원 분리 및 2GB 이상 스케일링) |
 | **MTTR (평균 복구 시간)** | **약 10분** (경보 감지 후 관리자의 수동 개입 및 재부팅) | **10초 이내** (ALB 헬스체크 및 Fargate Self-healing 자동 복구) |
+
+---
+
+## 1.5. Troubleshooting
+
+### 1.5.1. t3a.nano(512MB RAM) 환경 내 메모리 스레싱(Thrashing) 및 OOM 장애 해결
+* **배경**<br>
+  인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
+* **해결 방안**<br>
+  - **Agentless Pull 아키텍처 도입**<br>
+    호스트 리소스를 차지하는 수집 데몬(Alloy)을 배제. 대신 Nginx 리버스 프록시 단에서 Spring Actuator 메트릭 엔드포인트를 Bearer 토큰 보안 검증 하에 외부 노출하고, Grafana Cloud Prometheus가 원격으로 Pull(Scraping)하게 전환하여 모니터링 에이전트 구동에 따른 메모리 점유를 제거함.
+  - **GraalVM Native Image 고도화**<br>
+    빌드 타임 AOT 컴파일 및 Jackson 리플렉션 힌트 지정을 통해 Spring Boot 컨테이너 런타임 메모리 풋프린트를 기존 250MB+에서 **30MB 이하**로 극소화하여, 512MB RAM의 가혹한 물리 환경에서도 2개 컨테이너 무중단 교체 가용성을 안정적으로 유지함.
+* **개발자 회고 (Retrospective)**<br>
+  - 이 문제 해결 과정에서 코딩 AI 에이전트는 `t3a.nano` 환경의 리소스 임계치를 근거로 인스턴스 스케일업(micro/small로 업그레이드) 및 표준 관리형 아키텍처(ALB, RDS) 도입을 강력히 권장했습니다.
+  - 물론 정석적인 모범 사례(Best Practice)에 따르는 편이 쉬운 길이었겠으나, **극단적인 비용 효율화와 한계 최적화**라는 프로젝트의 기술적 지향점을 지키기 위해 기술적 수단을 집요하게 모색했습니다.
+  - 그 결과, 메트릭 수집 방식을 Push에서 Pull로 전환하고 GraalVM 메모리 풋프린트를 30MB 이하로 튜닝하는 등 깊이 있는 시스템 최적화 경험을 축적할 수 있었습니다. 도구(AI)의 제안을 맹신하지 않고, 프로젝트 상황에 맞게 주도적으로 아키텍처의 트레이드오프를 결정하는 역량의 중요성을 깨닫게 해준 값진 트러블슈팅 사례입니다. (자세한 인시던트 과정은 [Incident Report 2026-07-01](./docs/incidents/20260701_daily_puzzle_generation_failure.md) 참고)
 
 ---
 
@@ -300,6 +393,22 @@ stateDiagram-v2
 
 ---
 
+## 2.4. Troubleshooting
+
+### 2.4.1. Staging-Production 파이프라인 강결합 및 배포 동시성 제어 오류 극복
+* **배경**<br>
+  - Staging과 Production 인프라 설정이 동일 Terraform 코드에 묶여 일괄 반영되던 중, 운영 환경 S3 버킷에 정적 자산이 시딩되지 않은 상태에서 DNS A 레코드가 CloudFront/S3로 먼저 스위칭되어 운영 전체 접속 차단(`AccessDenied`) 장애 발생 ([Access Failure Report](./docs/incidents/20260630_production_access_failure.md)).
+  - 핫픽스 도중 GitHub Actions의 `cancel-in-progress: true` 설정으로 인해 Nginx 인증서 발급 프로세스 도중 후속 커밋이 이전 빌드를 강제 취소하면서 실서버 SSL 인증서 유실로 인한 HTTPS API 통신 불능 장애 발생 ([Handshake Failure Report](./docs/incidents/20260630_production_api_handshake_failure.md)).
+* **해결 방안**<br>
+  - **인프라 환경 물리 격리**<br>
+    Terraform Workspace 및 디렉토리 구조를 Staging과 Production으로 엄격히 분할하여 단일 실행이 실 운영계에 즉각 영향을 미치지 않도록 조치.
+  - **중요 배포 동시성 차단 옵션 제거**<br>
+    중요 서버 설정 배포 단계(`deploy-production`)에서 `cancel-in-progress: false`를 명시하여 이전 작업이 중도 파기되는 설정 정합성 훼손을 원천 차단.
+  - **배포 단계의 느슨한 결합(Loose Coupling)**<br>
+    CloudFront TLS 및 SSL 인증서 교체 등의 상호 의존적인 작업들이 실제 서버 준비 상태를 검증한 후에 이루어지도록 수동 승인 게이트(Manual Approval Gate)를 도입해 인프라 프로모션 방식을 개선함.
+
+---
+
 # 3. AI Engineering & Intelligent Systems
 
 ## 3.1. AI Puzzle Generator & Logical Validation Pipeline
@@ -336,6 +445,19 @@ stateDiagram-v2
     요구사항이 모호한 즉시 임의 구현(No Guessing)을 전면 중지시키고 개발자 승인 대기.
   * **[incident-reporting.md](.agents/rules/incident-reporting.md)**<br>
     장애 상황(빌드, 마이그레이션 실패 등) 복구 즉시 `docs/incidents/`에 YYYYMMDD 날짜 구조 포스트모템 장애보고서 자동 작성 및 보관 지침 명문화.
+
+---
+
+## 3.3. Troubleshooting
+
+### 3.3.1. Gemini 초경량 모델의 데이터 생략(JS Array 초기화 표현식)으로 인한 JSON 역직렬화 장애 대응
+* **배경**<br>
+  데일리 퍼즐 생성 중, 초경량 LLM 모델인 `gemini-3.1-flash-lite`가 30x30 대형 그리드(900개 셀) 연산 결과물 생성 시 응답 지연을 방지하기 위해 표준 JSON 포맷 대신 `Array(30).fill(0)` 등 JavaScript 배열 생성 문법을 반환하여 백엔드 Jackson 역직렬화 오류(`JsonParseException`) 및 배치 스케줄러 전면 중단 장애 발생 ([Daily Puzzle Failure Report](./docs/incidents/20260701_daily_puzzle_generation_failure.md)).
+* **해결 방안**<br>
+  - **프롬프트 가드레일 강화**<br>
+    AI 프롬프트에 `MUST be a literal 2D JSON array` 제약 명시 및 루프, 코드식 생략 표현 사용을 전면 불허하는 지침 추가.
+  - **대형 그리드 생성 모델 부하 제어**<br>
+    가로/세로 25개 이상의 대형 퍼즐 생성 시 AI 모델이 데이터를 생략하려는 경향성을 줄이기 위해 생성 후보군(Candidate) 개수를 5개에서 2개로 조정하여 출력 안전성 확보.
 
 ---
 
