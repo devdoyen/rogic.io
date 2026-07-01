@@ -175,9 +175,35 @@ C4Container
   EC2 호스트 터미널 접근 경로의 무작위 대입 공격과 SSH 키 유출 리스크를 제거하기 위해 인바운드 보안 그룹에서 SSH(22) 포트를 완전히 차단했습니다. 대신 호스트에 SSM Agent를 기동하고 IAM 권한을 바인딩하여, AWS 콘솔 및 CLI 환경에서 IAM 자격 증명만으로 보안 세션을 수립하도록 설계했습니다.
 * **SSH over SSM 터널링을 통한 Ansible 배포**<br>
   22포트가 차단된 가혹한 조건에서도 로컬 개발자 머신의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 구성에 매핑해 두어, 인프라 배포를 맡은 Ansible Playbook이 안전하게 암호화 터널을 통과해 호스트를 관리할 수 있도록 구성했습니다.
-* **IAM 최소 권한(Least Privilege) 설계**<br>
-  - **EC2 호스트 역할**: 인스턴스가 SSM 터널 구성 및 애플리케이션 로그 수집에 필요한 관리형 권한(`AmazonSSMManagedInstanceCore`, `CloudWatchAgentServerPolicy`)만을 할당한 Instance Profile을 부착했습니다.
-  - **CI/CD 배포 역할**: GitHub Actions 러너가 테라폼 인프라 구성 및 정적 자산 반영을 진행할 때 하드코딩된 API Key 사용을 전면 금지하고, 임시 토큰 기반의 **OIDC(OpenID Connect) 연임 역할(AssumeRole)**을 매핑하여 가동하도록 구현했습니다.
+
+#### [부록] Host Access & IAM Security Specification
+
+##### 1) 인바운드 보안 그룹 (Security Group) 허용 규칙
+외부로부터의 직접적인 터미널 접속 및 비정상 요청을 방지하기 위해 SSH 22번 포트 인바운드를 전면 배제하고 최소한의 포트만을 허용합니다.
+
+| 환경 (Environment) | 프로토콜 (Protocol) | 포트 대역 (Ports) | 소스 (Source) | 목적 (Purpose) |
+| :--- | :---: | :---: | :---: | :--- |
+| **Common** | TCP | 80 | `0.0.0.0/0` | HTTP Nginx 접속 (HTTPS 리다이렉트용) |
+| **Common** | TCP | 443 | `0.0.0.0/0` | HTTPS Nginx 보안 웹 접속 |
+| **Common** | TCP | 8080 | `0.0.0.0/0` | Spring Boot Actuator 및 API Endpoint 직접 호출 |
+| **Common** | TCP | 5173 | `0.0.0.0/0` | Frontend HTTP 접속 (Vite Dev Server 호환용) |
+| **Production / Staging** | - | **22** | **Blocked** | **인바운드 SSH 완전 차단 (SSM Proxy 사용)** |
+
+##### 2) IAM 최소 권한 (Least Privilege) 설계
+EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 필요한 최소한의 관리형 IAM 정책(Managed Policy)만을 매핑하여 보안 위협을 경감했습니다.
+
+| 주체 (Principal) | 권한 유형 (Type) | 연결된 IAM 정책 (IAM Policies) | 주요 역할 (Key Role) |
+| :--- | :--- | :--- | :--- |
+| **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>`CloudWatchAgentServerPolicy` | Session Manager 터널링 기동 및 CloudWatch 로그 실시간 포워딩 |
+| **CI/CD Role (GitHub)** | Trust Relationship (OIDC) | `sts:AssumeRoleWithWebIdentity` | 하드코딩된 크레덴셜(비밀키) 없이 임시 자격 증명을 연임하여 인프라를 배포 |
+
+##### 3) SSM 터널링 Ansible 접속 구성 명세
+Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
+
+```ini
+[nemologic_servers]
+nemologic-app-server ansible_host=<EC2_Instance_ID> ansible_user=ubuntu ansible_ssh_private_key_file=<PEM_File_Path> ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p"'
+```
 
 ### 1.4.3. SSL/TLS Certificate Management
 * **Let's Encrypt 및 Certbot 갱신**<br>
