@@ -417,33 +417,21 @@ stateDiagram-v2
 
 # 3. AI Engineering
 
-## 3.1. AI Puzzle Generator
-
-### 3.1.1. Model Integration & Scheduler
-* **Gemini flash-lite 모델 API 연동**<br>
-  무료 할당량(500 RPD)을 보유한 `gemini-3.1-flash-lite` LLM을 백엔드 스케줄러와 통합했습니다. 매일 새벽 04:17에 비활성 상태(`active = false`)로 퍼즐 후보를 생성해 DB에 안전하게 적재하며, 5초 지연 시간 및 3회 자동 재시도 장치로 Rate Limit 제한을 통제합니다.
-
-### 3.1.2. Automated Validation Pipeline
-* **논리해 자동 검증 및 정합성 제어**<br>
-  유저가 찍어서 퍼즐을 맞추는 오류를 원천 차단하기 위해 Java 백엔드 단에 DFS 백트래킹 기반의 `isLogicalOnly(grid)` 알고리즘을 구현했습니다. 논리적인 추론만으로 정답에 도달할 수 있는지 판단하고, 5회 연속 후보 세트 통과 실패 시 예외를 던지는 품질 가드레일을 구축하여 완성된 퍼즐만 00:00에 노출합니다.
+## 3.1. AI Puzzle Pipeline
+* **자동 생성 스케줄러**:
+  새벽 04:17마다 `gemini-3.1-flash-lite` LLM API를 호출하여 신규 퍼즐 레이아웃을 생성하며, API Rate Limit 방어를 위해 5초의 지연 간격과 3회의 재시도 장치를 백엔드에 장착했습니다.
+* **논리해 자동 검증**:
+  AI가 생성한 퍼즐 중 단순 찍기로 풀 수 있는 오출제 건을 필터링하기 위해, Java 백엔드 단에 DFS 백트래킹 기반의 `isLogicalOnly(grid)` 추론 검증 알고리즘을 이식하여 무결성 품질 가드레일을 구축했습니다.
 
 ---
 
 ## 3.2. AI Governance
-
-### 3.2.1. Client-Side Rating System
-* **👍 / 👎 실시간 피드백 카드**<br>
-  퍼즐 클리어 시 캔버스 하단 플로팅 카드 위젯(Glassmorphism 및 반응형 컬러 애니메이션)을 노출하여 사용자의 퍼즐 클리어 만족도를 직관적으로 평가 및 수집합니다.
-
-### 3.2.2. Backoffice Monitoring & Cascading Deletes
-* **만족도 통계 기반 즉각 삭제**<br>
-  수집된 평점은 데이터베이스 `stages` 테이블의 `upvotes`/`downvotes`에 기록되며, 백오피스 테이블에서 SVG Outline 평점 그래픽으로 통계화됩니다. 품질이 미달되거나 왜곡된 AI 생성 퍼즐은 관리자가 식별하여 즉시 Hard Delete(Cascade)할 수 있습니다.
-
-### 3.2.3. AI Agentic Development & Governance
-* **AI 에이전트(Antigravity) 협업**<br>
-  자율 코딩 에이전트 `Antigravity`를 기획·구현·TDD 테스트·관제 템플릿 배포의 전 과정에 동참시켜 수동 개발 영역을 자동화했습니다.
-* **에이전트 거버넌스 규칙 (.agents/rules/)**<br>
-  에이전트와 인간 개발자가 협업 시 일관된 설계 사상과 운영 안정성을 유지하기 위해 `.agents/rules/` 하위에 명시적인 프로젝트 거버넌스 규칙을 정의하여 관리합니다.
+* **피드백 루프**:
+  유저의 평점(👍/👎) 피드백 카드가 DB `stages` 테이블에 기록되며, 백오피스 대시보드에서 평점 현황을 식별할 수 있습니다.
+* **수동 강제 삭제**:
+  품질 미달이나 기형적인 퍼즐로 판단되면, 관리자가 백오피스 대시보드에서 연쇄 삭제(Cascading Delete)를 통해 즉각 Hard Delete할 수 있는 관리 장치를 도입했습니다.
+* **에이전트 거버넌스 규칙 (.agents/rules/)**:
+  AI 코딩 에이전트와 협업하여 지속 가능한 리스크 관리 및 고신뢰성 코딩 컨벤션을 준수하기 위해 정의된 파일 목록입니다:
 
   | 규칙 파일 | 주요 관리 목적 및 정책 요약 | 형상 추적 여부 |
   | :--- | :--- | :--- |
@@ -459,13 +447,10 @@ stateDiagram-v2
 ## 3.3. Troubleshooting
 
 ### 3.3.1. AI 생성 퍼즐 파싱 장애 복구
-* **배경**<br>
-  데일리 퍼즐 생성 중, 초경량 LLM 모델인 `gemini-3.1-flash-lite`가 30x30 대형 그리드(900개 셀) 연산 결과물 생성 시 응답 지연을 방지하기 위해 표준 JSON 포맷 대신 `Array(30).fill(0)` 등 JavaScript 배열 생성 문법을 반환하여 백엔드 Jackson 역직렬화 오류(`JsonParseException`) 및 배치 스케줄러 전면 중단 장애 발생 ([Daily Puzzle Failure Report](./docs/incidents/20260701_daily_puzzle_generation_failure.md)).
-* **해결 방안**<br>
-  - **프롬프트 가드레일 강화**<br>
-    AI 프롬프트에 `MUST be a literal 2D JSON array` 제약 명시 및 루프, 코드식 생략 표현 사용을 전면 불허하는 지침 추가.
-  - **대형 그리드 생성 모델 부하 제어**<br>
-    가로/세로 25개 이상의 대형 퍼즐 생성 시 AI 모델이 데이터를 생략하려는 경향성을 줄이기 위해 생성 후보군(Candidate) 개수를 5개에서 2개로 조정하여 출력 안전성 확보.
+* **배경**:
+  초경량 LLM 모델이 30x30 대형 그리드 생성 시 응답 지연을 아끼기 위해 JSON 포맷 대신 `Array(30).fill(0)` 같은 JS 문법을 변형 반환하여 백엔드 Jackson 역직렬화 오류(`JsonParseException`) 및 배치 스케줄러 중단 장애 발생 ([Daily Puzzle Failure Report](./docs/incidents/20260701_daily_puzzle_generation_failure.md)).
+* **해결 방안**:
+  AI 프롬프트에 `MUST be a literal 2D JSON array` 제약 가드레일을 주입하고, 대형 퍼즐 생성 시 출력 토큰 안전성 확보를 위해 후보군(Candidate) 개수를 5개에서 2개로 축소 조절하여 파싱 신뢰성을 100%로 확보함.
 
 ---
 
