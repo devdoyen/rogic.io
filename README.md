@@ -16,16 +16,42 @@
 - [🛠 Technology Stack](#-technology-stack)
 - [1. Infrastructure & Cloud Engineering](#1-infrastructure--cloud-engineering)
   - [1-1. System Architecture](#1-1-system-architecture)
+    - [1-1-1. High-Level Diagram](#1-1-1-high-level-diagram)
+    - [1-1-2. Component Specification](#1-1-2-component-specification)
+    - [1-1-3. Resource Dependency Graph](#1-1-3-resource-dependency-graph)
   - [1-2. Cost Optimization & Technical Trade-offs](#1-2-cost-optimization--technical-trade-offs)
+    - [1-2-1. Compute Resource Downsizing](#1-2-1-compute-resource-downsizing)
+    - [1-2-2. High Availability & Load Balancer Elimination](#1-2-2-high-availability--load-balancer-elimination)
+    - [1-2-3. Database Cost Minimization & Replication](#1-2-3-database-cost-minimization--replication)
   - [1-3. Network & Security Architecture](#1-3-network--security-architecture)
+    - [1-3-1. Network Isolation](#1-3-1-network-isolation)
+    - [1-3-2. Access Control](#1-3-2-access-control)
+    - [1-3-3. SSL/TLS Certificate Management](#1-3-3-ssltls-certificate-management)
+    - [1-3-4. State Management Security](#1-3-4-state-management-security)
   - [1-4. Observability & SRE (Site Reliability Engineering)](#1-4-observability--sre-site-reliability-engineering)
+    - [1-4-1. Metric Collection & Scraping](#1-4-1-metric-collection--scraping)
+    - [1-4-2. Centralized Log Management](#1-4-2-centralized-log-management)
+    - [1-4-3. Alerting & Notification](#1-4-3-alerting--notification)
+    - [1-4-4. SLO (Service Level Objective) Visualization](#1-4-4-slo-service-level-objective-visualization)
 - [2. Continuous Integration & Delivery (CI/CD)](#2-continuous-integration--delivery-cicd)
   - [2-1. Pipeline Workflow](#2-1-pipeline-workflow)
+    - [2-1-1. GitOps Flowchart](#2-1-1-gitops-flowchart)
+    - [2-1-2. Pipeline Trigger Optimization](#2-1-2-pipeline-trigger-optimization)
   - [2-2. Build & Artifact Management](#2-2-build--artifact-management)
+    - [2-2-1. Compute Offloading](#2-2-1-compute-offloading)
+    - [2-2-2. Static Asset Delivery](#2-2-2-static-asset-delivery)
   - [2-3. Quality Gate & Release Automation](#2-3-quality-gate--release-automation)
+    - [2-3-1. Automated End-to-End Testing](#2-3-1-automated-end-to-end-testing)
+    - [2-3-2. Deployment Gate & Approvals](#2-3-2-deployment-gate--approvals)
+    - [2-3-3. Automated Versioning](#2-3-3-automated-versioning)
 - [3. AI Engineering & Intelligent Systems](#3-ai-engineering--intelligent-systems)
   - [3-1. AI Puzzle Generator & Logical Validation Pipeline](#3-1-ai-puzzle-generator--logical-validation-pipeline)
+    - [3-1-1. Model Integration & Scheduler](#3-1-1-model-integration--scheduler)
+    - [3-1-2. Automated Validation Pipeline](#3-1-2-automated-validation-pipeline)
   - [3-2. User Feedback Loop & Governance System](#3-2-user-feedback-loop--governance-system)
+    - [3-2-1. Client-Side Rating System](#3-2-1-client-side-rating-system)
+    - [3-2-2. Backoffice Monitoring & Cascading Deletes](#3-2-2-backoffice-monitoring--cascading-deletes)
+    - [3-2-3. AI Agentic Development & Governance](#3-2-3-ai-agentic-development--governance)
 - [💻 Local Development Setup](#-local-development-setup)
 
 ---
@@ -46,8 +72,8 @@
 ## 1. Infrastructure & Cloud Engineering
 
 ### 1-1. System Architecture
-극단적인 비용 최적화를 유지하면서 가용성과 복구 속도를 보장하도록 설계된 인프라 구조입니다.
 
+#### 1-1-1. High-Level Diagram
 ```mermaid
 graph TD
     subgraph "AWS Cloud (ap-northeast-2)"
@@ -76,58 +102,82 @@ graph TD
     GC_CW[(Grafana Cloud CloudWatch DS)] -->|Pull logs| CWL
 ```
 
-* **Frontend Hosting & Multi-Origin CDN**: Vite 정적 빌드 자산을 `Amazon S3`에 호스팅(OAC 보안 적용)하고, `Amazon CloudFront` CDN을 통해 글로벌 배포합니다.
-* **Backend API & E2E HTTPS**: EC2 상에서 Spring Boot 앱이 도커 컨테이너로 기동되며, Nginx가 리버스 프록시 및 SSL/TLS 종단점으로 전면 배치됩니다. 전용 백엔드 서브도메인(`api.rogic.io` / `api.stage.rogic.io`)과 CDN Multi-Origin 규칙을 설정하여 전 구간 HTTPS 통신을 보장합니다.
-* **Telemetry**: 호스트 내 Alloy 에이전트를 배제하고 Nginx 토큰 인증 헤더(`Authorization: Bearer`) 검증을 통해 Prometheus Actuator 경로만 외부에 개방하여 Grafana Cloud가 직접 수집(Agentless Pull)하도록 설계했습니다.
+#### 1-1-2. Component Specification
+* **Frontend Static Hosting**: Vite 컴파일 결과물을 `Amazon S3` 버킷(OAC 차단)에 호스팅하고, `Amazon CloudFront` CDN을 통해 정적 웹 리소스를 배포합니다.
+* **Backend API Gateway**: Spring Boot 애플리케이션을 단일 EC2 인스턴스 내 Docker 컨테이너로 가동하며, 프론트엔드 레벨에는 Nginx 리버스 프록시를 배치하여 `api.rogic.io` / `api.stage.rogic.io` 경로에 SSL/TLS 종단 처리를 수행합니다.
+* **Telemetry Proxy**: 수집 데몬(Alloy) 설치를 배제하고 Nginx Bearer 토큰 검증을 이용해 Prometheus Actuator 엔드포인트를 외부에 간접 노출하여 수집 부하를 제거했습니다.
 
+#### 1-1-3. Resource Dependency Graph
 <details>
 <summary>🔍 Click to view Inframap Generated Resource Dependency Graphs</summary>
 
-#### Staging Environment Infrastructure Graph
-![Staging Infrastructure Graph](./docs/images/staging-infra.png)
-
-#### Production Environment Infrastructure Graph
-![Production Infrastructure Graph](./docs/images/production-infra.png)
+* **Staging Environment Infrastructure Graph**
+  ![Staging Infrastructure Graph](./docs/images/staging-infra.png)
+* **Production Environment Infrastructure Graph**
+  ![Production Infrastructure Graph](./docs/images/production-infra.png)
 
 </details>
 
-### 1-2. Cost Optimization & Technical Trade-offs
-운영 비용 최소화와 실무급 복구 가용성 확보 간의 절충안 설계입니다.
+---
 
-* **ALB(Load Balancer) 배제를 통한 가용성 타협**
-  * **비용 절감**: AWS ALB 고정 비용(월 약 $20) 대신 Route 53 DNS와 고정 탄력적 IP(EIP) 단일 EC2 구조로 타협했습니다.
-  * **보완 대책**: 장애 발생 시 건강한 물리 서버로 마이그레이션 기동을 트리거하는 **EC2 Auto Recovery**를 연동하고, 재해 발생 시 IaC 코드로 5분 내 복구하는 **복구 지향형 아키텍처**를 수립했습니다.
-  * **Active-Active 무중단 배포**: GraalVM Native Image 도입으로 컨테이너당 메모리를 30MB 안팎으로 경량화하여, 배포 완료 후에도 Blue/Green 컨테이너가 모두 가동되는 Active-Active 구조를 유지합니다.
-* **PostgreSQL 컨테이너 및 S3 백업 파이프라인 (RDS 대체)**
-  * **비용 절감**: AWS RDS 구동 비용(월 약 $15~20) 대신 EC2 내 PostgreSQL 컨테이너를 구동합니다.
-  * **보완 대책**: 매 6시간마다 DB 덤프를 압축해 S3로 이중화 백업하는 스크립트/크론탭을 연동하고, S3 버킷에 30일 경과 데이터 자동 삭제 수명 주기(Lifecycle Rules)를 적용했습니다.
-* **자원 제약 환경에 따른 컴퓨팅 및 모니터링 최적화**
-  * **비용 절감**: 월 $3.5 수준의 극저비용 인스턴스인 `t3.nano` / `t4g.nano` (512MB RAM) 환경을 타겟팅합니다.
-  * **보완 대책**:
-    * **AOT 컴파일 및 Reflection 힌트**: Spring Boot 애플리케이션에 GraalVM AOT 컴파일을 적용하고, Jackson 역직렬화 DTO 클래스들의 Reflection 런타임 힌트([NemologicRuntimeHints.java](file:///c:/Users/82107/dev/project/nemologic/backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java))를 명시적으로 등록해 AOT 빌드 오류를 방지했습니다.
-    * **Docker Garbage Collection 자동화**: 디스크 고갈 방지를 위해 매일 새벽 3시마다 72시간 동안 미사용된 컨테이너 레이어, 볼륨, 이미지 캐시를 강제 소거하는 prune 스크립트를 Ansible로 자동 배포했습니다.
+### 1-2. Cost Optimization & Technical Trade-offs
+
+#### 1-2-1. Compute Resource Downsizing
+* **t3a.nano/t4g.nano (512MB RAM) 타겟팅**: 월 $3.5 대 컴퓨팅 인스턴스 사양에 맞추어 리소스를 튜닝했습니다.
+* **GraalVM Native Image 메모리 최적화**: 런타임 메모리 사용량을 컨테이너당 30MB 이하로 낮추어, 초경량 컴퓨팅 환경 내에서도 배포 시 두 버전의 Spring Boot 컨테이너를 함께 띄울 수 있는 기반을 다졌습니다.
+  * **Jackson 역직렬화 DTO Reflection 힌트**: Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](file:///c:/Users/82107/dev/project/nemologic/backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
+* **Docker Garbage Collection 자동화**: 디스크 용량 고갈 장애 예방을 위해 새벽 3시마다 72시간 경과 도커 리소스를 강제 소거하는 prune 스크립트를 크론탭으로 자동 배치했습니다.
+
+#### 1-2-2. High Availability & Load Balancer Elimination
+* **ALB 제거 및 고정 EIP 구성**: 월 $20 상당의 AWS ALB를 배제하고 DNS 도메인(Route 53)과 고정 Elastic IP를 매핑했습니다.
+* **EC2 Auto Recovery 및 복구 지향 아키텍처(ROA)**: ALB 부재에 따른 장애 전파를 줄이기 위해 시스템 알람 연동 호스트 자동 복구(Auto Recovery)를 결합하고, 재해 복구 시 IaC 코드를 활용해 5분 이내 인프라를 복원하도록 구성했습니다.
+
+#### 1-2-3. Database Cost Minimization & Replication
+* **Self-hosted PostgreSQL 컨테이너**: 월 $15~20 이상의 RDS 비용을 아끼기 위해 EC2에 DB 컨테이너를 기동했습니다.
+* **S3 정기 백업 및 Lifecycle 제어**: 6시간 주기로 DB dump 데이터를 S3로 업로드하는 쉘 스크립트와 Cron을 배포하고, S3 백업 버킷에 30일 경과 백업 자동 파기 정책을 적용했습니다.
+
+---
 
 ### 1-3. Network & Security Architecture
-* **VPC 사설망 격리**: Staging VPC(`10.1.0.0/16`, 서브넷 `10.1.1.0/24`)와 Production VPC(`10.0.0.0/16`, 서브넷 `10.0.1.0/24`)를 독립적인 VPC망으로 완전 분리하여 물리적으로 격리했습니다.
-* **보안 그룹 최소 권한 권장**: SSH(22), Nginx HTTP(80), HTTPS(443), Spring Boot HTTP(8080) 포트 인입만 보안 그룹을 통해 수용하고 아웃바운드는 전면 오픈했습니다.
-* **HTTPS 보안 및 인증서 자동 갱신**: Let's Encrypt 멀티도메인 인증서를 연동하고 HTTP(80) 301 강제 HTTPS 리다이렉트를 Nginx에 구현했으며, pre/post hooks 쉘 스크립트를 Certbot에 통합 구성해 자동 갱신되도록 조치했습니다.
-* **형상 잠금 (State Locking)**: S3 버킷과 DynamoDB 테이블(`LockID` 해시 키)을 테라폼 원격 백엔드로 결합하여 배포 시 발생하는 형상(State) 충돌을 차단했습니다.
+
+#### 1-3-1. Network Isolation
+* **물리 격리형 VPC 구성**: Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 상호 간의 간섭을 완전히 격리했습니다.
+
+#### 1-3-2. Access Control
+* **보안 그룹 최소화 권장**: SSH(22), Nginx HTTP/S(80/443), Spring(8080) 이외의 외부 불필요한 포트 인바운드를 SG 방화벽 규칙을 통해 원천적으로 차단했습니다.
+
+#### 1-3-3. SSL/TLS Certificate Management
+* **Let's Encrypt 및 Certbot 갱신**: HTTPS(443) 통신 및 HTTP(80) 301 리다이렉트 정책을 구현하였으며, 3개월 만료 인증서 자동 갱신을 지원하는 pre/post 쉘 스크립트 훅을 Certbot 데몬에 바인딩했습니다.
+
+#### 1-3-4. State Management Security
+* **테라폼 원격 상태 잠금**: AWS S3 버킷과 DynamoDB 테이블(`LockID`)을 Backend로 연동해 개발자 배포 시 형상 관리(State)의 동시 수정 충돌을 원천 방지했습니다.
+
+---
 
 ### 1-4. Observability & SRE (Site Reliability Engineering)
-* **Agentless Pull 메트릭 수집**: Alloy 에이전트를 제거하고, Node Exporter와 Actuator Prometheus 엔드포인트를 Nginx Bearer Token 검증과 결합해 외부 Grafana Cloud로 원격 Scrape 되도록 개방했습니다.
-* **Docker awslogs 드라이버 연동**: 컨테이너 표준 출력을 AWS CloudWatch Logs `/aws/ec2/nemologic` 로그 그룹으로 직접 Offload하여 로컬 디스크/메모리 점유를 최소화하고 Logs Metric Filter 경보 및 SNS 이메일 전파망을 구축했습니다.
-* **Synthetic Monitoring & SLA 대시보드 (IaC)**:
-  * 도쿄, 싱가포르, 시드니 리전 Probes가 `/actuator/health` 엔드포인트를 60초 주기로 검증하며, 3개 프로브 동시 실패 감지 시 긴급 장애 이메일이 발송되도록 Grafana rule을 코드로 정의했습니다.
-  * 통합 대시보드 스키마([current_dashboard.json](file:///c:/Users/82107/dev/project/nemologic/infra/monitoring/current_dashboard.json))에 SRE 관제의 핵심인 기간별 SLA 지표(Incident Count, Uptime SLA, MTTR, MTBF)를 복구 탑재하여 3열 카드형 레이아웃 형태로 배치 관리하고 있습니다.
-  * **대시보드 레이아웃 확인용 퍼블릭 링크**: [Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380) 링크를 통해 구축된 모니터링 시스템의 시각화 레이아웃 및 차트 배치 구조를 외부에서도 직접 확인해 볼 수 있습니다. (보안 정책 상 실제 메트릭 데이터 대신 구조 확인용 임의 지표가 노출됩니다.)
 
-#### [부록] SLA 및 신뢰성 분석을 위한 PromQL 수식 정의
-* **실시간 가동 여부 (API Health Status)**: `sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})`
-* **30일 평균 가용성 가동률 (30-Day Service Availability)**: `avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) * 100`
-* **30일 누적 장애 발생 건수 (30-Day Incident Count)**: `changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2`
-* **평균 복구 시간 (MTTR, Mean Time To Recovery)**: `((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2, 1)`
-* **평균 고장 간격 (MTBF, Mean Time Between Failures)**: `(sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2, 1)`
+#### 1-4-1. Metric Collection & Scraping
+* **Agentless Pull 아키텍처**: 호스트 리소스를 소모하는 수집기(Alloy) 대신, Nginx 프록시가 `Authorization: Bearer` 헤더 토큰을 대조 검증하는 가상 경로를 열고 외부 Grafana Cloud Mimir가 직접 긁어가도록 구조화했습니다.
 
+#### 1-4-2. Centralized Log Management
+* **awslogs Docker 드라이버 연동**: 컨테이너 출력을 AWS CloudWatch Logs(`/aws/ec2/nemologic`)로 실시간 포워딩하여 디스크 점유율을 줄였으며, 헬스체크 및 메트릭 수집 API 경로는 Nginx Access Log에서 제외(off) 처리했습니다.
+
+#### 1-4-3. Alerting & Notification
+* **장애 감지 경보 연동**: CloudWatch Logs Metric Filter 오류 발생 시 AWS SNS를 경유해 개발자 메일로 상황이 실시간 통보되며, 도쿄·싱가포르·시드니 리전에서 동시에 `/actuator/health` 헬스체크 실패가 감지되면 Grafana 경보가 트리거됩니다.
+
+#### 1-4-4. SLO (Service Level Objective) Visualization
+* **통합 관제 SLA 대시보드 ([current_dashboard.json](file:///c:/Users/82107/dev/project/nemologic/infra/monitoring/current_dashboard.json))**:
+  SRE 핵심 품질 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 복구 탑재하여 3열 카드 레이아웃에 맞춰 배치했습니다.
+  * **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)** (레이아웃 구성 예시용 퍼블릭 링크, 보안 가공된 임의의 지표 노출)
+
+##### [부록 1] SLA 지표 PromQL 연산 수식
+* **API Health Status**: `sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})`
+* **30-Day Service Availability**: `avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) * 100`
+* **30-Day Incident Count**: `changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2`
+* **MTTR (Mean Time To Recovery)**: `((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2, 1)`
+* **MTBF (Mean Time Between Failures)**: `(sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[30d]) / 2, 1)`
+
+##### [부록 2] 가용성 및 재해 복구 지표 비교표
 | 지표 | 현재 사양 (단일 EC2 + S3 백업) | 향후 개선 목표 (Multi-AZ ALB + ECS/RDS) |
 | :--- | :--- | :--- |
 | **RPO (복구 시점)** | **6시간** (하루 4회 S3 백업 소산) | **5분 이내** (RDS Multi-AZ 및 PITR 자동 활성화) |
@@ -140,8 +190,8 @@ graph TD
 ## 2. Continuous Integration & Delivery (CI/CD)
 
 ### 2-1. Pipeline Workflow
-개발 브랜치 push부터 실서버 운영 릴리즈까지 전체 수명 주기를 제어하는 선언적 GitOps 배포 워크플로우를 가동하고 있습니다.
 
+#### 2-1-1. GitOps Flowchart
 ```mermaid
 stateDiagram-v2
     direction LR
@@ -196,37 +246,62 @@ stateDiagram-v2
     Production --> [*] : Production Release Complete
 ```
 
-* **Path-Filtered Executions**: 마크다운 문서나 인프라 설정 단독 수정 시 Gradle/Vite 애플리케이션 컴파일 단계를 우회하여 배포 대기 시간을 단축합니다.
-* **배포 동시성 제어 (Concurrency)**: Staging 배포 진행 중 추가 버그 수정 등으로 신규 커밋이 유입되는 즉시, 기존 진행 중이던 대기 상태 파이프라인을 자동 소거(`cancel-in-progress: true`)하여 배포 충돌을 차단합니다.
+#### 2-1-2. Pipeline Trigger Optimization
+* **경로 필터(Path Filtering)**: 단순 문서나 로컬 마크다운 수정 커밋 유입 시에는 빌드/컴파일 단계를 스킵하여 배포 속도를 최적화했습니다.
+* **배포 대기 취소(Concurrency)**: Staging 진행 중 추가 커밋이 수입되는 즉시 이전 배포 작업을 강제 취소(`cancel-in-progress: true`)해 배포의 꼬임 현상을 방지했습니다.
+
+---
 
 ### 2-2. Build & Artifact Management
-* **GitHub Actions & GHCR 빌드 오프로딩 (Backend)**:
-  512MB RAM 서버 자원의 컴파일 병목을 방지하기 위해 백엔드 빌드 과정을 GitHub Actions Runner(7GB RAM)로 오프로딩하고, 생성된 경량 GraalVM Native 바이너리 Docker 이미지를 GitHub Container Registry (GHCR)에 버전 태그(`sha-${{ github.sha }}`) 형식으로 푸시합니다. 운영 서버는 Docker pull만 실행하여 컨테이너 기동 오버헤드를 획기적으로 줄였습니다.
-* **Vite Static Asset 동적 업로드 & 캐시 무효화 (Frontend)**:
-  Actions 빌드 러너에서 정적 압축된 프론트 자산을 S3 버킷에 직접 덮어쓰기 동기화(`aws s3 sync`)한 후 CloudFront Edge Cache Invalidation을 실행해 가볍고 빠른 배포를 완수했습니다.
+
+#### 2-2-1. Compute Offloading
+* **Actions Runner 컴파일 오프로딩**: 512MB 호스트 내부의 컴파일 한계를 극복하기 위해 GitHub Actions Runner(7GB RAM) 환경에서 GraalVM Native AOT 컴파일을 수행하고 완료 이미지(`sha-${{ github.sha }}`)를 GHCR에 업로드해 운영 노드의 메모리 부하를 방지했습니다.
+
+#### 2-2-2. Static Asset Delivery
+* **Vite Static Asset 동적 업로드**: 프론트엔드는 도커 이미지 생성 대신 컴파일된 정적 자산(index.html, JS 번들)을 S3 버킷으로 다이렉트 동기화(`aws s3 sync`)하고 CloudFront Edge 무효화(Invalidation)를 호출하는 초경량 정적 호스팅 배포 방식을 수립했습니다.
+
+---
 
 ### 2-3. Quality Gate & Release Automation
-* **Playwright 브라우저 E2E Gating**: Staging 환경(`stage.rogic.io`)에 자동 배포가 완료되는 즉시, Playwright 브라우저 E2E 테스트(`frontend/e2e/staging.spec.ts`)를 헤드리스 모드로 실행하여 홈 화면 렌더링, Canvas 상호작용 및 익명 레벨/XP를 100% 자동 검증해 통과한 경우에만 프로모션 대기 상태로 이행합니다.
-* **수동 승인 게이트 (Manual Approval Gate)**: Staging E2E 검증이 성공 완료되면 파이프라인이 일시 중지되며, 관리자(Admin)가 GitHub UI 상에서 직접 승인 버튼을 클릭해야만 최종 Production 인프라 프로비저닝 및 멱등적 Ansible 플레이북 배포 단계로 롤링업을 실행합니다.
-* **Auto-SemVer 및 GitHub Release 자동 발행**: Production 배포 성공 즉시, 이전 릴리즈 태그 이후의 커밋 메시지 규칙(`feat:`, `fix:`, BREAKING CHANGE)을 동적 분석하여 메이저/마이너/패치 SemVer 버전 태그를 자동으로 연산 및 커밋하고, 관련 Changelog와 변경 노트를 작성한 GitHub Release를 완전 자동으로 발행합니다.
+
+#### 2-3-1. Automated End-to-End Testing
+* **Playwright E2E 테스트**: Staging 배포 완료 즉시 Playwright 브라우저(`frontend/e2e/staging.spec.ts`)를 헤드리스 기동하여 홈 화면 로딩, 캔버스 노노그램 상호작용 및 익명 가입 로직을 실제 유저 브라우저 환경에서 자동 점검해 품질 게이트를 가동합니다.
+
+#### 2-3-2. Deployment Gate & Approvals
+* **수동 승인 배포(Manual Gate)**: Staging 테스트가 100% 성공하면 빌드를 일시 정지시키고 관리자가 직접 GitHub Environment 상에서 릴리즈를 검증/승인해야만 Production으로 롤링 배포를 승격시키는 안전 장치를 구성했습니다.
+
+#### 2-3-3. Automated Versioning
+* **Auto-SemVer 및 Release 자동 작성**: 커밋 메시지 토큰(`feat:`, `fix:`) 규격을 파싱해 SemVer 버전을 갱신하고, 변경 이력(Changelog) 작성과 GitHub Release 릴리즈 발행 과정을 100% 자동화했습니다.
 
 ---
 
 ## 3. AI Engineering & Intelligent Systems
 
 ### 3-1. AI Puzzle Generator & Logical Validation Pipeline
-* **Gemini API 기반 백그라운드 스케줄러**: 일일 무료 할당량(500 RPD)을 지닌 `gemini-3.1-flash-lite` 모델을 Spring Boot 스케줄러와 연동했습니다. 매일 새벽 04:17에 비활성 상태(`active = false`)로 퍼즐 후보를 생성해 DB에 안전하게 보급하며, API Rate Limit 방지를 위해 5초 지연 시간 및 3회 자동 재시도 루프를 설계해 장애 리스크를 통제했습니다.
-* **100% 논리형 퍼즐(Logical-only) 검증 파이프라인**: 유저가 찍어서 맞추는 DFS 백트래킹(Backtracking)의 모호함 없이, 오직 논리적 유추로만 100% 풀이가 완수되는지 확인하는 `isLogicalOnly(grid)` 검증 알고리즘을 Java 백엔드 단에 구현했습니다. 1회 API 호출로 5개 후보 퍼즐 세트를 수집한 후, 해당 검증을 완벽하게 통과한 고품질 퍼즐만 승인 대기 풀에 적재하고, 5회 연속 후보군 전체 실패 시 예외를 던져 데이터 신뢰도를 보장했습니다.
+
+#### 3-1-1. Model Integration & Scheduler
+* **Gemini flash-lite 모델 API 연동**: 무료 할당량(500 RPD)을 보유한 `gemini-3.1-flash-lite` LLM을 백엔드 스케줄러와 통합했습니다. 매일 새벽 04:17에 비활성 상태(`active = false`)로 퍼즐 후보를 생성해 DB에 안전하게 적재하며, 5초 지연 시간 및 3회 자동 재시도 장치로 Rate Limit 제한을 통제합니다.
+
+#### 3-1-2. Automated Validation Pipeline
+* **논리해 자동 검증 및 정합성 제어**: 유저가 찍어서 퍼즐을 맞추는 오류를 원천 차단하기 위해 Java 백엔드 단에 DFS 백트래킹 기반의 `isLogicalOnly(grid)` 알고리즘을 구현했습니다. 논리적인 추론만으로 정답에 도달할 수 있는지 판단하고, 5회 연속 후보 세트 통과 실패 시 예외를 던지는 품질 가드레일을 구축하여 완성된 퍼즐만 00:00에 노출합니다.
+
+---
 
 ### 3-2. User Feedback Loop & Governance System
-* **👍 / 👎 실시간 플레이어 피드백 카드**: 퍼즐 클리어 시 캔버스 하단 플로팅 카드 위젯(Glassmorphism 다크 테마 및 청록/적색 네온 점등 애니메이션)을 렌더링하여 유저가 해당 퍼즐을 직관적으로 평가할 수 있게 했습니다. 평가 완료 시 `✨ Thank You!` 메시지로 부드럽게 페이드아웃됩니다.
-* **백오피스 만족도 기반 즉각 삭제**: 클리어 피드백은 데이터베이스 `stages` 테이블의 `upvotes`, `downvotes` 컬럼에 실시간 반영되며, 관리자 화면(Backoffice) 테이블에 깔끔한 가로형 SVG Outline 피드백 지표로 실시간 수집되어 평점이 나쁘거나 형태가 훼손된 퍼즐을 관리자가 식별하여 즉시 Hard Delete(Cascade)할 수 있습니다.
-* **AI 에이전트(Antigravity) 페어 프로그래밍**: Google DeepMind의 Advanced Agentic Coding 기술이 탑재된 자율 AI 코딩 에이전트인 `Antigravity`를 개발 전반에 적극 페어링하여 개발 생산성을 높이고 릴리즈 주기를 단축했습니다.
-* **AI 거버넌스 및 자율 조율 규격 (.agents/rules/)**: AI 에이전트의 작동에 완결성 높은 시스템 통제를 적용하여 규칙을 이탈하는 것을 방지했습니다.
-  * **[workflow-and-tdd.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/workflow-and-tdd.md)**: 코어 비즈니스 로직 구현 전 단위 테스트 작성을 강제하고, 작업 종료 후 [docs/progress_state.md](file:///c:/Users/82107/dev/project/nemologic/docs/progress_state.md) 상태 맵을 반드시 동기화하도록 유도합니다.
-  * **[architecture-and-tech-stack.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/architecture-and-tech-stack.md)**: 작업 시 frontend, backend, infra 간 혼재된 수정을 차단하고 Vue의 Reactivity와 논리 연산 간의 디커플링을 유지합니다.
-  * **[safety-and-communication.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/safety-and-communication.md)**: 모호한 설계 요구 사항이 발생한 즉시 에이전트가 혼자 추측해 코드를 구현하는 행위를 전면 금지하며, 즉시 중단하고 개발자에게 직접 승인을 요구하도록 조치합니다.
-  * **[incident-reporting.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/incident-reporting.md)**: 런타임 장애나 빌드 에러, DB 마이그레이션 실패 등 치명적 이슈가 복구된 경우, `docs/incidents/` 경로에 포스트모템(장애 원인 분석, 타임라인 및 재발 방지 대책) 문서를 자동 작성·보관하도록 명문화했습니다.
+
+#### 3-2-1. Client-Side Rating System
+* **👍 / 👎 실시간 피드백 카드**: 퍼즐 클리어 시 캔버스 하단 플로팅 카드 위젯(Glassmorphism 및 반응형 컬러 애니메이션)을 노출하여 사용자의 퍼즐 클리어 만족도를 직관적으로 평가 및 수집합니다.
+
+#### 3-2-2. Backoffice Monitoring & Cascading Deletes
+* **만족도 통계 기반 즉각 삭제**: 수집된 평점은 데이터베이스 `stages` 테이블의 `upvotes`/`downvotes`에 기록되며, 백오피스 테이블에서 SVG Outline 평점 그래픽으로 통계화됩니다. 품질이 미달되거나 왜곡된 AI 생성 퍼즐은 관리자가 식별하여 즉시 Hard Delete(Cascade)할 수 있습니다.
+
+#### 3-2-3. AI Agentic Development & Governance
+* **AI 에이전트(Antigravity) 협업**: 자율 코딩 에이전트 `Antigravity`를 기획·구현·TDD 테스트·관제 템플릿 배포의 전 과정에 동참시켜 수동 개발 영역을 자동화했습니다.
+* **에이전트 이탈 방지용 거버넌스 규칙 (.agents/rules/)**:
+  * **[workflow-and-tdd.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/workflow-and-tdd.md)**: 핵심 비즈니스 로직 수정 전 JUnit/Vitest 테스트 선행 작성(TDD) 규범 강제 및 `progress_state.md` 동기화 유도.
+  * **[architecture-and-tech-stack.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/architecture-and-tech-stack.md)**: Frontend/Backend/Infra 다중 레이어의 동시 이중 수정 차단 및 Vue Reactivity(Ref/Reactive)의 논리 연산 유출 방지.
+  * **[safety-and-communication.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/safety-and-communication.md)**: 요구사항이 모호한 즉시 임의 구현(No Guessing)을 전면 중지시키고 개발자 승인 대기.
+  * **[incident-reporting.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/incident-reporting.md)**: 장애 상황(빌드, 마이그레이션 실패 등) 복구 즉시 `docs/incidents/`에 YYYYMMDD 날짜 구조 포스트모템 장애보고서 자동 작성 및 보관 지침 명문화.
 
 ---
 
