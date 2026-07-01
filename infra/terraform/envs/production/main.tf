@@ -432,10 +432,7 @@ resource "aws_iam_role" "github_actions_production" {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = [
-              "repo:devdoyen/rogic.io:ref:refs/heads/main",
-              "repo:devdoyen/rogic.io:ref:refs/tags/v*"
-            ]
+            "token.actions.githubusercontent.com:sub" = "repo:devdoyen/rogic.io:ref:refs/*"
           }
         }
       }
