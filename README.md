@@ -426,7 +426,7 @@ stateDiagram-v2
 
 ## 3.3. Troubleshooting
 
-### 3.3.1. Gemini 초경량 모델의 데이터 생략(JS Array 초기화 표현식)으로 인한 JSON 역직렬화 장애 대응
+### 3.3.1. AI 생성 퍼즐 파싱 장애 복구
 * **배경**<br>
   데일리 퍼즐 생성 중, 초경량 LLM 모델인 `gemini-3.1-flash-lite`가 30x30 대형 그리드(900개 셀) 연산 결과물 생성 시 응답 지연을 방지하기 위해 표준 JSON 포맷 대신 `Array(30).fill(0)` 등 JavaScript 배열 생성 문법을 반환하여 백엔드 Jackson 역직렬화 오류(`JsonParseException`) 및 배치 스케줄러 전면 중단 장애 발생 ([Daily Puzzle Failure Report](./docs/incidents/20260701_daily_puzzle_generation_failure.md)).
 * **해결 방안**<br>
