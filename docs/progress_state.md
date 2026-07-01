@@ -117,8 +117,18 @@
   - **CI/CD 파이프라인 OIDC 전환 (Phase 2)**: [.github/workflows/ci-cd.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/ci-cd.yml)에서 전역 `permissions` 권한(`id-token: write`, `contents: read`)을 선언하여 OIDC JWT 발급 자격을 활성화함. 또한 모든 인프라 plan/apply 및 애플리케이션 deploy 잡(총 6개 잡)의 초반부에 `aws-actions/configure-aws-credentials` 단계를 이식하여 동적으로 1회용 STS 임시 보안 토큰을 AssumeRole하도록 스위칭함. 이에 따라 전역 및 개별 스텝에 하드코딩 주입되던 `AWS_ACCESS_KEY_ID` 및 `AWS_SECRET_ACCESS_KEY` 환경 변수를 파이프라인에서 완전히 Pruning 처리함.
   - **수동 배포 수립 및 더미 커밋 제거**: 소스 주석 수정으로 빌드를 트리거하는 임시방편(안티패턴)을 완전 극복하기 위해 `workflow_dispatch` 수동 기동 이벤트를 추가함. 수동 기동 시(`github.event_name == 'workflow_dispatch'`)에는 경로 감지(paths-filter) 조건과 관계없이 빌드, Docker 패키징, Staging/Production S3 동기화 및 호스트 배포 전 구간이 OIDC를 통해 강제 구동(Bypass)되도록 워크플로우 분기 로직을 리팩토링함.
 
+### 도커 네트워크 마이그레이션 중복 해제 에러 해결 (Step 42) - 완료
+- **해결 내역**:
+  - **현상**: Ansible 배포 파이프라인의 `Start Database service` 단계에서 `Error response from daemon: container ... is not connected to the network nemologic_backend-net` 에러를 뱉으며 배포가 실패함.
+  - **원인 분석**: `Force disconnect` 루프 내에 `nemologic-db` 컨테이너가 포함되어 있어 사전에 네트워크가 강제 분리되었고, 이로 인해 Docker Compose가 `db` 컨테이너 정지/기동을 위한 네트워크 상태 동기화 과정에서 에러를 발생시킴. 또한 이미 마이그레이션이 완료된 네트워크 환경에서도 매번 연결 강제 분리가 실행되어 다운타임 위협이 존재함.
+  - **해결 조치**:
+    1. [playbook.yml](file:///c:/Users/82107/dev/project/nemologic/infra/ansible/playbook.yml) 내에 `docker network inspect` 명령을 통해 해당 네트워크가 이미 `internal: true`로 마이그레이션 완료되었는지 여부를 동적으로 사전 검증하는 스텝을 신규 추가함 (`backend_net_internal`).
+    2. 네트워크가 아직 마이그레이션되지 않았을 때만 `Force disconnect` 태스크가 구동되도록 제어하여 배포 시 순단 리스크를 방지함.
+    3. `Force disconnect` 대상 컨테이너 루프에서 `nemologic-db`를 영구 제외하고, Docker Compose의 자체 제어(stop/recreate) 범위 내에서 네트워크 차단 및 갱신이 정상 처리되도록 고도화함.
+    4. Staging 환경의 `nemologic-db` 컨테이너 상태를 수동 복원(SSM 명령어를 통한 기존 컨테이너 강제 소거 및 `docker compose up -d db` 재생성)하여 `internal: true` 네트워크 격리가 무사히 정합성을 유지하도록 복원 완료함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **AWS IAM 최소 권한(Least Privilege) 수립 (Step 42)**: 생성된 Staging/Production GitHub OIDC IAM Role에 부착된 `AdministratorAccess` 전권 정책을 회수하고, Terraform 및 배포에 필요한 실제 최소 자원 권한으로 타이트하게 격하하는 커스텀 정책(IAM Policy) 설계 및 적용.
+- **AWS IAM 최소 권한(Least Privilege) 수립 (Step 43)**: 생성된 Staging/Production GitHub OIDC IAM Role에 부착된 `AdministratorAccess` 전권 정책을 회수하고, Terraform 및 배포에 필요한 실제 최소 자원 권한으로 타이트하게 격하하는 커스텀 정책(IAM Policy) 설계 및 적용.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.

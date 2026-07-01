@@ -276,14 +276,23 @@
         group: root
         mode: "0755"
 
+    - name: Check if backend-net is already internal
+      shell: |
+        docker network inspect nemologic_backend-net --format '{% raw %}{{.Internal}}{% endraw %}' 2>/dev/null || echo "false"
+      register: backend_net_internal
+      changed_when: false
+      failed_when: false
+      become: true
+
     - name: Force disconnect active backend containers from backend-net to resolve docker network migration locks
       shell: |
-        for container in nemologic-backend-blue nemologic-backend-green nemologic-backend-stage nemologic-db; do
+        for container in nemologic-backend-blue nemologic-backend-green nemologic-backend-stage; do
           if docker ps -q --filter "name=$container" | grep -q .; then
             echo "Disconnecting $container from backend-net"
             docker network disconnect -f nemologic_backend-net $container || true
           fi
         done
+      when: backend_net_internal.stdout | trim != 'true'
       failed_when: false
       become: true
 
