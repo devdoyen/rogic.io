@@ -513,3 +513,14 @@ npm install
 npm run dev
 ```
 * Frontend app will run on: `http://localhost:5173`
+
+## 4.3. Custom Development Rules & Guidelines
+본 프로젝트는 AI 코딩 에이전트와 인간 개발자가 협업 시 일관된 설계 사상과 운영 안정성을 유지하기 위해 `.agents/rules/` 하위에 명시적인 프로젝트 거버넌스 규칙을 정의하여 관리합니다. 에이전트는 작업 수행 시 아래의 모든 규정을 강제적으로 준수합니다.
+
+| 규칙 파일 | 주요 관리 목적 및 정책 요약 | 형상 추적 여부 |
+| :--- | :--- | :--- |
+| [architecture-and-tech-stack.md](.agents/rules/architecture-and-tech-stack.md) | 프론트/백엔드 디렉토리 격리, Canvas API 강제, Terraform/Ansible Staging 순차 배포 준수 | `Git Tracked` |
+| [documentation-guidelines.md](.agents/rules/documentation-guidelines.md) | 상대경로(file:// 금지) 사용, 마크다운 개행 규정, 비교 수치 기술 시 테이블(Table) 시각화 의무화 | `Git Tracked` |
+| [git-and-commit-guidelines.md](.agents/rules/git-and-commit-guidelines.md) | Conventional Commits 영문 소문자 prefix 규칙 준수, 로컬 커밋 자동 보존 및 원격 push 개발자 위임 | `Git Tracked (Force Added)` |
+| [workflow-and-tdd.md](.agents/rules/workflow-and-tdd.md) | 코어 로직 작성 시 TDD(Test-Driven Development) 선행 의무화 및 progress_state.md 수시 동기화 | `Git Tracked` |
+| [incident-reporting.md](.agents/rules/incident-reporting.md) | 장애 리포트 작성 시 3W1H 사상에 근거한 구체적 원인-결과 수치 명세 규칙 | `Git Tracked` |
