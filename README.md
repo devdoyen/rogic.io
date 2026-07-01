@@ -190,7 +190,7 @@ C4Container
 * **다계층 도커 브리지 네트워크 격리**<br>
   단일 EC2 인스턴스 내부 컨테이너 통신 시, 인터넷 개방점인 Nginx(`frontend-net`에만 소속)가 데이터베이스(`backend-net`에만 소속)에 직접 접근할 수 없도록 가상 네트워크를 이중 분리했습니다. 백엔드 API 컨테이너가 양쪽 네트워크의 다리 역할을 수행함으로써, Nginx 침투 시 DB에 직접 가해지는 SQL 주입 및 무작위 접속(횡적 이동, Lateral Movement) 위험을 구조적으로 제한합니다. 특히 데이터베이스가 상주하는 **`backend-net` 브리지망은 `internal: true` 옵션으로 인터넷 연결을 완전히 차단**하여, 해킹 시 내부 데이터베이스의 외부 C2 리버스 커넥션 수립이나 외부 데이터 유출(Exfiltration) 시도를 네트워크 레벨에서 원천 봉쇄했습니다. DB 백업은 호스트 단의 표준 출력 파이프라인(`docker exec pg_dump`)으로 중재 처리하므로 기능적 장애가 없습니다. (보안 로드맵: 향후 컨테이너 이미지의 Non-root User 실행 및 Read-Only root 파일시스템 제한 적용 예정)
 
-### 1.4.2. Access Control & Host Security
+### 1.4.2. Host Access Control
 * **SSM Session Manager 및 SSH(22) 포트 완전 차단**<br>
   EC2 호스트 터미널 접근 경로의 무작위 대입 공격과 SSH 키 유출 리스크를 제거하기 위해 인바운드 보안 그룹에서 SSH(22) 포트를 완전히 차단했습니다. 외부 직접 접속은 거부하고 IAM 자격 증명 기반의 AWS System Manager 세션을 경유해서만 터미널 접근이 가능하도록 구성했습니다.
 * **SSM 터널 캡슐화를 통한 Ansible SSH 인증**<br>
@@ -220,10 +220,13 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적
 | 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
 | :--- | :--- | :--- | :--- |
 | **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>Staging: `CloudWatchAgentServerPolicy` (관리형)<br>Production: `nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화, CloudWatch 로그 실시간 포워딩(Staging/Production 별 정책 차등 적용), DB 백업 S3 업로드 권한 제어 |
-| **CI/CD User (GitHub)** | IAM User Credentials | `AdministratorAccess` (또는 인프라 구축 권한)* | GitHub Secrets(`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) 자격 증명을 주입받아 Terraform 리소스 관리 및 S3 동기화 실행 |
+| **CI/CD Runner (GitHub)** | AWS OIDC (Keyless) | `AdministratorAccess` (커스텀 IAM Role 연임)* | `sts:AssumeRoleWithWebIdentity`를 통해 GitHub Actions OIDC 토큰으로 1회용 단기 자격 증명을 획득하여 Terraform 및 배포 수행 (Secret Key 하드코딩 배제) |
 
-> [!WARNING]
-> \* **CI/CD 권한 거버넌스 로드맵**: 현재 GitHub Actions 러너에는 Terraform을 통한 리소스 전체 배포(VPC, EC2, S3, DynamoDB, IAM Role 등)를 위해 `AdministratorAccess`급 권한이 임시 부여되어 있어 완전한 최소 권한 설계와 거리가 있습니다. 향후 스프린트에서 인프라 변경 범위에 부합하도록 IAM Policy를 세분화하여 제한하고, 하드코딩된 Secret 키가 필요 없는 OIDC 역할 연임 방식(AssumeRole)으로 전환할 예정입니다.
+##### 1.4.2.2.1. OIDC 무키(Keyless) 인증 설계<br>
+  하드코딩된 AWS API Access Key 사용을 지양하고, GitHub OIDC(OpenID Connect) 연동을 수립하여 매 빌드 및 배포 시점에 AWS Security Token Service(STS)로부터 1회용 단기 자격 증명을 획득(AssumeRole)합니다. 이로써 자격 증명 유출 경로를 원천 차단하고 보안 안전성을 확보했습니다.
+
+##### 1.4.2.2.2. CI/CD 권한 최소화 로드맵<br>
+  현재 GitHub Actions OIDC Role에는 Terraform을 통한 전체 리소스 배포(VPC, EC2, S3, DynamoDB, IAM Role 등) 및 제어를 위해 `AdministratorAccess` 권한이 부여되어 있습니다. 향후 스프린트에서 인프라 리소스 범위에 상응하는 세분화된 최소 권한 정책(IAM Policy)으로 권한을 타이트하게 제한할 예정입니다.
 
 #### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
