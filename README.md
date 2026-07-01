@@ -234,32 +234,35 @@ C4Container
   레이아웃 구성 예시용 퍼블릭 링크 (보안 정책 상 실제 메트릭 데이터 대신 구조 확인용 임의 지표가 노출됩니다.)
 
 #### [부록 1] SLA 지표 PromQL 연산 수식
+> [!NOTE]
+> 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다.
+
 * **API Health Status**
-  $$\text{API Health} = \sum \text{probe\_success}$$
+  $$\text{API Health} = \sum P_t$$
   ```promql
   sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})
   ```
 
 * **Dynamic Service Availability**
-  $$\text{Availability (\%)} = \text{avg}_{t \in \text{range}}(\text{probe\_success}_t) \times 100$$
+  $$\text{Availability (\%)} = \text{avg}_{t \in \text{range}}(P_t) \times 100$$
   ```promql
   avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 100
   ```
 
 * **Dynamic Incident Count**
-  $$\text{Incident Count} = \frac{\Delta \text{changes}(\text{probe\_success})}{2}$$
+  $$\text{Incident Count} = \frac{\text{changes}(P_t)}{2}$$
   ```promql
   changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2
   ```
 
 * **Dynamic MTTR (Mean Time To Recovery)**
-  $$\text{MTTR} = \frac{\left(\text{count}_{t \in \text{range}}(\text{probe\_success}_t) - \sum_{t \in \text{range}} \text{probe\_success}_t\right) \times 60}{\max\left(\frac{\Delta \text{changes}(\text{probe\_success})}{2}, 1\right)}$$
+  $$\text{MTTR} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_{t \in \text{range}} P_t\right) \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
   ```promql
   ((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
   ```
 
 * **Dynamic MTBF (Mean Time Between Failures)**
-  $$\text{MTBF} = \frac{\sum_{t \in \text{range}} \text{probe\_success}_t \times 60}{\max\left(\frac{\Delta \text{changes}(\text{probe\_success})}{2}, 1\right)}$$
+  $$\text{MTBF} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
   ```promql
   (sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
   ```
