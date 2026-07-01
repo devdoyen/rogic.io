@@ -154,7 +154,7 @@ C4Container
                 ContainerDb(postgres, "PostgreSQL Database", "Docker Container", "Persists puzzle templates, user logs, clear history, and user stats.")
             }
             
-            Container(spring, "Spring Boot App", "Docker Container (GraalVM)", "Handles business logic, daily puzzle scheduling, rating, and XP leaderboard.")
+            Container(spring, "Spring Boot App", "Docker Container (GraalVM) [frontend-net & backend-net]", "Handles business logic, daily puzzle scheduling, rating, and XP leaderboard.")
             
             Rel(nginx, spring, "Proxy API requests", "HTTP / Port 8080 [frontend-net]")
             Rel(spring, postgres, "Reads/Writes state", "JPA & JDBC / Port 5432 [backend-net]")
@@ -169,7 +169,7 @@ C4Container
                 ContainerDb(postgres_stg, "PostgreSQL Database (Stage)", "Docker Container", "Persists isolated staging state.")
             }
             
-            Container(spring_stg, "Spring Boot App (Stage)", "Docker Container (JVM)", "Staging application runtime environment.")
+            Container(spring_stg, "Spring Boot App (Stage)", "Docker Container (JVM) [frontend-net & backend-net]", "Staging application runtime environment.")
             
             Rel(nginx_stg, spring_stg, "Proxy API requests", "HTTP / Port 8080 [frontend-net]")
             Rel(spring_stg, postgres_stg, "Reads/Writes state", "JPA & JDBC / Port 5432 [backend-net]")
