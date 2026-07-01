@@ -382,6 +382,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/nemologic-key.pem
           chmod 400 ~/.ssh/nemologic-key.pem
+          cat <<EOF > ~/.ssh/config
+          Host i-* mi-*
+              ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Install AWS Session Manager Plugin
         run: |
@@ -503,6 +510,13 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/nemologic-key.pem
           chmod 400 ~/.ssh/nemologic-key.pem
+          cat <<EOF > ~/.ssh/config
+          Host i-* mi-*
+              ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
 
       - name: Install AWS Session Manager Plugin
         run: |
