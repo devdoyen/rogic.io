@@ -133,7 +133,7 @@ graph TD
 * **GraalVM Native Image 메모리 최적화**<br>
   런타임 메모리 사용량을 컨테이너당 30MB 이하로 낮추어, 초경량 컴퓨팅 환경 내에서도 배포 시 두 버전의 Spring Boot 컨테이너를 함께 띄울 수 있는 기반을 다졌습니다.
   * **Jackson 역직렬화 DTO Reflection 힌트**<br>
-    Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](file:///c:/Users/82107/dev/project/nemologic/backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
+    Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
 * **Docker Garbage Collection 자동화**<br>
   디스크 용량 고갈 장애 예방을 위해 새벽 3시마다 72시간 경과 도커 리소스를 강제 소거하는 prune 스크립트를 크론탭으로 자동 배치했습니다.
 
@@ -186,7 +186,7 @@ graph TD
   CloudWatch Logs Metric Filter 오류 발생 시 AWS SNS를 경유해 개발자 메일로 상황이 실시간 통보되며, 도쿄·싱가포르·시드니 리전에서 동시에 `/actuator/health` 헬스체크 실패가 감지되면 Grafana 경보가 트리거됩니다.
 
 #### 1-4-4. SLO (Service Level Objective) Visualization
-* **통합 관제 SLA 대시보드 ([current_dashboard.json](file:///c:/Users/82107/dev/project/nemologic/infra/monitoring/current_dashboard.json))**<br>
+* **통합 관제 SLA 대시보드 ([current_dashboard.json](infra/monitoring/current_dashboard.json))**<br>
   SRE 핵심 품질 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 복구 탑재하여 3열 카드 레이아웃에 맞춰 배치했습니다.
 * **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)**<br>
   레이아웃 구성 예시용 퍼블릭 링크 (보안 정책 상 실제 메트릭 데이터 대신 구조 확인용 임의 지표가 노출됩니다.)
@@ -336,13 +336,13 @@ stateDiagram-v2
 * **AI 에이전트(Antigravity) 협업**<br>
   자율 코딩 에이전트 `Antigravity`를 기획·구현·TDD 테스트·관제 템플릿 배포의 전 과정에 동참시켜 수동 개발 영역을 자동화했습니다.
 * **에이전트 이탈 방지용 거버넌스 규칙 (.agents/rules/)**:
-  * **[workflow-and-tdd.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/workflow-and-tdd.md)**<br>
+  * **[workflow-and-tdd.md](.agents/rules/workflow-and-tdd.md)**<br>
     핵심 비즈니스 로직 수정 전 JUnit/Vitest 테스트 선행 작성(TDD) 규범 강제 및 `progress_state.md` 동기화 유도.
-  * **[architecture-and-tech-stack.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/architecture-and-tech-stack.md)**<br>
+  * **[architecture-and-tech-stack.md](.agents/rules/architecture-and-tech-stack.md)**<br>
     Frontend/Backend/Infra 다중 레이어의 동시 이중 수정 차단 및 Vue Reactivity(Ref/Reactive)의 논리 연산 유출 방지.
-  * **[safety-and-communication.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/safety-and-communication.md)**<br>
+  * **[safety-and-communication.md](.agents/rules/safety-and-communication.md)**<br>
     요구사항이 모호한 즉시 임의 구현(No Guessing)을 전면 중지시키고 개발자 승인 대기.
-  * **[incident-reporting.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/incident-reporting.md)**<br>
+  * **[incident-reporting.md](.agents/rules/incident-reporting.md)**<br>
     장애 상황(빌드, 마이그레이션 실패 등) 복구 즉시 `docs/incidents/`에 YYYYMMDD 날짜 구조 포스트모템 장애보고서 자동 작성 및 보관 지침 명문화.
 
 ---
