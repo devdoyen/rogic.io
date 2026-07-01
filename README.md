@@ -234,16 +234,35 @@ C4Container
   레이아웃 구성 예시용 퍼블릭 링크 (보안 정책 상 실제 메트릭 데이터 대신 구조 확인용 임의 지표가 노출됩니다.)
 
 #### [부록 1] SLA 지표 PromQL 연산 수식
-* **API Health Status**<br>
-  `sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})`
-* **Dynamic Service Availability**<br>
-  `avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 100`
-* **Dynamic Incident Count**<br>
-  `changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2`
-* **Dynamic MTTR (Mean Time To Recovery)**<br>
-  `((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)`
-* **Dynamic MTBF (Mean Time Between Failures)**<br>
-  `(sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)`
+* **API Health Status**
+  $$\text{API Health} = \sum \text{probe\_success}$$
+  ```promql
+  sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})
+  ```
+
+* **Dynamic Service Availability**
+  $$\text{Availability (\%)} = \text{avg}_{t \in \text{range}}(\text{probe\_success}_t) \times 100$$
+  ```promql
+  avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 100
+  ```
+
+* **Dynamic Incident Count**
+  $$\text{Incident Count} = \frac{\Delta \text{changes}(\text{probe\_success})}{2}$$
+  ```promql
+  changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2
+  ```
+
+* **Dynamic MTTR (Mean Time To Recovery)**
+  $$\text{MTTR} = \frac{\left(\text{count}_{t \in \text{range}}(\text{probe\_success}_t) - \sum_{t \in \text{range}} \text{probe\_success}_t\right) \times 60}{\max\left(\frac{\Delta \text{changes}(\text{probe\_success})}{2}, 1\right)}$$
+  ```promql
+  ((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
+  ```
+
+* **Dynamic MTBF (Mean Time Between Failures)**
+  $$\text{MTBF} = \frac{\sum_{t \in \text{range}} \text{probe\_success}_t \times 60}{\max\left(\frac{\Delta \text{changes}(\text{probe\_success})}{2}, 1\right)}$$
+  ```promql
+  (sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
+  ```
 
 #### [부록 2] 가용성 및 재해 복구 지표 비교표
 | 지표 | 현재 사양 (단일 EC2 + S3 백업) | 향후 개선 목표 (Multi-AZ ALB + ECS/RDS) |
