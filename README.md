@@ -5,9 +5,9 @@
 | 🚀 **Production** | [rogic.io](https://rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-brightgreen) |
 | 🧪 **Staging** | [stage.rogic.io](https://stage.rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-blue) |
 
-`rogic.io`는 3차원 서브 그리드 회전 역학을 도입한 차세대 노노그램 논리 퍼즐 플랫폼입니다. 플레이어는 그리드의 특정 섹션을 회전하고 패턴을 맞추어 숨겨진 그림을 찾아냅니다.
+`rogic.io`는 그리드의 특정 영역을 회전시켜 숨겨진 패턴을 맞추는 변형 노노그램 퍼즐 게임입니다.
 
-본 저장소는 자동화된 CI/CD 파이프라인, 선언적 IaC 클라우드 프로비저닝, 구성 관리 자동화, 그리고 애플리케이션 가용성과 보안성을 극대화한 실무 수준의 인프라 아키텍처 포트폴리오를 포함하고 있습니다.
+본 저장소는 프로젝트 빌드 및 배포에 필요한 CI/CD 파이프라인, IaC 기반 인프라 구성 코드(Terraform/Ansible), 그리고 모니터링 환경의 구축 명세를 담고 있습니다.
 
 ---
 
