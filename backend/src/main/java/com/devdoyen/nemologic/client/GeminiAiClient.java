@@ -58,17 +58,19 @@ public class GeminiAiClient implements AiClient {
                     excludePrompt = String.format("Do NOT generate puzzles with similar themes or names to the following: %s. ", String.join(", ", recentThemes));
                 }
 
+                int candidateCount = (width >= 25 || height >= 25) ? 2 : 5;
                 String prompt = String.format(
-                    "Generate a JSON array of exactly 5 different, creative, and recognizable pixel art grid designs of size %dx%d in JSON format. " +
+                    "Generate a JSON array of exactly %d different, creative, and recognizable pixel art grid designs of size %dx%d in JSON format. " +
                     "Do NOT generate a simple heart shape. Create recognizable shapes (like a tree, a letter, a face, a cup, an arrow, animal, etc.). " +
                     "%s" +
                     "The response must follow this exact JSON schema (a JSON array of candidate objects): " +
                     "[ { \"name\": \"ObjectName\", \"width\": %d, \"height\": %d, \"grid\": [[...], [...]] }, ... ]. " +
                     "Do NOT prefix names with 'AI Puzzle:' or 'Daily Puzzle:'. Just output the pure name of the object. " +
                     "Return only raw JSON string inside, no markdown formatting (do NOT wrap in ```json). " +
-                    "For each candidate, the 'grid' field MUST be a 2D JSON array representing %dx%d cells containing only 0 and 1. " +
+                    "For each candidate, the 'grid' field MUST be a literal 2D JSON array representing %dx%d cells containing only 0 and 1. " +
+                    "Do NOT use any shorthand code, loops, functions, or placeholder syntax (such as Array(30), fill, etc.) to define the grid. Every number MUST be explicitly outputted. " +
                     "Ensure the filled cells form a recognizable connected shape with symmetry where appropriate, avoiding isolated noise pixels.",
-                    width, height, excludePrompt, width, height, width, height
+                    candidateCount, width, height, excludePrompt, width, height, width, height
                 );
 
 
