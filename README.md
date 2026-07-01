@@ -26,6 +26,7 @@
 - [3. AI Engineering & Intelligent Systems](#3-ai-engineering--intelligent-systems)
   - [3-1. AI Puzzle Generator & Logical Validation Pipeline](#3-1-ai-puzzle-generator--logical-validation-pipeline)
   - [3-2. User Feedback & Backoffice Monitoring System](#3-2-user-feedback--backoffice-monitoring-system)
+  - [3-3. AI Agentic Development & Governance (.agents/rules)](#3-3-ai-agentic-development--governance-agentsrules)
 - [💻 Local Development Setup](#-local-development-setup)
 
 ---
@@ -231,6 +232,15 @@ stateDiagram-v2
   퍼즐 클리어 시 캔버스 하단 플로팅 카드 위젯(Glassmorphism 다크 테마 및 청록/적색 네온 점등 애니메이션)을 렌더링하여 유저가 해당 퍼즐의 재미와 시각적 아름다움을 직관적으로 평가할 수 있게 했습니다. 평가 완료 시 `✨ Thank You!` 메시지로 부드럽게 페이드아웃되며, 세션 ID 및 DB 동기화 예외 처리를 `finally` 구문으로 처리해 타이머 지연 현상을 원천 방어했습니다.
 * **백오피스 만족도 기반 즉각 삭제**:
   클리어 피드백은 데이터베이스 `stages` 테이블의 `upvotes`, `downvotes` 컬럼에 실시간 반영되며, 관리자 화면(Backoffice) 테이블에 깔끔한 가로형 SVG Outline 피드백 지표로 실시간 수집되어 평점이 나쁘거나 형태가 훼손된 퍼즐을 관리자가 식별하여 즉시 Hard Delete(Cascade)할 수 있는 완결성 높은 운영 피드백 고리를 확보했습니다.
+
+### 3-3. AI Agentic Development & Governance (.agents/rules)
+* **AI 에이전트(Antigravity) 페어 프로그래밍**: Google DeepMind의 Advanced Agentic Coding 기술이 탑재된 자율 AI 코딩 에이전트인 `Antigravity`를 개발 전반(설계, TDD 테스트 작성, 디버깅, 인프라 배포 구성, 대시보드 스키마 교정)에 적극 페어링하여 개발 생산성을 높이고 릴리즈 주기를 단축했습니다.
+* **AI 거버넌스 및 자율 조율 규격 (.agents/rules/)**:
+  AI 에이전트가 단독으로 코드를 수정하거나 아키텍처 규칙을 이탈하는 것을 막기 위해, 프로젝트 정책 및 SRE 가이드라인을 규정한 규칙 파일들을 프로젝트의 `.agents/rules/` 하위에 배치하여 AI 에이전트의 작동에 완결성 높은 시스템 통제를 적용했습니다.
+  * **[workflow-and-tdd.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/workflow-and-tdd.md) (Mandatory TDD)**: 코어 비즈니스 로직(솔버, 생성기 등) 구현 전 단위 테스트 케이스 작성을 강력히 강제하고, 작업 종료 후 [docs/progress_state.md](file:///c:/Users/82107/dev/project/nemologic/docs/progress_state.md) 상태 맵을 반드시 동기화하도록 유도합니다.
+  * **[architecture-and-tech-stack.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/architecture-and-tech-stack.md) (Directory Isolation)**: 작업 시 frontend, backend, infra 간 혼재된 수정을 차단하고, Vue의 Reactivity 시스템(Ref/Reactive)이 순수 논리 물리 연산에 침범하는 것을 차단해 디커플링을 유지합니다.
+  * **[safety-and-communication.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/safety-and-communication.md) (No Guessing)**: 모호한 설계 요구 사항이 발생한 즉시 에이전트가 혼자 추측해 코드를 구현하는 행위를 전면 금지하며, 즉시 중단하고 개발자에게 직접 승인을 요구하도록 강제 조치합니다.
+  * **[incident-reporting.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/incident-reporting.md) (Postmortem Automated)**: 런타임 장애나 빌드 에러, DB 마이그레이션 실패 등 치명적 이슈가 발생하여 복구된 경우, 반드시 `docs/incidents/` 경로에 YYYYMMDD 날짜 형식으로 된 포스트모템(장애 원인 분석, 타임라인 및 재발 방지 대책) 문서를 자동 작성·보관하도록 명문화하여 AI 자율 개발 프로세스에 강력한 SRE 규범을 바인딩했습니다.
 
 ---
 
