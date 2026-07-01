@@ -448,15 +448,17 @@ stateDiagram-v2
 ### 3.2.3. AI Agentic Development & Governance
 * **AI 에이전트(Antigravity) 협업**<br>
   자율 코딩 에이전트 `Antigravity`를 기획·구현·TDD 테스트·관제 템플릿 배포의 전 과정에 동참시켜 수동 개발 영역을 자동화했습니다.
-* **에이전트 이탈 방지용 거버넌스 규칙 (.agents/rules/)**:
-  * **[workflow-and-tdd.md](.agents/rules/workflow-and-tdd.md)**<br>
-    핵심 비즈니스 로직 수정 전 JUnit/Vitest 테스트 선행 작성(TDD) 규범 강제 및 `progress_state.md` 동기화 유도.
-  * **[architecture-and-tech-stack.md](.agents/rules/architecture-and-tech-stack.md)**<br>
-    Frontend/Backend/Infra 다중 레이어의 동시 이중 수정 차단 및 Vue Reactivity(Ref/Reactive)의 논리 연산 유출 방지.
-  * **[safety-and-communication.md](.agents/rules/safety-and-communication.md)**<br>
-    요구사항이 모호한 즉시 임의 구현(No Guessing)을 전면 중지시키고 개발자 승인 대기.
-  * **[incident-reporting.md](.agents/rules/incident-reporting.md)**<br>
-    장애 상황(빌드, 마이그레이션 실패 등) 복구 즉시 `docs/incidents/`에 YYYYMMDD 날짜 구조 포스트모템 장애보고서 자동 작성 및 보관 지침 명문화.
+* **에이전트 거버넌스 규칙 (.agents/rules/)**<br>
+  에이전트와 인간 개발자가 협업 시 일관된 설계 사상과 운영 안정성을 유지하기 위해 `.agents/rules/` 하위에 명시적인 프로젝트 거버넌스 규칙을 정의하여 관리합니다.
+
+  | 규칙 파일 | 주요 관리 목적 및 정책 요약 | 형상 추적 여부 |
+  | :--- | :--- | :--- |
+  | [architecture-and-tech-stack.md](.agents/rules/architecture-and-tech-stack.md) | 프론트/백엔드/인프라 레이어의 다중 동시 수정 차단, Vue Reactivity 논리 유출 방지, 순차 배포 준수 | `Git Tracked` |
+  | [documentation-guidelines.md](.agents/rules/documentation-guidelines.md) | 상대경로(file:// 금지) 사용, 마크다운 개행 규정 준수, 비교 수치 데이터 기술 시 테이블(Table) 시각화 의무화 | `Git Tracked` |
+  | [git-and-commit-guidelines.md](.agents/rules/git-and-commit-guidelines.md) | Conventional Commits 규칙 준수, 로컬 커밋 자동 보존 및 원격 push 개발자 위임 | `Git Tracked (Force Added)` |
+  | [workflow-and-tdd.md](.agents/rules/workflow-and-tdd.md) | 코어 로직 작성 시 TDD(Test-Driven Development) 선행 의무화 및 progress_state.md 수시 동기화 | `Git Tracked` |
+  | [safety-and-communication.md](.agents/rules/safety-and-communication.md) | 요구사항이 모호한 경우 임의 구현(No Guessing)을 중단하고 개발자 승인 대기 | `Git Tracked` |
+  | [incident-reporting.md](.agents/rules/incident-reporting.md) | 장애 리포트 작성 시 3W1H 사상에 근거한 구체적 원인-결과 수치 명세 및 포스트모템 구조화 | `Git Tracked` |
 
 ---
 
@@ -514,13 +516,4 @@ npm run dev
 ```
 * Frontend app will run on: `http://localhost:5173`
 
-## 4.3. Custom Development Rules & Guidelines
-본 프로젝트는 AI 코딩 에이전트와 인간 개발자가 협업 시 일관된 설계 사상과 운영 안정성을 유지하기 위해 `.agents/rules/` 하위에 명시적인 프로젝트 거버넌스 규칙을 정의하여 관리합니다. 에이전트는 작업 수행 시 아래의 모든 규정을 강제적으로 준수합니다.
 
-| 규칙 파일 | 주요 관리 목적 및 정책 요약 | 형상 추적 여부 |
-| :--- | :--- | :--- |
-| [architecture-and-tech-stack.md](.agents/rules/architecture-and-tech-stack.md) | 프론트/백엔드 디렉토리 격리, Canvas API 강제, Terraform/Ansible Staging 순차 배포 준수 | `Git Tracked` |
-| [documentation-guidelines.md](.agents/rules/documentation-guidelines.md) | 상대경로(file:// 금지) 사용, 마크다운 개행 규정, 비교 수치 기술 시 테이블(Table) 시각화 의무화 | `Git Tracked` |
-| [git-and-commit-guidelines.md](.agents/rules/git-and-commit-guidelines.md) | Conventional Commits 영문 소문자 prefix 규칙 준수, 로컬 커밋 자동 보존 및 원격 push 개발자 위임 | `Git Tracked (Force Added)` |
-| [workflow-and-tdd.md](.agents/rules/workflow-and-tdd.md) | 코어 로직 작성 시 TDD(Test-Driven Development) 선행 의무화 및 progress_state.md 수시 동기화 | `Git Tracked` |
-| [incident-reporting.md](.agents/rules/incident-reporting.md) | 장애 리포트 작성 시 3W1H 사상에 근거한 구체적 원인-결과 수치 명세 규칙 | `Git Tracked` |
