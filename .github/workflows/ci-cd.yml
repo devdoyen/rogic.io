@@ -24,6 +24,7 @@ jobs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       ansible: ${{ steps.filter.outputs.ansible }}
+      terraform: ${{ steps.filter.outputs.terraform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,6 +39,9 @@ jobs:
               - 'frontend/**'
             ansible:
               - 'infra/ansible/**'
+            terraform:
+              - 'infra/terraform/**'
+              - 'infra/monitoring/**'
 
   # 1. CI Phase: Run backend and frontend test suites
   ci:
@@ -338,7 +342,7 @@ jobs:
     name: Deploy to Staging (Ansible)
     needs: [build, infra-apply-staging, changes]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ansible == 'true')
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && (needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.ansible == 'true' || needs.changes.outputs.terraform == 'true')
     concurrency:
       group: app-${{ github.ref }}
       cancel-in-progress: true
