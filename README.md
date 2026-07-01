@@ -257,7 +257,7 @@ C4Container
 
 ## 1.6. Troubleshooting
 
-### 1.6.1. t3a.nano(512MB RAM) 환경 내 메모리 스레싱(Thrashing) 및 OOM 장애 해결
+### 1.6.1. 호스트 메모리 고갈 장애 복구
 * **배경**<br>
   인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
 * **해결 방안**<br>
@@ -369,7 +369,7 @@ stateDiagram-v2
 
 ## 2.4. Troubleshooting
 
-### 2.4.1. Staging-Production 파이프라인 강결합 및 배포 동시성 제어 오류 극복
+### 2.4.1. 배포 파이프라인 충돌 오류 극복
 * **배경**<br>
   - Staging과 Production 인프라 설정이 동일 Terraform 코드에 묶여 일괄 반영되던 중, 운영 환경 S3 버킷에 정적 자산이 시딩되지 않은 상태에서 DNS A 레코드가 CloudFront/S3로 먼저 스위칭되어 운영 전체 접속 차단(`AccessDenied`) 장애 발생 ([Access Failure Report](./docs/incidents/20260630_production_access_failure.md)).
   - 핫픽스 도중 GitHub Actions의 `cancel-in-progress: true` 설정으로 인해 Nginx 인증서 발급 프로세스 도중 후속 커밋이 이전 빌드를 강제 취소하면서 실서버 SSL 인증서 유실로 인한 HTTPS API 통신 불능 장애 발생 ([Handshake Failure Report](./docs/incidents/20260630_production_api_handshake_failure.md)).
