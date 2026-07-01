@@ -137,16 +137,14 @@
 
 ---
 
-### AWS IAM 최소 권한(Least Privilege) 수립 (Step 44) - Staging 완료 (Phase 1)
+### AWS IAM 최소 권한(Least Privilege) 수립 (Step 44) - 완료
 - **해결 내역**:
   - **현상**: GitHub Actions OIDC 역할에 `AdministratorAccess` 전권 정책이 부여되어 있어 최소 권한 통제 원칙에 위배됨.
   - **해결 조치**:
-    1. [staging/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/main.tf) 내에 `github_actions_staging_policy` 커스텀 IAM 정책을 정의함.
-    2. EC2, VPC, S3, DynamoDB, IAM, CloudWatch, SNS, SSM, CloudFront 등 Staging 자원 프로비저닝 및 러너 배포 동작에 실제로 국한된 서비스/리소스 범위 수준의 최소 권한으로 한정함.
-    3. `aws_iam_role_policy_attachment.github_actions_staging_admin` 리소스의 연결 정책을 `aws_iam_policy.github_actions_staging_policy.arn`으로 교체하여 전권 권한을 회수함.
+    1. **Staging 반영 (Phase 1)**: [staging/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/main.tf) 내에 `github_actions_staging_policy` 커스텀 IAM 정책을 정의하고 역할을 바인딩하여 전권 권한을 회수함. EC2, VPC, S3, DynamoDB, IAM, CloudWatch, SNS, SSM, CloudFront 범위로 한정함.
+    2. **Production 반영 (Phase 2)**: [production/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf) 내에 `github_actions_production_policy` 커스텀 IAM 정책을 추가 연동함. Production 환경에서 관리하는 ACM(us-east-1 포함), CloudFront 및 Route 53 자원 관리 권한을 명시적으로 추가 바인딩하여 안전하게 권한 축소 적용함.
 
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **AWS IAM 최소 권한(Least Privilege) 수립 (Step 44) - Production 반영 (Phase 2)**: Staging 파이프라인 무결 검증 완료 확인 후, Production 환경 테라폼(`production/main.tf`)에도 동일하게 최소 권한 정책을 설계하고 최종 반영하여 AWS IAM 권한 관리 작업을 완결함.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.

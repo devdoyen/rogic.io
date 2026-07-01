@@ -447,8 +447,85 @@ resource "aws_iam_role" "github_actions_production" {
   }
 }
 
+resource "aws_iam_policy" "github_actions_production_policy" {
+  name        = "nemologic-production-github-policy"
+  description = "Custom policy for production GitHub Actions runner with least privilege"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ec2:*"]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["s3:*"]
+        Resource = [
+          "arn:aws:s3:::nemologic-*",
+          "arn:aws:s3:::rogic-*"
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:*"]
+        Resource = "arn:aws:dynamodb:ap-northeast-2:${data.aws_caller_identity.current.account_id}:table/nemologic-tfstate-lock"
+      },
+      {
+        Effect = "Allow"
+        Action = ["iam:*"]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/nemologic-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/nemologic-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/nemologic-*",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["logs:*"]
+        Resource = "arn:aws:logs:ap-northeast-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/ec2/nemologic*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["cloudwatch:*"]
+        Resource = "arn:aws:cloudwatch:ap-northeast-2:${data.aws_caller_identity.current.account_id}:alarm:nemologic-*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["sns:*"]
+        Resource = "arn:aws:sns:ap-northeast-2:${data.aws_caller_identity.current.account_id}:nemologic-*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["ssm:*"]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = ["acm:*"]
+        Resource = [
+          "arn:aws:acm:ap-northeast-2:${data.aws_caller_identity.current.account_id}:certificate/*",
+          "arn:aws:acm:us-east-1:${data.aws_caller_identity.current.account_id}:certificate/*"
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["cloudfront:*"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["route53:*"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "github_actions_production_admin" {
   role       = aws_iam_role.github_actions_production.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  policy_arn = aws_iam_policy.github_actions_production_policy.arn
 }
 
