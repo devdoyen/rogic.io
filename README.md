@@ -228,18 +228,19 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적
 ##### 1.4.2.2.2. 서비스 범위 최소 권한 정책<br>
   테라폼 및 Ansible 배포 범위에 정확히 부합하는 서비스 수준 최소 권한 정책(Staging/Production 별 커스텀 IAM Policy)을 바인딩했습니다. 이를 통해 허용 서비스 이외의 타 서비스 자원(예: RDS, Lambda, KMS 등) 관리를 원천 차단하여 Least Privilege 통제를 완결했습니다.
 
-  * **허용 서비스 및 리소스 구성 명세**<br>
-    - **EC2 및 VPC (`ec2:*`)**: 모든 리소스 (`*` - VPC, 서브넷, 보안 그룹, 인스턴스 및 EIP 등의 동적 관리 요건)
-    - **S3 (`s3:*`)**: `arn:aws:s3:::nemologic-*` 및 `arn:aws:s3:::rogic-*` 버킷군 (상태 파일, 로그 및 백업 관리)
-    - **DynamoDB (`dynamodb:*`)**: `arn:aws:dynamodb:*:*:table/nemologic-tfstate-lock` 테이블 (테라폼 상태 잠금 제어)
-    - **IAM (`iam:*`)**: `arn:aws:iam::*:role/nemologic-*` 등 관련 리소스 (OIDC 역할 및 EC2 인스턴스 프로필 수명주기 관리)
-    - **CloudWatch Logs (`logs:*`)**: 모든 리소스 (`*` - 로그 그룹 메타데이터 설명 및 조회 요건)
-    - **CloudWatch Alarms (`cloudwatch:*`)**: `arn:aws:cloudwatch:*:*:alarm:nemologic-*` 알람군
-    - **SNS (`sns:*`)**: `arn:aws:sns:*:*:nemologic-*` 토픽군
-    - **SSM (`ssm:*`)**: 모든 리소스 (`*` - SSM Session Manager 터널링 세션 연결 요건)
-    - **CloudFront (`cloudfront:*`)**: 모든 리소스 (`*` - CDN 배포판 조회 및 캐시 무효화 요건)
-    - **ACM (`acm:*`)**: 모든 리소스 (`*` - SSL 인증서 검증 및 us-east-1 인증서 조회 요건)
-    - **Route 53 (`route53:*`)**: 모든 리소스 (`*` - DNS 네임서버 레코드 정보 관리 요건)
+  | 대상 서비스 (Service) | 허용 작업 (Actions) | 대상 리소스 범위 (Resource Constraints) | 사용 목적 및 용도 (Purpose) |
+  | :--- | :--- | :--- | :--- |
+  | **EC2 / VPC** | `ec2:*` | `*` (Wildcard) | VPC, 서브넷, Route Table, Internet Gateway, 보안 그룹, 인스턴스 및 EIP 생성/관리 |
+  | **S3 Storage** | `s3:*` | `arn:aws:s3:::nemologic-*`<br>`arn:aws:s3:::rogic-*` | 테라폼 상태 파일(State), 데이터베이스 백업 버킷 관리 및 프론트엔드 정적 파일 배포 동기화 |
+  | **DynamoDB** | `dynamodb:*` | `arn:aws:dynamodb:*:*:table/nemologic-tfstate-lock` | 테라폼 상태 파일의 동시 수정 충돌을 예방하기 위한 원격 상태 잠금(Locking) 제어 |
+  | **IAM** | `iam:*` | `arn:aws:iam::*:role/nemologic-*`<br>`arn:aws:iam::*:policy/nemologic-*`<br>`arn:aws:iam::*:instance-profile/nemologic-*`<br>`arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com` | EC2 IAM 역할/인스턴스 프로필 프로비저닝 및 OIDC Runner 역할 자체의 AssumeRole 정책 제어 |
+  | **CloudWatch Logs** | `logs:*` | `*` (Wildcard) | 호스트 내부 시스템 및 애플리케이션 로그 그룹 생성, 수명주기 조회 및 스트림 수집 관리 |
+  | **CloudWatch Alarms** | `cloudwatch:*` | `arn:aws:cloudwatch:*:*:alarm:nemologic-*` | 시스템 하드웨어 장애(Status Check Failed) 감지 시 호스트 자동 복구(Auto Recovery) 트리거 |
+  | **SNS Alerts** | `sns:*` | `arn:aws:sns:*:*:nemologic-*` | 장애/경고 상황 발생 시 시스템 관리자 이메일 수신을 위한 알림 토픽 및 구독(Subscription) 관리 |
+  | **SSM** | `ssm:*` | `*` (Wildcard) | Ansible Playbook 가동 시 22번 포트 외부 노출을 방지하기 위한 SSM Session Manager 터널링 연결 |
+  | **CloudFront (CDN)** | `cloudfront:*` | `*` (Wildcard) | 정적 자산 배포용 CDN 배포판 정보 조회 및 신규 버전 배포 시 엣지 캐시 무효화(Invalidation) 실행 |
+  | **ACM Certificate** | `acm:*` | `*` (Wildcard) | HTTPS 적용을 위한 SSL/TLS 인증서 검증 및 CloudFront 연결 전용 us-east-1 인증서 조회 |
+  | **Route 53 (DNS)** | `route53:*` | `*` (Wildcard) | 퍼블릭 도메인(`rogic.io`, `stage.rogic.io`) 매핑 및 네임서버 DNS 레코드셋 생성/조정 제어 |
 
 #### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
