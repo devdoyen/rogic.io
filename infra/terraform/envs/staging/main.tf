@@ -277,6 +277,8 @@ resource "aws_cloudwatch_metric_alarm" "staging_ec2_status_check_alarm" {
   }
 }
 
+# Dummy edit to force trigger deployment pipeline
+
 # --- S3 Backup Bucket Lifecycle Rule ---
 resource "aws_s3_bucket_lifecycle_configuration" "backup_lifecycle" {
   bucket = aws_s3_bucket.backup_bucket.id
