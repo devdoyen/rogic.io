@@ -238,34 +238,44 @@ C4Container
 > 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다.
 
 * **API Health Status**
-  $$\text{API Health} = \sum P_t$$
-  ```promql
-  sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})
-  ```
+
+$$\text{API Health} = \sum P_t$$
+
+```promql
+sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})
+```
 
 * **Dynamic Service Availability**
-  $$\text{Availability (\%)} = \text{avg}_{t \in \text{range}}(P_t) \times 100$$
-  ```promql
-  avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 100
-  ```
+
+$$\text{Availability (\%)} = \text{avg}_{t \in \text{range}}(P_t) \times 100$$
+
+```promql
+avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 100
+```
 
 * **Dynamic Incident Count**
-  $$\text{Incident Count} = \frac{\text{changes}(P_t)}{2}$$
-  ```promql
-  changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2
-  ```
+
+$$\text{Incident Count} = \frac{\text{changes}(P_t)}{2}$$
+
+```promql
+changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2
+```
 
 * **Dynamic MTTR (Mean Time To Recovery)**
-  $$\text{MTTR} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_{t \in \text{range}} P_t\right) \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
-  ```promql
-  ((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
-  ```
+
+$$\text{MTTR} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_{t \in \text{range}} P_t\right) \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
+
+```promql
+((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
+```
 
 * **Dynamic MTBF (Mean Time Between Failures)**
-  $$\text{MTBF} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
-  ```promql
-  (sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
-  ```
+
+$$\text{MTBF} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
+
+```promql
+(sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
+```
 
 #### [부록 2] 가용성 및 재해 복구 지표 비교표
 | 지표 | 현재 사양 (단일 EC2 + S3 백업) | 향후 개선 목표 (Multi-AZ ALB + ECS/RDS) |
