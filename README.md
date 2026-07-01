@@ -186,9 +186,10 @@ graph TD
   CloudWatch Logs Metric Filter 오류 발생 시 AWS SNS를 경유해 개발자 메일로 상황이 실시간 통보되며, 도쿄·싱가포르·시드니 리전에서 동시에 `/actuator/health` 헬스체크 실패가 감지되면 Grafana 경보가 트리거됩니다.
 
 #### 1-4-4. SLO (Service Level Objective) Visualization
-* **통합 관제 SLA 대시보드 ([current_dashboard.json](file:///c:/Users/82107/dev/project/nemologic/infra/monitoring/current_dashboard.json))**:
+* **통합 관제 SLA 대시보드 ([current_dashboard.json](file:///c:/Users/82107/dev/project/nemologic/infra/monitoring/current_dashboard.json))**<br>
   SRE 핵심 품질 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 복구 탑재하여 3열 카드 레이아웃에 맞춰 배치했습니다.
-  * **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)** (레이아웃 구성 예시용 퍼블릭 링크, 보안 가공된 임의의 지표 노출)
+* **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)**<br>
+  레이아웃 구성 예시용 퍼블릭 링크 (보안 정책 상 실제 메트릭 데이터 대신 구조 확인용 임의 지표가 노출됩니다.)
 
 ##### [부록 1] SLA 지표 PromQL 연산 수식
 * **API Health Status**<br>
