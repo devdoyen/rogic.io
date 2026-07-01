@@ -1,17 +1,23 @@
 # 0. Project Overview
 
-`rogic.io`는 출제 시점에 임의의 각도로 회전된 퍼즐을 해결하면, 완료되는 순간 원래 방향으로 자동 회전 복원되며 완성된 패턴을 보여주는 변형 노노그램 퍼즐 게임입니다.
+본 저장소는 `rogic.io` 프로젝트의 빌드 및 배포에 필요한 CI/CD 파이프라인, IaC 기반 인프라 구성 코드(Terraform/Ansible), 그리고 모니터링 환경의 구축 명세를 담고 있습니다.
 
-본 저장소는 프로젝트 빌드 및 배포에 필요한 CI/CD 파이프라인, IaC 기반 인프라 구성 코드(Terraform/Ansible), 그리고 모니터링 환경의 구축 명세를 담고 있습니다.
+## 0.1. Game Concept & Rules
 
-## 0.1. Service Environments
+`rogic.io`는 전통적인 사각형 격자판에서 퍼즐을 해결하는 네모로직(노노그램) 게임입니다. 단, 출제 시점에 임의의 각도로 회전된 퍼즐을 해결하면, 완료되는 순간 원래 방향으로 자동 회전 복원되며 완성된 패턴을 올바르게 보여주는 메커니즘을 내장하고 있습니다.
+
+<p align="center">
+  <img src="./docs/assets/rogic_gameplay_demo.webp" width="70%" alt="rogic.io Gameplay Demo" />
+</p>
+
+## 0.2. Service Environments
 
 | Service Environment | Live URL | Deployment Status |
 | :--- | :--- | :--- |
 | 🚀 **Production** | [rogic.io](https://rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-brightgreen) |
 | 🧪 **Staging** | [stage.rogic.io](https://stage.rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-blue) |
 
-## 0.2. Technology Stack
+## 0.3. Technology Stack
 | Category | Technologies | Description |
 | :--- | :--- | :--- |
 | **Frontend** | `Vue 3`, `TypeScript`, `HTML5 Canvas API`, `Axios` | Client app with decoupled pure TS game engine. |
