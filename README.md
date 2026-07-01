@@ -2,7 +2,7 @@
 
 본 저장소는 `rogic.io` 프로젝트의 빌드 및 배포에 필요한 CI/CD 파이프라인, IaC 기반 인프라 구성 코드(Terraform/Ansible), 그리고 모니터링 환경의 구축 명세를 담고 있습니다.
 
-## 0.1. Game Concept & Rules
+## 0.1. Game Concept
 
 `rogic.io`는 전통적인 사각형 격자판에서 퍼즐을 해결하는 네모로직(노노그램) 게임입니다. 단, 출제 시점에 임의의 각도로 회전된 퍼즐을 해결하면, 완료되는 순간 원래 방향으로 자동 회전 복원되며 완성된 패턴을 올바르게 보여주는 메커니즘을 내장하고 있습니다.
 
@@ -29,7 +29,7 @@
 
 ---
 
-# 1. Infrastructure & Cloud Engineering
+# 1. Infrastructure
 
 ## 1.1. System Architecture
 
@@ -91,13 +91,13 @@ C4Context
 * **Docker Garbage Collection 자동화**<br>
   디스크 용량 고갈 장애 예방을 위해 새벽 3시마다 72시간 경과 도커 리소스를 강제 소거하는 prune 스크립트를 크론탭으로 자동 배치했습니다.
 
-### 1.2.2. High Availability & Load Balancer Elimination
+### 1.2.2. Load Balancer Elimination
 * **ALB 제거 및 고정 EIP 구성**<br>
   월 $20 상당의 AWS ALB를 배제하고 DNS 도메인(Route 53)과 고정 Elastic IP를 매핑했습니다.
 * **EC2 Auto Recovery 및 복구 지향 아키텍처(ROA)**<br>
   ALB 부재에 따른 장애 전파를 줄이기 위해 시스템 알람 연동 호스트 자동 복구(Auto Recovery)를 결합하고, 재해 복구 시 IaC 코드를 활용해 5분 이내 인프라를 복원하도록 구성했습니다.
 
-### 1.2.3. Database Cost Minimization & Replication
+### 1.2.3. Database Cost Minimization
 * **Self-hosted PostgreSQL 컨테이너**<br>
   월 $15~20 이상의 RDS 비용을 아끼기 위해 EC2에 DB 컨테이너를 기동했습니다.
 * **S3 정기 백업 및 Lifecycle 제어**<br>
@@ -105,7 +105,7 @@ C4Context
 
 ---
 
-## 1.3. Technical Trade-offs & Mitigations
+## 1.3. Technical Trade-offs
 비용 최적화를 달성하기 위해 포기한 기술적 혜택(Trade-offs)과 이를 극복하기 위해 설계한 완화 대책(Mitigations)을 명시적으로 투명하게 공개합니다.
 
 ### 1.3.1. Build Resource Constraints
@@ -128,7 +128,7 @@ C4Context
 
 ---
 
-## 1.4. Network & Security Architecture
+## 1.4. Security Infrastructure
 
 ### 1.4.1. Network Isolation
 ```mermaid
@@ -184,7 +184,7 @@ C4Container
 
 ---
 
-## 1.5. Observability & SRE (Site Reliability Engineering)
+## 1.5. Observability
 
 ### 1.5.1. Metric Collection & Scraping
 ```mermaid
@@ -272,7 +272,7 @@ C4Container
 
 ---
 
-# 2. Continuous Integration & Delivery (CI/CD)
+# 2. CI/CD
 
 ## 2.1. Pipeline Workflow
 
@@ -339,7 +339,7 @@ stateDiagram-v2
 
 ---
 
-## 2.2. Build & Artifact Management
+## 2.2. Artifact Management
 
 ### 2.2.1. Compute Offloading
 * **Actions Runner 컴파일 오프로딩**<br>
@@ -351,7 +351,7 @@ stateDiagram-v2
 
 ---
 
-## 2.3. Quality Gate & Release Automation
+## 2.3. Release Automation
 
 ### 2.3.1. Automated End-to-End Testing
 * **Playwright E2E 테스트**<br>
@@ -383,9 +383,9 @@ stateDiagram-v2
 
 ---
 
-# 3. AI Engineering & Intelligent Systems
+# 3. AI Engineering
 
-## 3.1. AI Puzzle Generator & Logical Validation Pipeline
+## 3.1. AI Puzzle Generator
 
 ### 3.1.1. Model Integration & Scheduler
 * **Gemini flash-lite 모델 API 연동**<br>
@@ -397,7 +397,7 @@ stateDiagram-v2
 
 ---
 
-## 3.2. User Feedback Loop & Governance System
+## 3.2. AI Governance
 
 ### 3.2.1. Client-Side Rating System
 * **👍 / 👎 실시간 피드백 카드**<br>
@@ -437,7 +437,7 @@ stateDiagram-v2
 
 ---
 
-# 4. Appendices & Local Setup
+# 4. Appendices
 
 ## 4.1. Local Development Setup
 To run `rogic.io` on your local workstation, select one of the options below:
