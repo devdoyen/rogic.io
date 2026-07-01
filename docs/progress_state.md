@@ -110,7 +110,7 @@
 
 ### AWS IAM OIDC 기반 무키(Keyless) 인증 및 최소 권한 고도화 (Step 41) - 진행 중
 - **해결 내역**:
-  - **AWS OIDC 프로비저닝 (Phase 1)**: Staging 테라폼 코드([main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/main.tf))에 글로벌 `aws_iam_openid_connect_provider` 리소스를 정의하고, Production 테라폼 코드([main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf))에는 data source를 통해 이를 재사용하도록 설계함.
+  - **AWS OIDC 프로비저닝 (Phase 1)**: Staging 및 Production 테라폼 코드 각각에 `aws_iam_openid_connect_provider`를 개별 리소스로 정의하여, 병렬 빌드 및 plan 수행 시 발생하는 OIDC Provider lookup 실패(not found) 에러를 방지하고 환경 간 느슨한 결합(Decoupling)을 보장함.
   - **GitHub Actions 연동 IAM Role 매핑**: 환경별로 격리된 IAM Role을 생성하고 assume policy를 바인딩함. Staging Role은 전체 sub 대역을 허용하며, Production Role은 `refs/heads/main` 브랜치 및 `refs/tags/v*` 릴리즈 태그 배포 시에만 가동되도록 sub 대역을 타이트하게 제한함.
   - **역할 ARN 출력(Outputs) 정의**: [staging/outputs.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/outputs.tf) 및 [production/outputs.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/outputs.tf)에 생성된 IAM Role ARN의 output 출력을 기재하고 두 환경의 `terraform validate` 검증을 통과함.
 
