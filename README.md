@@ -193,12 +193,12 @@ C4Container
 | All | All | `0.0.0.0/0` | 패키지 업데이트, 외부 API 호출 및 DB 백업 S3 업로드용 |
 
 #### 1.4.2.2. IAM 최소 권한 (Least Privilege) 설계
-EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 필요한 최소한의 IAM 정책만을 선별 매핑하여 보안 위협을 경감했습니다.
+EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적용된 IAM 권한과 인증 메커니즘을 명시하여 보안 정합성을 보장합니다.
 
-| 주체 (Principal) | 인증/권한 유형 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
+| 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
 | :--- | :--- | :--- | :--- |
 | **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>`nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화 및 CloudWatch 실시간 로그 포워딩, DB 백업 S3 업로드 권한 제어 |
-| **CI/CD Role (GitHub)** | IAM User Credentials | `AWS_ACCESS_KEY_ID`<br>`AWS_SECRET_ACCESS_KEY` | GitHub Secrets에 저장된 자격 증명을 빌드/배포 환경변수로 직접 주입하여 사용 |
+| **CI/CD User (GitHub)** | IAM User Credentials | `AdministratorAccess` (또는 인프라 구축 권한) | GitHub Secrets(`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) 자격 증명을 주입받아 Terraform 리소스 관리 및 S3 동기화 실행 |
 
 #### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
