@@ -440,32 +440,45 @@ stateDiagram-v2
 # 4. Appendices & Local Setup
 
 ## 4.1. Local Development Setup
-To run `rogic.io` on your local workstation:
+To run `rogic.io` on your local workstation, select one of the options below:
 
-### Prerequisites
-* Java 17 JDK
-* Node.js 20+
-* Docker & Docker Compose
+### Option 1: Docker Compose (Single-Command Spin Up - Recommended)
+If you want to build and spin up the entire application stack (Database, Backend, and Frontend) immediately:
 
-### Step 1: Start PostgreSQL Database
 ```bash
-# In project root
-docker compose -f docker-compose.local.yml up -d db
+# In the project root, compile, build and start all container services
+docker compose up --build
+```
+* **Frontend Web Client**: `http://localhost:5173`
+* **Backend REST API**: `http://localhost:8080`
+* **Prerequisites**: Docker & Docker Compose installed.
+
+---
+
+### Option 2: Hybrid Local Setup (For Hot-Reloading Development)
+If you want to modify code on the fly and take advantage of live hot-reloading (Vite dev server):
+
+#### Step 1: Start PostgreSQL Database
+```bash
+# Start only the database container in the background
+docker compose up -d db
 ```
 
-### Step 2: Run Backend API
+#### Step 2: Run Backend API
 ```bash
 cd backend
 ./gradlew bootRun
 ```
 * API Server will run on: `http://localhost:8080`
+* **Prerequisites**: Java 17 JDK installed.
 
-### Step 3: Run Frontend Client
+#### Step 3: Run Frontend Client
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 * Frontend app will run on: `http://localhost:5173`
+* **Prerequisites**: Node.js 20+ installed.
 
 
