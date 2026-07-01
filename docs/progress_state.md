@@ -108,14 +108,15 @@
   - **다계층 도커 브리지 네트워크 격리 문서화**: [docker-compose.prod.yml](file:///c:/Users/82107/dev/project/nemologic/infra/ansible/docker-compose.prod.yml)에 기구축되어 운영 중인 frontend-net 및 backend-net 격리 구조와 침투 시 횡적 이동(Lateral Movement)을 막는 심층 방어 전략 및 보안 로드맵을 [README.md](file:///c:/Users/82107/dev/project/nemologic/README.md)에 사실 위주로 콤팩트하게 문서화함. (1.4.1 C4 Container Diagram에 nested boundary 시각화 반영 완료)
   - **보안 그룹 문서 계층화 및 규칙 최적화**: [README.md](file:///c:/Users/82107/dev/project/nemologic/README.md)의 보안 그룹 설정(1.4.2.1) 아래에 있던 비정형 Note 블록을 제거하고 H5 공식 서브섹션(1.4.2.1.1~3)으로 분할 계층화하여 중복 기술을 제거함. 이 문서 포맷팅 규칙을 프로젝트 공통 규칙인 [.agents/rules/documentation-guidelines.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/documentation-guidelines.md)에 상시 반영함.
 
-### AWS IAM OIDC 기반 무키(Keyless) 인증 및 최소 권한 고도화 (Step 41) - 진행 중
+### AWS IAM OIDC 기반 무키(Keyless) 인증 및 최소 권한 고도화 (Step 41) - 완료
 - **해결 내역**:
   - **AWS OIDC 프로비저닝 (Phase 1)**: 단일 계정 내 OIDC Provider 중복 생성에 따른 API 409(EntityAlreadyExists) 충돌 에러와 병행 plan 검증 시의 리소스 선후 관계(not found) 에러를 방어함. Staging 테라폼에서만 `aws_iam_openid_connect_provider` 리소스를 직접 생성하고, Production 테라폼에서는 `aws_caller_identity` 데이터 소스를 통해 현재 계정 ID를 조회하여 ARN을 동적으로 조립해 참조하도록 최적화 설계함.
   - **GitHub Actions 연동 IAM Role 매핑**: 환경별로 격리된 IAM Role을 생성하고 assume policy를 바인딩함. Staging Role은 전체 sub 대역을 허용하며, Production Role은 `refs/heads/main` 브랜치 및 `refs/tags/v*` 릴리즈 태그 배포 시에만 가동되도록 sub 대역을 타이트하게 제한함.
   - **역할 ARN 출력(Outputs) 정의**: [staging/outputs.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/outputs.tf) 및 [production/outputs.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/outputs.tf)에 생성된 IAM Role ARN of output 출력을 기재하고 두 환경의 `terraform validate` 검증을 통과함.
+  - **CI/CD 파이프라인 OIDC 전환 (Phase 2)**: [.github/workflows/ci-cd.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/ci-cd.yml)에서 전역 `permissions` 권한(`id-token: write`, `contents: read`)을 선언하여 OIDC JWT 발급 자격을 활성화함. 또한 모든 인프라 plan/apply 및 애플리케이션 deploy 잡(총 6개 잡)의 초반부에 `aws-actions/configure-aws-credentials` 단계를 이식하여 동적으로 1회용 STS 임시 보안 토큰을 AssumeRole하도록 스위칭함. 이에 따라 전역 및 개별 스텝에 하드코딩 주입되던 `AWS_ACCESS_KEY_ID` 및 `AWS_SECRET_ACCESS_KEY` 환경 변수를 파이프라인에서 완전히 Pruning 처리함.
 
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **OIDC 무키(Keyless) 인증 체계 전환 (Phase 2)**: 생성된 IAM Role ARN을 GitHub Actions 배포 파이프라인 워크플로우(`.github/workflows/ci-cd.yml`)에 적용하고, 기존 static access key 기반에서 임시 토큰(AssumeRole) 기반 인증으로 마이그레이션하여 GitHub Secrets의 액세스 키를 완전히 정리.
+- **AWS IAM 최소 권한(Least Privilege) 수립 (Step 42)**: 생성된 Staging/Production GitHub OIDC IAM Role에 부착된 `AdministratorAccess` 전권 정책을 회수하고, Terraform 및 배포에 필요한 실제 최소 자원 권한으로 타이트하게 격하하는 커스텀 정책(IAM Policy) 설계 및 적용.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
