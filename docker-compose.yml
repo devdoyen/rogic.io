@@ -48,10 +48,16 @@ services:
       - root
     tmpfs:
       - /tmp
-      - /var/cache/nginx
       - /var/run
     ports:
       - "5173:8080"
+    volumes:
+      - type: tmpfs
+        target: /var/cache/nginx
+        tmpfs:
+          mode: 0770
+          uid: 101
+          gid: 101
     depends_on:
       - backend
 

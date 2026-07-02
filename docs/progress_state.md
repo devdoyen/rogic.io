@@ -297,6 +297,10 @@
 - **해결 내역**:
   - **임시 캐시 쓰기 차단 극복**: Nginx 비특권 사용자 기동 시 `/var/cache/nginx/client_temp` 생성이 거부되어 컨테이너가 즉사하던 결함을 패치함. `nginx.conf` 및 `nginx.stage.conf` 의 `server` 블록 내부에 `client_body_temp_path` 등 5가지 임시 파일 쓰기 지시어를 주입하여, 스티키 비트가 활성화된 메모리 개방 임시 공간인 **`/tmp`** 하위로 쓰기 경로를 변경함으로써 `read_only: true` 격리 가동을 최종 완수함.
 
+### Nginx 캐시 영역 상세 tmpfs 소유권(101:101) 마운트 및 구동 정상화 (Step 75) - 완료
+- **해결 내역**:
+  - **tmpfs 소유자 권한 완치**: Nginx 초기화 전역 루틴에서 `/var/cache/nginx/client_temp` 등을 강제 생성하려고 시도하여 Permission Denied(13번) 에러를 유발하던 구동 장벽을 해결함. `docker-compose` 및 `docker-compose.stage.yml` 에 선언적 상세 tmpfs 마운트(`type: tmpfs`, `uid: 101`, `gid: 101`, `mode: 0770`)를 주입하여 Nginx 비특권 유저가 캐시 디렉터리 내부에 무제한 쓰기 및 디렉터리 생성을 수행할 수 있도록 완치함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
