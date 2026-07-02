@@ -4,8 +4,10 @@ COPY --chown=gradle:gradle . .
 RUN ./gradlew bootJar --no-daemon -x test
 
 FROM eclipse-temurin:17-jre-alpine
+RUN addgroup -S nemogroup && adduser -S nemouser -G nemogroup
 WORKDIR /app
-COPY --from=build /app/build/libs/*-SNAPSHOT.jar app.jar
+COPY --chown=nemouser:nemogroup --from=build /app/build/libs/*-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENV SPRING_PROFILES_ACTIVE=local
+USER nemouser
 ENTRYPOINT ["java", "-jar", "app.jar"]

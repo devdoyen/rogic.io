@@ -8,7 +8,12 @@ COPY dist /usr/share/nginx/html
 # Copy custom Nginx configuration for Vue Router support
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose Nginx port
-EXPOSE 80
+# Expose Nginx port (using non-privileged port)
+EXPOSE 8080
+
+# Modify Nginx configuration to use /tmp/nginx.pid instead of /var/run/nginx.pid to allow non-root running
+RUN sed -i 's|/var/run/nginx.pid|/tmp/nginx.pid|g' /etc/nginx/nginx.conf
+
+USER nginx
 
 CMD ["nginx", "-g", "daemon off;"]

@@ -22,6 +22,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile.local
     container_name: nemologic-backend
+    read_only: true
+    tmpfs:
+      - /tmp
     ports:
       - "8080:8080"
     environment:
@@ -39,8 +42,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: nemologic-frontend
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
     ports:
-      - "5173:80"
+      - "5173:8080"
     depends_on:
       - backend
 
