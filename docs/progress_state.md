@@ -248,6 +248,11 @@
   - **죽은 앵커 링크 보정**: 이전 1.2 섹션 구조조정 시 유실되어 클릭이 고장났던 `2.2.1` 내부의 `[1.2.1. Compute](#121-compute)` 앵커 링크를 유효한 앵커인 `[1.2. Cost Optimization](#12-cost-optimization)` 내 Compute 단락 참조로 현행화 패치함.
   - **대분류 유실 핫픽스**: 치환 슬라이싱 과정에서 유실되었던 `# 2. CI/CD` 및 `# 3. AI Engineering` H1 대분류 헤더를 안전하게 원상복구 완료함.
 
+### README.md AI Engineering(3) LLMOps 표준 정규화 및 H1 헤더 복원 (Step 63) - 완료
+- **해결 내역**:
+  - **LLM/LLMOps 표준 기둥 정규화**: `3. AI Engineering` 하위 구성을 업계 표준 인공지능 엔지니어링 분류 3대 영역인 `3.1. LLM Generation Pipeline` (LLM 생성 파이프라인), `3.2. Automated Quality Guardrails` (자동 품질 검증 가드레일), `3.3. AI Governance & Human-in-the-Loop` (AI 거버넌스 및 관리 통제)로 정규화하고 2단 개괄식 목록화로 리팩토링함.
+  - **대분류 유실 핫픽스**: 치환 슬라이싱 과정에서 유실되었던 `# 3. AI Engineering` 및 `# 4. Performance & Cost Analysis` H1 대분류 헤더를 안전하게 원상복구 완료함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

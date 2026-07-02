@@ -472,21 +472,40 @@ stateDiagram-v2
 
 # 3. AI Engineering
 
-## 3.1. AI Puzzle Pipeline
-* **자동 생성 스케줄러**<br>
-  새벽 04:17마다 `gemini-3.1-flash-lite` LLM API를 호출하여 신규 퍼즐 레이아웃을 생성하며, API Rate Limit 방어를 위해 5초의 지연 간격과 3회의 재시도 장치를 백엔드에 장착했습니다.
-* **논리해 자동 검증**<br>
-  AI가 생성한 퍼즐 중 단순 찍기로 풀 수 있는 오출제 건을 필터링하기 위해, Java 백엔드 단에 DFS 백트래킹 기반의 `isLogicalOnly(grid)` 추론 검증 알고리즘을 이식하여 무결성 품질 가드레일을 구축했습니다.
+## 3.1. LLM Generation Pipeline
+사용자가 언제나 신선한 스테이지를 플레이할 수 있도록 초경량 생성형 LLM 및 비동기 배치 스케줄러를 유기적으로 구성했습니다.
+
+* **Gemini 비동기 생성 스케줄러**<br>
+  - 매일 새벽 04:17 크론 스케줄러에 의해 `gemini-3.1-flash-lite` LLM API가 비동기 트리거되어 신규 퍼즐 레이아웃(그리드, 솔루션 맵)을 자동 생성
+  - API Rate Limit 오류 방어를 위해 백엔드 단에 5초의 지연 간격(Delay Interval) 및 3회의 지수 백오프 재시도(Exponential Retry) 장치를 통합 설계
+* **퍼즐 후보 예비 버퍼링 (FIFO Buffer)**<br>
+  - 매 빌드 시점 및 실서버 기동 시 크기별(5x5, 10x10, 15x15, 20x20 등)로 최소 5개 이상의 예비 퍼즐 데이터를 미리 생성하여 버퍼 테이블에 선입선출(FIFO) 형태로 상시 적재
+  - API 장애 시에도 다운타임 없이 안정적인 일 단위 퍼즐 업데이트 서비스가 지속되도록 안전장치 구비
 
 ---
 
-## 3.2. AI Governance
-* **피드백 루프**<br>
-  유저의 평점(👍/👎) 피드백 카드가 DB `stages` 테이블에 기록되며, 백오피스 대시보드에서 평점 현황을 식별할 수 있습니다.
-* **수동 강제 삭제**<br>
-  품질 미달이나 기형적인 퍼즐로 판단되면, 관리자가 백오피스 대시보드에서 연쇄 삭제(Cascading Delete)를 통해 즉각 Hard Delete할 수 있는 관리 장치를 도입했습니다.
-* **에이전트 거버넌스 규칙 (.agents/rules/)**<br>
-  AI 코딩 에이전트와 협업하여 지속 가능한 리스크 관리 및 고신뢰성 코딩 컨벤션을 준수하기 위해 정의된 파일 목록입니다:
+## 3.2. Automated Quality Guardrails
+LLM이 창조한 무작위 패턴 중 논리적 무결성이 결여된 불량 문제를 기계적으로 자동 필터링하는 실시간 검증 시스템입니다.
+
+* **DFS 백트래킹 기반 논리 검증 엔진 (isLogicalOnly)**<br>
+  - 생성된 솔루션 그리드로부터 가로/세로 힌트 숫자를 역산한 뒤, Java 백엔드 단의 고성능 노노그램 분석 솔버 알고리즘(`NonogramSolver`)을 구동하여 추론
+  - 단순 찍기(Guessing)나 다중 해(Multiple Solutions)가 나오는 비정형 출제를 기계적으로 차단하고, 수학적으로 유일한 해(Unique Solution)만 존재하는 무결성 통과 데이터만 검증
+* **데이터 필터링 가드레일**<br>
+  - 솔버 검증에 실패하거나 해의 유일성이 입증되지 않은 생성 데이터는 버퍼 적재 전 즉시 버기(Discard) 처리
+  - 이를 통해 LLM 특유의 할루시네이션(비정형 및 문법 오류 데이터 출력)이 최종 사용자 경험에 유입될 경로를 완전 격리
+
+---
+
+## 3.3. AI Governance & Human-in-the-Loop
+인간이 루프에 참여(HITL)하여 인공지능이 생성한 스테이지의 평판을 수집하고 지속 가능한 품질을 감독하는 통제 장치입니다.
+
+* **사용자 피드백 루프 (HITL Feedback)**<br>
+  - 실제 플레이어들이 게임 클리어 시 부여하는 추천/비추천(👍/👎) 평점 카드 데이터가 백엔드 DB `stages` 테이블에 실시간 집계
+  - 평점 비율을 가시적으로 식별하여 LLM 생성 프롬프트 매개변수 및 출제 경향 조절의 기초 자산으로 활용
+* **백오피스 기반 연쇄 하드 딜리트**<br>
+  - 평점이 불량하거나 기형적인 패턴으로 판정된 스테이지를 관리자가 수동 식별 시 백오피스 어드민 대시보드 상에서 단 한 번의 조작으로 DB에서 즉각 하드 딜리트(Hard Delete)할 수 있는 관리 프로세스 수립
+* **에이전트 거버넌스 규격 (.agents/rules/)**<br>
+  - AI 코딩 에이전트와의 협업 시 리포지토리 보안 정책과 코드 컨벤션을 엄격하게 보존하기 위해 수립된 Git Tracked 협업 정책 규칙 테이블입니다:
 
   | 규칙 파일 | 주요 관리 목적 및 정책 요약 | 형상 추적 여부 |
   | :--- | :--- | :--- |
@@ -499,13 +518,16 @@ stateDiagram-v2
 
 ---
 
-## 3.3. Troubleshooting
+## 3.4. Troubleshooting
 
-### 3.3.1. AI Generation Parsing Incident
+### 3.4.1. AI Puzzle Generation Parsing Incident
 * **배경**<br>
-  초경량 LLM 모델이 30x30 대형 그리드 생성 시 응답 지연을 아끼기 위해 JSON 포맷 대신 `Array(30).fill(0)` 같은 JS 문법을 변형 반환하여 백엔드 Jackson 역직렬화 오류(`JsonParseException`) 및 배치 스케줄러 중단 장애 발생 ([Daily Puzzle Failure Report](./docs/incidents/20260701_daily_puzzle_generation_failure.md)).
+  - 초경량 LLM 모델이 30x30 대형 그리드 생성 시 응답 지연을 아끼기 위해 JSON 포맷 대신 `Array(30).fill(0)` 같은 JS 문법을 변형 반환하여 백엔드 Jackson 역직렬화 오류(`JsonParseException`) 및 배치 스케줄러 중단 장애 발생 ([Daily Puzzle Failure Report](./docs/incidents/20260701_daily_puzzle_generation_failure.md)).
 * **해결 방안**<br>
-  AI 프롬프트에 `MUST be a literal 2D JSON array` 제약 가드레일을 주입하고, 대형 퍼즐 생성 시 출력 토큰 안전성 확보를 위해 후보군(Candidate) 개수를 5개에서 2개로 축소 조절하여 파싱 신뢰성을 100%로 확보함.
+  - AI 프롬프트에 `MUST be a literal 2D JSON array` 제약 가드레일을 주입하고, 대형 퍼즐 생성 시 출력 토큰 안전성 확보를 위해 후보군(Candidate) 개수를 5개에서 2개로 축소 조절하여 파싱 신뢰성을 100%로 확보함.
+
+---
+
 
 ---
 
