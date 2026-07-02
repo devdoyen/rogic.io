@@ -486,7 +486,8 @@
         docker compose -f docker-compose.prod.yml logs --tail=50 backend-blue || true
         echo "=== BACKEND GREEN LOGS ==="
         docker compose -f docker-compose.prod.yml logs --tail=50 backend-green || true
-      chdir: /opt/nemologic
+      args:
+        chdir: /opt/nemologic
       become: true
       register: deploy_debug_logs
       changed_when: false

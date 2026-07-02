@@ -285,6 +285,10 @@
   - **경로 진입 차단 극복**: LetsEncrypt 개인키 파일이 존재하는 상위 디렉터리 경로들(`/etc/letsencrypt/live` 등)의 그룹 실행 권한 비트 누락으로 Nginx 프로세스의 스캔 진입이 거부되던 장애를 패치함. `live`, `archive`, 부모 경로 전체를 루프 돌려 그룹 읽기/실행 권한(`g+rX`, `o-rwx`)을 명시적으로 개정함.
   - **배포 자가 진단(Diagnostics) 태스크 도입**: 배포 완료 직후 모든 원격 컨테이너 구동 현황(`docker ps -a`) 및 최신 logs를 Actions 빌드 화면에 실시간으로 프린트하도록 플레이북 최하단에 디버그 단계를 장착하여 잠재 장애 시 즉각 추적할 수 있는 툴체인을 마련함.
 
+### Ansible playbook.yml shell chdir 문법 구문 오류 핫픽스 (Step 72) - 완료
+- **해결 내역**:
+  - **문법적 결함 패치**: `Debug and display remote docker container status` 태스크에서 `shell` 모듈 사용 시 `chdir` 파라미터를 태스크 루트 수준에 잘못 병렬 매핑하여 발생하던 파서 분석 장애(`conflicting action statements: shell, chdir`)를 해결함. `chdir` 을 `args:` 지시어의 하위 키로 중첩 정렬하여 Ansible 문법 정합성을 충족함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
