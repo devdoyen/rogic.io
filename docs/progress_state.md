@@ -337,9 +337,16 @@
 - **해결 내역**:
   - **보안 명세 표준 고도화**: `README.md` 내 인프라 보안 아키텍처 분류 방식을 실무 위협 모델링 표준에 부합하도록 **`Network & Host Security`**와 **`Container Security`** 대분류로 분리 정렬함. 단순 "완료"라는 이력 기재 방식을 지양하고, CIS Benchmark 및 STRIDE 위협 체계의 핵심 보안 키워드(VPC Isolation, Least Access, Network Partitioning, Non-root Execution, Read-Only rootfs 등) 중심으로 실용적 기술 명세를 재구성함.
 
+### CI/CD 내 Trivy 기반 다계층 취약점 진단 파이프라인 통합 (Step 85) - 완료
+- **해결 내역**:
+  - **Trivy 보안 스캔 통합**: 소프트웨어 공급망 무결성과 보안 강화를 위해 알려진 취약점(CVE) 및 IaC 정적 진단 도구인 Trivy를 CI/CD 파이프라인에 통합 완료함.
+  - **다계층 보안 진단**: GitHub Actions 워크플로우에 `security-scan` 잡을 추가하여 소스코드 의존성(SCA)과 Terraform/Ansible 인프라 설정(IaC)을 검증함. 또한 `build` 잡 내에서 백엔드 Docker 이미지 빌드 직후, 레포지토리 푸시 전에 이미지 내부 취약점을 자동으로 스캔하는 3중 방어선을 수립함.
+  - **보안 지표 수치화 및 문서화**: `README.md` 내 CI/CD 장표의 품질 검증 영역(`## 2.3. Continuous Validation`)에 Trivy 진단 명세를 통합하였으며, 정량적 취약점 관리 목표(Severity별 Target: `CRITICAL 0`, `HIGH 0`) 실측 보고 테이블을 신설하여 보안 수준을 정량화함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
+- **Trivy 스캔 결과 모니터링**: CI/CD 가동 시 Trivy가 탐지하는 의존성 라이브러리 및 IaC 취약점 건수를 관찰하고 필요시 라이브러리 버전 업데이트 조치.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
 - **Nginx 웹 방화벽(WAF) 도입 검토**: 리소스 제약을 극복하고 Nginx 레벨의 보안 강화를 위한 방화벽 구성안 비교 및 적용 설계 수립.
 

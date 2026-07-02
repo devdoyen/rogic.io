@@ -100,10 +100,40 @@ jobs:
           cd infra/ansible
           ansible-playbook playbook.yml --syntax-check -i localhost,
 
+  # 1.5. Security Scan Phase: Run Trivy vulnerability scanning
+  security-scan:
+    name: Security Vulnerability Scan (Trivy)
+    needs: changes
+    runs-on: ubuntu-latest
+    concurrency:
+      group: security-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner (Repository FS)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Run Trivy IaC scanner (Infrastructure Config)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
   # 2. Staging Infra Plan Phase: Dry-run staging Terraform changes
   infra-plan-staging:
     name: Terraform Staging Dry-Run (Plan)
-    needs: ci
+    needs: [ci, security-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     concurrency:
@@ -148,7 +178,7 @@ jobs:
   # 3. Production Infra Plan Phase: Dry-run production Terraform changes
   infra-plan-production:
     name: Terraform Production Dry-Run (Plan)
-    needs: ci
+    needs: [ci, security-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     concurrency:
@@ -274,7 +304,7 @@ jobs:
   # 4. Build Phase: Compile GraalVM Native Image and Frontend Assets
   build:
     name: Build Application (GraalVM & Node)
-    needs: [ci, changes]
+    needs: [ci, changes, security-scan]
     runs-on: ubuntu-latest
     if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     concurrency:
@@ -340,10 +370,24 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           fi
 
-      - name: Build and Push Docker Images
+      - name: Build Docker Images
         if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           docker build -t ghcr.io/devdoyen/nemologic-backend:latest -t ghcr.io/devdoyen/nemologic-backend:$IMAGE_TAG ./backend
+
+      - name: Run Trivy vulnerability scanner on Backend Docker Image
+        if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'ghcr.io/devdoyen/nemologic-backend:${{ env.IMAGE_TAG }}'
+          format: 'table'
+          exit-code: '0'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Push Docker Images
+        if: needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+        run: |
           docker push ghcr.io/devdoyen/nemologic-backend:latest
           docker push ghcr.io/devdoyen/nemologic-backend:$IMAGE_TAG
 
