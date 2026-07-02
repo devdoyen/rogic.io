@@ -251,13 +251,20 @@
       become: true
       when: not ssl_cert_check.stat.exists
 
-    - name: Allow root group read access to LetsEncrypt keys
+    - name: Allow root group read and execute access on LetsEncrypt paths
       file:
-        path: "/etc/letsencrypt/archive/{{ cert_domain }}/"
+        path: "{{ item.path }}"
+        state: directory
         owner: root
         group: root
-        mode: 'g+rX'
-        recurse: yes
+        mode: "{{ item.mode | default('o-rwx,g+rX') }}"
+        recurse: "{{ item.recurse | default(false) | bool }}"
+      loop:
+        - { path: "/etc/letsencrypt" }
+        - { path: "/etc/letsencrypt/live" }
+        - { path: "/etc/letsencrypt/live/{{ cert_domain }}" }
+        - { path: "/etc/letsencrypt/archive" }
+        - { path: "/etc/letsencrypt/archive/{{ cert_domain }}", recurse: true }
       become: true
 
     - name: Ensure Certbot renewal-hooks directories exist
@@ -468,3 +475,22 @@
         minute: "0"
         hour: "3"
         job: "/usr/bin/docker system prune -af --volumes --filter 'until=72h' > /dev/null 2>&1"
+
+    - name: Debug and display remote docker container status
+      shell: |
+        echo "=== DOCKER PROCESSES ==="
+        docker ps -a
+        echo "=== FRONTEND CONTAINER LOGS ==="
+        docker compose -f docker-compose.prod.yml logs --tail=50 frontend
+        echo "=== BACKEND BLUE LOGS ==="
+        docker compose -f docker-compose.prod.yml logs --tail=50 backend-blue || true
+        echo "=== BACKEND GREEN LOGS ==="
+        docker compose -f docker-compose.prod.yml logs --tail=50 backend-green || true
+      chdir: /opt/nemologic
+      become: true
+      register: deploy_debug_logs
+      changed_when: false
+
+    - name: Print Debug Logs
+      debug:
+        var: deploy_debug_logs.stdout_lines

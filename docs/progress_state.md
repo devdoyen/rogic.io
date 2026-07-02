@@ -280,6 +280,11 @@
   - **그룹 읽기(g+rX) 권한 추가**: `playbook.yml` 내에 `Allow root group read access to LetsEncrypt keys` 태스크를 신설하여, 키 원본 저장소인 `/etc/letsencrypt/archive/{{ cert_domain }}/` 경로의 권한을 `640`/`750` 권한으로 자동 개정함.
   - **보안 무결성 수호**: `other` (타인) 권한은 `0` 으로 완벽히 묶어두어 호스트 머신의 보안을 해치지 않고, 오직 `root` 그룹에 속한 컨테이너 내부의 `nginx` 비특권 계정만 개인키를 안정적으로 읽어 구동되도록 핫픽스를 완결함.
 
+### LetsEncrypt 상위 경로 진입 권한 g+rX 활성화 및 배포 자가 진단 도입 (Step 71) - 완료
+- **해결 내역**:
+  - **경로 진입 차단 극복**: LetsEncrypt 개인키 파일이 존재하는 상위 디렉터리 경로들(`/etc/letsencrypt/live` 등)의 그룹 실행 권한 비트 누락으로 Nginx 프로세스의 스캔 진입이 거부되던 장애를 패치함. `live`, `archive`, 부모 경로 전체를 루프 돌려 그룹 읽기/실행 권한(`g+rX`, `o-rwx`)을 명시적으로 개정함.
+  - **배포 자가 진단(Diagnostics) 태스크 도입**: 배포 완료 직후 모든 원격 컨테이너 구동 현황(`docker ps -a`) 및 최신 logs를 Actions 빌드 화면에 실시간으로 프린트하도록 플레이북 최하단에 디버그 단계를 장착하여 잠재 장애 시 즉각 추적할 수 있는 툴체인을 마련함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
