@@ -253,6 +253,15 @@
   - **LLM/LLMOps 표준 기둥 정규화**: `3. AI Engineering` 하위 구성을 업계 표준 인공지능 엔지니어링 분류 3대 영역인 `3.1. LLM Generation Pipeline` (LLM 생성 파이프라인), `3.2. Automated Quality Guardrails` (자동 품질 검증 가드레일), `3.3. AI Governance & Human-in-the-Loop` (AI 거버넌스 및 관리 통제)로 정규화하고 2단 개괄식 목록화로 리팩토링함.
   - **대분류 유실 핫픽스**: 치환 슬라이싱 과정에서 유실되었던 `# 3. AI Engineering` 및 `# 4. Performance & Cost Analysis` H1 대분류 헤더를 안전하게 원상복구 완료함.
 
+### README.md 3.3 내 Antigravity IDE 에이전트 개발 협업 스택 기술 (Step 64) - 완료
+- **해결 내역**:
+  - **AI 협업 개발 스택 추가**: `Antigravity IDE` 페어 프로그래밍 협업 시 실제 활용된 AI 모델 역할 구조를 명세함. Gemini 3.5 Flash (주 개발/문서화), Claude Sonnet 4.6 (단위 코드 리뷰/정적 진단), Claude Opus 4.6 (전체 포트폴리오 최종 점검 및 고부하 설계 리뷰 게이트용 선별 가동)의 사양 분배 체계를 설명함.
+  - **토큰 가성비 제안 반영**: Opus 모델의 큰 토큰 비용(Token Cost) 제약을 명시하여 최상위 아키텍처 점검 게이트 역할에만 제한 가동하는 현실적인 AI 제어 공학 스토리를 완성함.
+
+### README.md 3.3 내 Chrome 연동 Gemini 3.5 Flash 활용성 보강 (Step 65) - 완료
+- **해결 내역**:
+  - **Chrome 연동 AI 도구 활용처 명세**: 크롬 브라우저 상에 연동된 Gemini 3.5 Flash 모델의 실전 사용 시나리오(AWS CloudWatch/Grafana 실시간 인프라 장애 로그 추적, Chrome DevTools 연계 프론트엔드 캔버스 및 CSS 디자인 검증, 브라우저 콘솔 오류 디버깅)를 명시하여 개발 다각화 성과를 완성함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
