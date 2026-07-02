@@ -309,6 +309,10 @@
 - **해결 내역**:
   - **심볼릭 링크 실제 경로 개통**: Nginx 컨테이너 내 프로세스가 `/run/nginx.pid` 에 직접 파일을 기록하려 할 때, `/var/run`만 임시 메모리 마운트되어 실제 경로인 `/run`은 쓰기 제한으로 기동이 거부되던 장애를 패치함. `docker-compose` 및 `docker-compose.stage.yml` 설정 내 `tmpfs` 마운트 대상을 **`/run`** 으로 개정함으로써 PID 생성 에러를 완전히 해소함.
 
+### 공식 Nginx 비특권 이미지(nginxinc/nginx-unprivileged:alpine) 통합 완료 (Step 78) - 완료
+- **해결 내역**:
+  - **정석 Non-root 구성 도달**: Nginx 공식 Alpine 이미지의 전역 초기화 쉘 스크립트 실행 충돌을 회피하기 위해, 비특권 전용 빌드 공식 이미지인 **`nginxinc/nginx-unprivileged:alpine`** 으로 전격 마이그레이션함. 이를 통해 임시 우회용 Nginx 쓰기 경로 패치 지시어들을 전량 소거하고, `docker-compose` 에서 `/run` 및 `/var/cache/nginx` 등 복잡하게 얽혀 있던 불필요한 tmpfs 임시 마운트 설정을 완벽하게 청산함. 오직 `/tmp` 만 tmpfs 마운트하여 정석 non-root + read-only 구동 상태를 완전 수립함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
