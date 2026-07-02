@@ -275,8 +275,9 @@ C4Container
 ---
 
 ## 1.4. Observability
+본 프로젝트는 시스템 가용성과 지표 수집 부하 최소화 통제를 위해 업계 표준 모니터링 핵심 영역(Metrics, Logs, Alerting & SLO)을 관제 아키텍처로 구축했습니다.
 
-### 1.4.1. Metric Collection & Scraping
+### 1.4.1. Metrics & Telemetry
 ```mermaid
 C4Container
     title Telemetry Diagram for rogic.io (Level 3: Observability & Alerting)
@@ -306,72 +307,42 @@ C4Container
     Rel(spring, cw, "Streams application logs", "awslogs driver")
 ```
 
-* **Agentless Pull 아키텍처**<br>
-  호스트 리소스를 소모하는 수집기(Alloy) 대신, Nginx 프록시가 `Authorization: Bearer` 헤더 토큰을 대조 검증하는 가상 경로를 열고 외부 Grafana Cloud Mimir가 직접 긁어가도록 구조화했습니다.
+* **Agentless Pull 아키텍처 수립**<br>
+  - 호스트 내부 CPU/메모리 자원을 소모하는 별도 수집 에이전트(Grafana Alloy 등)를 완전히 배제
+  - Nginx 리버스 프록시 단에서 `Authorization: Bearer` 헤더 토큰을 상시 대조 검증하는 가상 라우팅 경로를 개방
+  - 외부 Grafana Cloud의 Prometheus/Mimir 서버가 정기적으로 지표를 직접 Scrape(Scraping)하도록 설계하여 에이전트 구동 부하를 0으로 통제
 
-### 1.4.2. Centralized Log Management
-* **awslogs Docker 드라이버 연동**<br>
-  컨테이너 출력을 AWS CloudWatch Logs(`/aws/ec2/nemologic`)로 실시간 포워딩하여 디스크 점유율을 줄였으며, 헬스체크 및 메트릭 수집 API 경로는 Nginx Access Log에서 제외(off) 처리했습니다.
+### 1.4.2. Log Aggregation & Storage
+* **awslogs Docker 드라이버 실시간 스트리밍**<br>
+  - 개별 컨테이너 내부 콘솔 출력을 디스크 파일 대신 AWS CloudWatch Logs(`/aws/ec2/nemologic`)로 즉시 리다이렉트 포워딩
+  - 호스트 로컬 내에 원시 로그를 축적하지 않아 디스크 공간 고갈 및 I/O 병목 리스크 사전 격리
+* **액세스 지표 로그 필터링**<br>
+  - 헬스체크 및 주기적인 프로메테우스 메트릭 수집 API 호출 경로의 Nginx Access Log 로깅을 강제 중지(`access_log off;`) 처리
+  - 불필요한 관제 트래픽에 의한 스토리지 낭비 및 CPU 소모 통제
 
-### 1.4.3. Alerting & Notification
-* **장애 감지 경보 연동**<br>
-  CloudWatch Logs Metric Filter 오류 발생 시 AWS SNS를 경유해 개발자 메일로 상황이 실시간 통보되며, 도쿄·싱가포르·시드니 리전에서 동시에 `/actuator/health` 헬스체크 실패가 감지되면 Grafana 경보가 트리거됩니다.
-
-### 1.4.4. SLO Visualization
-* **통합 관제 SLA 대시보드 ([current_dashboard.json](infra/monitoring/current_dashboard.json))**<br>
-  SRE 핵심 품질 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 Grafana 전역 시간 범위(Time Range Picker)에 동적으로 연동되도록 설계하여 단일 행 4열 KPI 카드 레이아웃에 맞춰 배치했습니다.
-* **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)**<br>
-  레이아웃 구성 예시용 퍼블릭 링크 (인프라 보안 정책 준수를 위해 민감한 라이브 메트릭 대신 데모용 샘플 메트릭이 시각화됩니다.)
-
-#### 1.4.4.1. PromQL Query Formulation
-> [!NOTE]
-> 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다. 초기 수집 시점에 가용 상태가 0(장애)으로 시작하는 경우, 첫 번째 변화(0 → 1)가 장애 복구임에도 홀수 변화 횟수가 반환되어 나눗셈 결과에 소수점이 발생할 수 있으므로 쿼리에서는 정수 나눗셈(내림) 처리를 적용합니다.
-
-* **API Health Status**
-
-$$\text{API Health} = \sum P_t$$
-
-```promql
-sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})
-```
-
-* **Dynamic Service Availability**
-
-$$\text{Availability (\%)} = \text{avg}_{t \in \text{range}}(P_t) \times 100$$
-
-```promql
-avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 100
-```
-
-* **Dynamic Incident Count**
-
-$$\text{Incident Count} = \left\lfloor \frac{\text{changes}(P_t)}{2} \right\rfloor$$
-
-```promql
-floor(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2)
-```
-
-* **Dynamic MTTR (Mean Time To Recovery)**
-
-$$\text{MTTR (sec)} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_{t \in \text{range}} P_t\right) \times 60}{\text{clamp}_{\text{min}}\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
-
-```promql
-((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
-```
-
-* **Dynamic MTBF (Mean Time Between Failures)**
-
-$$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\text{clamp}_{\text{min}}\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
-
-```promql
-(sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
-```
-
-* $\text{clamp}_{\text{min}}(x, d) = \max(x, d)$을 의미하며, 측정 대상 기간 중 장애/복구 전환 이벤트가 0회 발생할 경우 발생하는 분모 0 오류(Zero-division) 방지를 위해 PromQL 함수로 보정한 것입니다.
+### 1.4.3. Alerting & SLO Visualization
+* **싱가포르/시드니/도쿄 3중 가용성 관제**<br>
+  - Grafana Cloud Synthetic Monitoring 프로브를 통해 다중 글로벌 리전 엣지(싱가포르, 시드니, 도쿄)에서 1분 간격으로 `/actuator/health` 헬스체크 다중 모니터링 수행
+  - 단일 지점 프로브 오류에 따른 오탐을 방지하고 다중 감색 가용성 검증 체계 구현
+* **AWS SNS 경보 메일 전송**<br>
+  - CloudWatch Logs Metric Filter 임계치 초과 장애 감지 시 AWS SNS 토픽을 트리거하여 SRE 메일로 장애 인시던트 즉시 전파
+* **통합 SLA 대시보드 시각화 ([current_dashboard.json](infra/monitoring/current_dashboard.json))**<br>
+  - 핵심 가용성 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 Grafana 대시보드 상단 단일 행 4열 KPI 카드로 일괄 관제 가능하도록 동적 연동 구성
+  - 레이아웃 구성용 예시 링크: [Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380) (민감 메트릭 배제 데모용 구성)
+  - 상세 관제 PromQL 수식 및 쿼리 구현은 부록 [5.2. PromQL Query Formulations (SLO Metrics)](#52-promql-query-formulations-slo-metrics) 참고
 
 ## 1.5. Troubleshooting
 
 ### 1.5.1. Host Memory Exhaustion Incident
+* **SRE 장애 포스트모템 요약 (Post-mortem Summary)**<br>
+  | 메타데이터 항목 (Metadata) | 명세 및 세부 내용 (Specifications) |
+  | :--- | :--- |
+  | **장애 유형 (Incident Type)** | Host Out of Memory (OOM) 및 CPU 스레싱에 따른 서비스 불능 |
+  | **장애 영향도 (Impact)** | Staging / Production API 컨테이너 잦은 다운타임 (가용성 저하 주 요인) |
+  | **핵심 유발 원인 (Root Cause)** | t3a.nano(512MB RAM) 극단 자원 환경 내 Alloy 모니터링 데몬(100MB+) 구동 및 블루-그린 배포 시 일시적 컨테이너 중복(OOM) |
+  | **최종 조치 유형 (Resolution)** | Agentless Pull 수집 아키텍처 전환, GraalVM Native Image 30MB 풋프린트 빌드, swap 구성 및 Docker 디스크 GC |
+  | **실측 RTO / RPO (Realized metrics)** | 복원 자동화 E2E 테스트 결과 RTO 3분 이내 / 일 4회 백업 덤프 소산 기반 RPO 6시간 이내 |
+
 * **배경**<br>
   인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
 * **해결 방안**<br>
@@ -651,4 +622,54 @@ docker compose up --build
 nemologic-app-server ansible_host=<EC2_Instance_ID> ansible_user=ubuntu ansible_ssh_private_key_file=<PEM_File_Path> ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p"'
 ```
 
+
+
+
+---
+
+## 5.2. PromQL Query Formulations (SLO Metrics)
+> [!NOTE]
+> 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다. 초기 수집 시점에 가용 상태가 0(장애)으로 시작하는 경우, 첫 번째 변화(0 → 1)가 장애 복구임에도 홀수 변화 횟수가 반환되어 나눗셈 결과에 소수점이 발생할 수 있으므로 쿼리에서는 정수 나눗셈(내림) 처리를 적용합니다.
+
+* **API Health Status**
+
+$$\text{API Health} = \sum P_t$$
+
+```promql
+sum(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"})
+```
+
+* **Dynamic Service Availability**
+
+$$\text{Availability (\%)} = \text{avg}_{t \in \text{range}}(P_t) \times 100$$
+
+```promql
+avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 100
+```
+
+* **Dynamic Incident Count**
+
+$$\text{Incident Count} = \left\lfloor \frac{\text{changes}(P_t)}{2} \right\rfloor$$
+
+```promql
+floor(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2)
+```
+
+* **Dynamic MTTR (Mean Time To Recovery)**
+
+$$\text{MTTR (sec)} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_{t \in \text{range}} P_t\right) \times 60}{\text{clamp}_{\text{min}}\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
+
+```promql
+((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
+```
+
+* **Dynamic MTBF (Mean Time Between Failures)**
+
+$$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\text{clamp}_{\text{min}}\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
+
+```promql
+(sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
+```
+
+* $\text{clamp}_{\text{min}}(x, d) = \max(x, d)$을 의미하며, 측정 대상 기간 중 장애/복구 전환 이벤트가 0회 발생할 경우 발생하는 분모 0 오류(Zero-division) 방지를 위해 PromQL 함수로 보정한 것입니다.
 

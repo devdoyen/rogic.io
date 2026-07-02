@@ -210,6 +210,17 @@
   - **C4 모델 표준 적용**: 기존 `1.3.1.1` 하위의 일반 `flowchart TD` 기반 보안 다이어그램을 C4 Component 다이어그램 규격으로 전면 전환하여, 프로젝트의 타 아키텍처 다이어그램들과의 기술 정합성 및 일관성을 확보함.
   - **C4Component 구성**: 주체(GitHub Actions Runner, EC2)를 `Container`로, 신뢰점 및 역할/Policies를 `Component`로, 대상 자원군들을 `System` 경계로 정확하게 맵핑하여 클라우드 보안 토폴로지 가독성을 극대화함.
 
+### README.md 관제(1.4) 정규화 및 트러블슈팅(1.5) SRE 포스트모템 요약 테이블 주입 (Step 56) - 완료
+- **해결 내역**:
+  - **관제 아키텍처 명칭 정규화**: `1.4. Observability` 의 하위 구성 요소들을 모니터링 3대 핵심 표준인 `1.4.1. Metrics & Telemetry`, `1.4.2. Log Aggregation & Storage`, `1.4.3. Alerting & SLO Visualization` 체계로 승격하고 명칭을 정규화함.
+  - **포스트모템 메타데이터 테이블 도입**: 인프라 장애 장표인 `1.5.1. Host Memory Exhaustion Incident` 의 도입부 상단에 장애 유형, 영향도, 핵심 유발 원인, 복구 조치, 실측 RTO/RPO 지표를 한눈에 볼 수 있는 **SRE 표준 장애 포스트모템 요약 테이블**을 설계하여 이식함.
+  - **수식 기호 이스케이프 복원**: 파이썬 빌더 치환 시 이스케이프 오류로 유실되었던 LaTeX PromQL 수식 특수 기호들(Times, Fraction, Right, Floor 등)을 정교한 복원 스크립트를 통해 온전하게 재보정함.
+
+### README.md PromQL 수식 및 쿼리 블록 부록 이관 (Step 57) - 완료
+- **해결 내역**:
+  - **관제 쿼리 스펙 이관**: 메인 관제 아키텍처 본문(`1.4.3. Alerting & SLO Visualization`)에 위치하여 다큐먼트 가독성을 해치던 구체적인 `PromQL` 쿼리 스펙 및 LaTeX 수학 공식 블록들을 통째로 본문에서 걷어냄.
+  - **신규 부록 신설**: 해당 장표를 최하단 부록의 신규 단원인 `## 5.2. PromQL Query Formulations (SLO Metrics)` 로 이관하여 병합함. 본문 1.4.3 끝에는 부록으로 즉각 도달 가능한 마크다운 앵커 링크를 배치해 가독성을 높임.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
