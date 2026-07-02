@@ -317,6 +317,10 @@
 - **해결 내역**:
   - **S3 동기화 누락 복구**: Actions 빌드 스크립트 중 프론트엔드 정적 파일 S3 동기화 루틴(`aws s3 ls`)이 `ListAllMyBuckets` AccessDenied 에러로 인해 소리 없이 스킵되던 버그를 패치함. Staging 및 Production 환경 테라폼 IAM 정책 구성 파일(`main.tf`)에 **`s3:ListAllMyBuckets`** 권한 Statement를 주입하여 Actions 러너가 S3 버킷명을 정상 획득하고 웹 리소스를 무사히 동기화하도록 조치함.
 
+### Frontend 패스 필터 발화를 위한 README 더미 갱신 (Step 80) - 완료
+- **해결 내역**:
+  - **파이프라인 강제 빌드**: 이전 IAM 정책 수정 커밋 시 `frontend/` 경로 변경이 인지되지 않아 S3 싱크 배포가 강제 스킵되던 현상을 해결함. `frontend/README.md` 에 더미 트리거 주석을 추가하여 GitHub Actions path filter 가 `frontend: true` 를 인식하게 만듦으로써 S3 배포 단계와 Playwright E2E 최종 검증을 무사히 수행하도록 파이프라인 트리거를 기동함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
