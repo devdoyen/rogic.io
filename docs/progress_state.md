@@ -313,6 +313,10 @@
 - **해결 내역**:
   - **정석 Non-root 구성 도달**: Nginx 공식 Alpine 이미지의 전역 초기화 쉘 스크립트 실행 충돌을 회피하기 위해, 비특권 전용 빌드 공식 이미지인 **`nginxinc/nginx-unprivileged:alpine`** 으로 전격 마이그레이션함. 이를 통해 임시 우회용 Nginx 쓰기 경로 패치 지시어들을 전량 소거하고, `docker-compose` 에서 `/run` 및 `/var/cache/nginx` 등 복잡하게 얽혀 있던 불필요한 tmpfs 임시 마운트 설정을 완벽하게 청산함. 오직 `/tmp` 만 tmpfs 마운트하여 정석 non-root + read-only 구동 상태를 완전 수립함.
 
+### GitHub Actions IAM 정책 내 s3:ListAllMyBuckets 전역 조회 권한 추가 (Step 79) - 완료
+- **해결 내역**:
+  - **S3 동기화 누락 복구**: Actions 빌드 스크립트 중 프론트엔드 정적 파일 S3 동기화 루틴(`aws s3 ls`)이 `ListAllMyBuckets` AccessDenied 에러로 인해 소리 없이 스킵되던 버그를 패치함. Staging 및 Production 환경 테라폼 IAM 정책 구성 파일(`main.tf`)에 **`s3:ListAllMyBuckets`** 권한 Statement를 주입하여 Actions 러너가 S3 버킷명을 정상 획득하고 웹 리소스를 무사히 동기화하도록 조치함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

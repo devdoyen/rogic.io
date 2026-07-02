@@ -358,6 +358,11 @@ resource "aws_iam_policy" "github_actions_staging_policy" {
       },
       {
         Effect   = "Allow"
+        Action   = ["s3:ListAllMyBuckets"]
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow"
         Action   = ["dynamodb:*"]
         Resource = "arn:aws:dynamodb:ap-northeast-2:${data.aws_caller_identity.current.account_id}:table/nemologic-tfstate-lock"
       },
