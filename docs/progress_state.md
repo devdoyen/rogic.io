@@ -270,6 +270,10 @@
 - **해결 내역**:
   - **그룹 상속을 통한 권한 우회**: Nginx 컨테이너를 `nginx` 비특권 사용자로 기동 시, 호스트에서 `root:root` 로 마운트된 LetsEncrypt SSL 인증서 파일에 접근할 수 없어 `Permission Denied` 크래시를 내던 오류를 패치함. Nginx 컨테이너는 비특권 `nginx` 유저로 유지하되, `docker-compose` 내에 **`group_add: - root`** 옵션을 주어 호스트의 root 그룹 읽기 권한을 상속받도록 결합함으로써 호스트 OS 변경 없이 SSL 복구를 완료함.
 
+### Staging Nginx PID 생성 쓰기 거부 /var/run tmpfs 핫픽스 (Step 69) - 완료
+- **해결 내역**:
+  - **PID 파일 쓰기 차단 극복**: Staging 환경 배포 시 Nginx 가 Dockerfile 빌드 과정(sed 치환) 없이 공식 이미지를 기동함에 따라, `read_only` 상태에서 `/var/run/nginx.pid` 생성이 거부되던 장애를 패치함. `docker-compose` 설정 내 Nginx 서비스의 `tmpfs` 마운트 목록에 **`/var/run`** 을 명시적으로 추가하여 비특권/읽기 전용 Nginx 의 정상 기동을 완성함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
