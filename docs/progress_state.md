@@ -289,6 +289,10 @@
 - **해결 내역**:
   - **문법적 결함 패치**: `Debug and display remote docker container status` 태스크에서 `shell` 모듈 사용 시 `chdir` 파라미터를 태스크 루트 수준에 잘못 병렬 매핑하여 발생하던 파서 분석 장애(`conflicting action statements: shell, chdir`)를 해결함. `chdir` 을 `args:` 지시어의 하위 키로 중첩 정렬하여 Ansible 문법 정합성을 충족함.
 
+### LetsEncrypt 전체 경로 전역 재귀적 권한 완화 및 non-root Nginx SSL 전면 개통 (Step 73) - 완료
+- **해결 내역**:
+  - **링크 수준 경로 탐색 차단 해소**: LetsEncrypt 개별 경로 루프 처리 시 일부 심볼릭 링크 파일 자체나 갱신 파일들의 권한 장벽이 남아 Nginx 기동에 실패하던 크래시를 패치함. 최상위 `/etc/letsencrypt` 전역에 대해 **`recurse: yes`** 및 **`o-rwx,g+rX`** 모드를 부여하여 모든 서브디렉터리 및 파일의 그룹 권한을 완치 및 개통함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

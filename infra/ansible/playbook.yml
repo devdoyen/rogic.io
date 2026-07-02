@@ -251,20 +251,14 @@
       become: true
       when: not ssl_cert_check.stat.exists
 
-    - name: Allow root group read and execute access on LetsEncrypt paths
+    - name: Allow root group read and execute access recursively on all LetsEncrypt directories and files
       file:
-        path: "{{ item.path }}"
+        path: /etc/letsencrypt
         state: directory
         owner: root
         group: root
-        mode: "{{ item.mode | default('o-rwx,g+rX') }}"
-        recurse: "{{ item.recurse | default(false) | bool }}"
-      loop:
-        - { path: "/etc/letsencrypt" }
-        - { path: "/etc/letsencrypt/live" }
-        - { path: "/etc/letsencrypt/live/{{ cert_domain }}" }
-        - { path: "/etc/letsencrypt/archive" }
-        - { path: "/etc/letsencrypt/archive/{{ cert_domain }}", recurse: true }
+        mode: 'o-rwx,g+rX'
+        recurse: yes
       become: true
 
     - name: Ensure Certbot renewal-hooks directories exist
