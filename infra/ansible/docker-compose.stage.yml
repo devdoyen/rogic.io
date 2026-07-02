@@ -21,6 +21,9 @@ services:
   frontend:
     image: nginx:alpine
     read_only: true
+    user: "nginx"
+    group_add:
+      - root
     tmpfs:
       - /tmp
       - /var/cache/nginx

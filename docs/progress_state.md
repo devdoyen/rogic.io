@@ -266,6 +266,10 @@
 - **해결 내역**:
   - **universe 리포지토리 활성화**: 도커 미설치 신규 서버 구축 분기 진입 시, 우분투 universe 패키지 저장소가 누락되어 `awscli` 및 `prometheus-node-exporter` 설치가 취소되던 결함을 패치함. `Update apt package cache` 태스크 바로 다음에 `Enable universe repository` 태스크를 주입하여, apt가 정상적으로 해당 패키지를 탐색해 낼 수 있도록 가용화함.
 
+### Staging Nginx non-root SSL 권한 오류 group_add 핫픽스 (Step 68) - 완료
+- **해결 내역**:
+  - **그룹 상속을 통한 권한 우회**: Nginx 컨테이너를 `nginx` 비특권 사용자로 기동 시, 호스트에서 `root:root` 로 마운트된 LetsEncrypt SSL 인증서 파일에 접근할 수 없어 `Permission Denied` 크래시를 내던 오류를 패치함. Nginx 컨테이너는 비특권 `nginx` 유저로 유지하되, `docker-compose` 내에 **`group_add: - root`** 옵션을 주어 호스트의 root 그룹 읽기 권한을 상속받도록 결합함으로써 호스트 OS 변경 없이 SSL 복구를 완료함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

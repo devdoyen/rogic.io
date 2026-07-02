@@ -43,6 +43,9 @@ services:
       dockerfile: Dockerfile
     container_name: nemologic-frontend
     read_only: true
+    user: "nginx"
+    group_add:
+      - root
     tmpfs:
       - /tmp
       - /var/cache/nginx
