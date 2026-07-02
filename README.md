@@ -30,9 +30,9 @@
 ## 0.4. Engineering Constraints & Principles
 본 프로젝트는 엔지니어링 수행 과정에서 다음과 같은 극단적인 제약 조건을 상정하고, 이를 기술적인 아키텍처 튜닝으로 극복하여 시스템 안정성을 확보하는 것을 최우선 목표로 설계되었습니다.
 
-* **물리 메모리 512MB 극 한계 극복 (Compute Resource Constraints)**<br>
+* **512MB 물리 메모리의 리소스 한계 극복 (Compute Resource Constraints)**<br>
   월 $3.5 수준의 `t3a.nano`/`t4g.nano` 초경량 인스턴스를 타겟팅합니다. 컴파일 연산의 외부 오프로딩, JVM 배제 및 GraalVM Native AOT 컴파일 전환, 가비지 컬렉션 자동화 및 지표 수집기(Alloy) 제거를 통해 물리적 리소스 제약을 극복합니다.
-* **인프라 비용의 극 최소화 (Financial Efficiency)**<br>
+* **인프라 운영 비용의 극소화 (Financial Efficiency)**<br>
   월 실청구액 $12 이하의 무중단급 인프라 운영을 지향합니다. AWS ALB 및 RDS와 같은 완전관리형 유료 서비스를 배제하고, Docker 네트워크 격리 기반의 Self-hosted DB 컨테이너화 및 Nginx Reverse Proxy로 대체하여 기존 모범 사례 대비 비용을 80% 이상 절감합니다.
 * **제약 조건 하에서의 고가용성 보장 (Resilience under Constraints)**<br>
   로드 밸런서가 없는 환경에서 장애 발생 시의 리스크를 줄이기 위해 AWS CloudWatch Alarms 기반의 호스트 자동 복구(Auto Recovery), 그리고 IaC(Terraform/Ansible) 자동화에 연동된 6시간 주기 S3 백업 수동 복구(ROA, RTO 20분/RPO 6시간) 절차를 정밀 수립하여 운영 안전성을 통제합니다.
