@@ -185,6 +185,26 @@
   - **인프라 Troubleshooting 복원**: 이전에 1.6으로 이동했던 Troubleshooting 단원을 원래 자리인 `## 1.5. Troubleshooting` 및 `### 1.5.1` 로 당겨서 복원하고, 성과 회고(4.2) 내의 앵커 참조도 1.5.1로 정상 복원함.
   - **부록(Appendices) 인덱스 하향 조정**: 기존 `# 4. Appendices` 대단원을 `# 5. Appendices` 로 한 칸 하향 이동하고 하위 구조(`## 5.1`, `### 5.1.1~3`)를 전면 보정함.
 
+### README.md 보안 인프라 섹션(1.3) 개괄식 목록화 리팩토링 (Step 51) - 완료
+- **해결 내역**:
+  - **보안 아키텍처 개괄식 포맷 변환**: `1.3. Security Infrastructure` 하위의 모든 서술형 설명 문장들을 1.2와 일관된 글머리 기호 기반의 구조화된 개괄식 포맷으로 변경함.
+  - **가독성 및 시인성 고도화**: 물리 격리 VPC 및 가상 도커 브릿지 격리(1.3.1), SSM 터널링 세부 스펙(1.3.2), 인바운드/프록시 중재(1.3.2.1), IAM 단기 자격 증명 OIDC/서비스 최소 권한(1.3.2.2), Certbot 인증서 갱신 자동화(1.3.3), 테라폼 원격 상태 형상 보안(1.3.4)의 복잡한 줄글 표현을 명료하게 구조화하여 문서 정합성을 극대화함.
+
+### README.md 보안 인프라(1.3) AWS Well-Architected Framework 표준 규격 정규화 (Step 52) - 완료
+- **해결 내역**:
+  - **보안 아키텍처 분류 체계 정규화**: 기존의 산발적이고 임의적이었던 보안 서브섹션들을 AWS Well-Architected Framework 보안 기둥(Security Pillar)에 맞춰 `1.3.1. Identity & Access Management`, `1.3.2. Infrastructure Protection`, `1.3.3. Data Protection` 3대 영역으로 전면 재구성하고 정규화함.
+  - **콘텐츠 통합 및 압축**: IAM 최소 권한 정책 및 Ansible SSM Tunneling Spec을 IAM 섹션(1.3.1) 하위로 이관하고, 네트워크 다이어그램 및 보안 그룹 정책을 인프라 보호 섹션(1.3.2)으로, 인증서/상태 파일 보안을 데이터 보호 섹션(1.3.3)으로 유기적으로 묶어서 문서의 정보 응집도를 대폭 개선함.
+
+### README.md Ansible SSM 상세 코드블록 부록 이관 (Step 53) - 완료
+- **해결 내역**:
+  - **구현 상세 이관**: 메인 보안 아키텍처 본문(`1.3.1. Identity & Access Management`)에 상주해 흐름을 해치던 구체적인 `hosts.ini` 설정용 Ansible SSM Tunneling 코드 블록을 본문에서 도려냄.
+  - **부록 병합 및 앵커 참조**: 해당 코드 스니펫을 호스트 접근 툴 가이드라인 부록인 `## 5.1.3. AWS SSM Session Manager Setup` 최하단 항목으로 이관하여 문서의 정보 위계를 고도화하고, 본문에서는 부록으로 직접 이동할 수 있는 마크다운 앵커 링크(`[5.1.3. AWS SSM Session Manager Setup](#513-aws-ssm-session-manager-setup)`)를 배치함.
+
+### README.md IAM verbose 테이블 제거 및 Mermaid 다이어그램 도입 (Step 54) - 완료
+- **해결 내역**:
+  - **다이어그램 대체 및 시인성 극대화**: 본문 `1.3.1.1. IAM Least Privilege Design` 의 과도하게 길었던 11개 대상 서비스별 IAM Actions 세부 매핑 테이블을 완전히 삭제하고, 대신 전체 주체(Runner, EC2)와 인증 체계(OIDC, Instance Profile), IAM 역할/정책, AWS 타깃 자원 간의 유기적 흐름을 표상하는 **Mermaid IAM Architecture Flowchart**를 설계하여 삽입함.
+  - **정보 간결성 획득**: 핵심 요약인 주체별 자격 증명 테이블만 다이어그램과 병치하고 불필요한 구현성 Policy 세부 테이블은 완전히 걷어냄으로써 전체 다큐먼트 아키텍처 리포트의 가독성과 정보 전달력을 완성함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

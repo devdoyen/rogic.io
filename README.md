@@ -109,8 +109,88 @@ C4Context
 ---
 
 ## 1.3. Security Infrastructure
+본 프로젝트는 서비스 무결성과 호스트 시스템 보호를 위해 AWS Well-Architected Framework의 보안 기둥(Security Pillar) 설계 가이드라인에 부합하는 3대 보안 제어 정책을 구현했습니다.
 
-### 1.3.1. Network Isolation
+### 1.3.1. Identity & Access Management
+* **SSM Session Manager 도입**<br>
+  - 무작위 대입 공격과 SSH 키 유출 리스크가 높은 호스트 SSH(22) 포트를 인바운드 보안 그룹에서 완전 차단
+  - IAM 자격 증명 기반의 AWS Systems Manager Session Manager를 경유하는 세션 통신만 허용
+* **Ansible SSM 터널 캡슐화**<br>
+  - 호스트의 22번 포트를 원격 개방하지 않고, 로컬 및 배포 러너 환경에서 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 터널로 캡슐화
+  - 해당 터널 내부에서 기존 SSH 인증 키(PEM)를 활용한 2차 인증을 통과해야만 Ansible Playbook 가동이 가능하도록 이중 방어선 구축 (상세 `hosts.ini` 구성은 부록 [5.1.3. AWS SSM Session Manager Setup](#513-aws-ssm-session-manager-setup) 참고)
+* **OIDC Keyless Authentication**<br>
+  - GitHub Actions 러너 배포 시 하드코딩된 AWS API Access Key 사용을 전면 배제
+  - GitHub OIDC(OpenID Connect) 연동을 수립하여 배포 시점에 AWS STS로부터 1회용 단기 자격 증명(`AssumeRole`)을 획득함으로써 유출 경로 원천 제거
+* **서비스 수준 최소 권한 정책 (Least Privilege)**<br>
+  - 테라폼 및 Ansible 배포 범위에 정확히 부합하는 서비스 수준 최소 권한 정책(Staging/Production 별 커스텀 IAM Policy) 바인딩
+  - 허용 자원 이외의 타 서비스 자원(예: RDS, Lambda, KMS 등) 관리를 원천 배제하여 위협 반경 차단
+
+#### 1.3.1.1. IAM Least Privilege Design
+EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적용된 IAM 권한과 OIDC 단기 자격 증명 기반의 자원 통제 아키텍처는 다음과 같습니다.
+
+```mermaid
+flowchart TD
+    subgraph GitHub_Actions ["CI/CD Pipeline (GitHub Actions Runner)"]
+        runner["GitHub Runner"]
+    end
+
+    subgraph AWS_Cloud ["AWS Cloud (ap-northeast-2)"]
+        subgraph IAM_Control ["Identity & Access Management (IAM)"]
+            oidc["OIDC Trust Provider<br>(token.actions.githubusercontent.com)"]
+            run_role["CI/CD Runner IAM Role<br>(Staging / Production Role)"]
+            host_role["EC2 Instance IAM Role<br>(Instance Profile)"]
+            
+            subgraph Policies ["IAM Least Privilege Policies"]
+                tf_policy["Terraform & Deploy Policy<br>(EC2, VPC, S3, DynamoDB, Route53, CloudFront)"]
+                ssm_policy["SSM Managed Policy<br>(SSM Access)"]
+                cw_policy["CloudWatch Log Policy<br>(Telemetry Access)"]
+                s3_back_policy["S3 Backup Write Policy<br>(Backup Access)"]
+            end
+        end
+
+        subgraph AWS_Resources ["AWS Resources"]
+            ec2["EC2 Instances<br>(Staging / Production)"]
+            s3_tf["S3 tfstate & deploy Bucket"]
+            ddb_lock["DynamoDB tfstate lock Table"]
+            cf_cdn["CloudFront CDN"]
+            r53_dns["Route 53 Hosted Zone"]
+            cw_logs["CloudWatch Logs / Alarms"]
+            s3_back["S3 Backup Bucket"]
+        end
+    end
+
+    %% OIDC Authentication Flow
+    runner -->|"1. Web Identity Token (Keyless)"| oidc
+    oidc -->|2. Assume Role| run_role
+    run_role -->|3. Bind Permissions| tf_policy
+
+    %% CI/CD Resource Access
+    tf_policy -.->|Manage VPC & Host| ec2
+    tf_policy -.->|Read/Write tfstate| s3_tf
+    tf_policy -.->|Lock state| ddb_lock
+    tf_policy -.->|Invalidate CDN cache| cf_cdn
+    tf_policy -.->|Update DNS record| r53_dns
+
+    %% EC2 IAM Host Role Flow
+    ec2 -->|4. Assume Role| host_role
+    host_role -->|5. Bind Permissions| ssm_policy
+    host_role -->|5. Bind Permissions| cw_policy
+    host_role -->|5. Bind Permissions| s3_back_policy
+
+    %% Host Resource Access
+    ssm_policy -.->|Enable Systems Manager Tunnel| ec2
+    cw_policy -.->|Push stdout streams| cw_logs
+    s3_back_policy -.->|Upload daily DB dump| s3_back
+```
+
+| 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
+| :--- | :--- | :--- | :--- |
+| **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>Staging: `CloudWatchAgentServerPolicy` (관리형)<br>Production: `nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화, CloudWatch 로그 실시간 포워딩(Staging/Production 별 정책 차등 적용), DB 백업 S3 업로드 권한 제어 |
+| **CI/CD Runner (GitHub)** | AWS OIDC (Keyless) | `nemologic-staging-github-policy`<br>`nemologic-production-github-policy` (커스텀) | `sts:AssumeRoleWithWebIdentity`를 통해 GitHub Actions OIDC 토큰으로 1회용 단기 자격 증명을 획득하여 Terraform 및 배포 수행 (Secret Key 하드코딩 배제 및 최소 권한 수립) |
+
+---
+
+### 1.3.2. Infrastructure Protection
 ```mermaid
 C4Container
     title Container Diagram for rogic.io (Level 2: Network & Containers)
@@ -161,80 +241,46 @@ C4Container
 ```
 
 * **물리 격리형 VPC 구성**<br>
-  Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 상호 간의 간섭을 완전히 격리했습니다.
+  - Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝
+  - 망간 교차 접근을 원천 차단하여 테스트 환경의 불안정성이 운영계에 전이되지 않도록 격리 안전성 확보
 * **다계층 도커 브리지 네트워크 격리**<br>
-  단일 EC2 내부 통신 시 인터넷 개방점인 Nginx(`frontend-net`)가 DB(`backend-net`)에 직접 접근할 수 없도록 가상 네트워크를 분리하고, 백엔드 API 컨테이너가 가교 역할을 전담하게 하여 횡적 이동(Lateral Movement) 위협을 제한했습니다.
-* **Database Outbound 차단 (`internal: true`)**<br>
-  데이터베이스가 상주하는 `backend-net` 브리지망에 `internal: true`를 지정하여 인터넷 아웃바운드를 완전 봉쇄함으로써 RCE 침투 시 리버스 커넥션 수립 및 데이터 무단 유출(Exfiltration) 시도를 원천 차단했습니다.
-* **보안 로드맵 (Security Roadmap)**<br>
-  향후 컨테이너 내부 애플리케이션의 Non-root User 실행 권한 전환 및 Read-Only root 파일시스템 제한을 적용하여 컨테이너 샌드박스 보안을 더욱 강화할 예정입니다. DB 백업은 호스트 단의 표준 출력 파이프라인(`docker exec pg_dump`)으로 중재 처리하므로 기능적 장애가 없습니다.
-
-### 1.3.2. Host Access Control
-* **SSM Session Manager 및 SSH(22) 포트 완전 차단**<br>
-  EC2 호스트 터미널 접근 경로의 무작위 대입 공격과 SSH 키 유출 리스크를 제거하기 위해 인바운드 보안 그룹에서 SSH(22) 포트를 완전히 차단했습니다. 외부 직접 접속은 거부하고 IAM 자격 증명 기반의 AWS System Manager 세션을 경유해서만 터미널 접근이 가능하도록 구성했습니다.
-* **SSM 터널 캡슐화를 통한 Ansible SSH 인증**<br>
-  인스턴스의 인바운드 22포트를 막아두는 대신, 로컬 및 러너 환경의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 터널로 삼아 캡슐화했습니다. 이 터널 내부에서 기존 SSH 인증 키(PEM)를 활용한 2차 인증을 거치도록 구성하여 Ansible Playbook을 통한 무작위 SSH 노출 리스크를 차단하고 안전하게 호스트를 관리합니다.
+  - 단일 EC2 내부 컨테이너 통신 시 인터넷 개방점인 Nginx 프록시(`frontend-net`)가 DB(`backend-net`)에 직접 접근할 수 없도록 가상 네트워크 분리
+  - 백엔드 API 컨테이너만 양쪽 브리지 네트워크에 동시 소속되어 가교 역할을 전담하게 함으로써 횡적 이동(Lateral Movement) 위협 제한
+* **Database 아웃바운드 완전 차단**<br>
+  - 데이터베이스 컨테이너가 상주하는 `backend-net` 브리지망에 `internal: true` 옵션 인라인 지정
+  - 데이터베이스의 외부 인터넷 아웃바운드 시도를 봉쇄하여 RCE(원격 코드 실행) 침투 시 리버스 커넥션 및 데이터 무단 유출(Exfiltration) 시도 원천 차단
+* **최소 인바운드 포트 제한**<br>
+  - Staging 및 Production 환경 모두 외부 서비스 및 모니터링 연동을 위한 Nginx 포트(80, 443)만 외부 인바운드 개방
+  - SSH(22), Spring API(8080), Vite Frontend 개발(5173) 포트는 보안 그룹 규칙에서 완전히 제외하여 외부 접근 차단
+* **원격 메트릭 수집 프록시 중재**<br>
+  - Grafana Cloud Mimir의 원격 프로메테우스 수집기가 메트릭을 수집(Pull)할 때 외부 Actuator 포트(8080) 직접 호출 차단
+  - Nginx HTTPS(443) 인터페이스로 스크래핑을 요청하면, Nginx가 Bearer 토큰 보안 검증을 완료한 통신에 한해 로컬 루프백망의 `/actuator/prometheus`로 포워딩 중재
+* **컨테이너 보안 로드맵**<br>
+  - 향후 컨테이너 내부 애플리케이션의 Non-root User 실행 권한 전환 및 Read-Only root 파일시스템 제한 적용 예정
+  - DB 백업은 호스트 단에서 Docker API 표준 출력 파이프라인(`docker exec pg_dump`)으로 안전하게 중재 처리하여 백업 무결성 유지
 
 #### 1.3.2.1. Security Group Configuration
-* **Inbound (Ingress) Rules & Port Control**<br>
-  본 프로젝트에서는 Staging 및 Production 환경 모두 외부 서비스 및 모니터링 연동을 위한 Nginx 포트(80, 443)만 인바운드로 최소 허용합니다. 그 외 SSH(22), Spring Boot API(8080), Vite Frontend 개발(5173) 포트는 보안 그룹 규칙에서 완전히 배제되어 인터넷 직접 노출이 불가능합니다.
+* **보안 그룹 인바운드 제어 (Security Group Ingress/Egress Rule)**<br>
+  외부 인터넷과의 경계점 포트를 제어하고, 아웃바운드 전송 트래픽 규격을 명확히 고정합니다.
 
   | 허용 포트 (Port) | 프로토콜 (Protocol) | 소스 (Source) | 목적 및 대상 서비스 |
   | :---: | :---: | :---: | :--- |
   | 80 | TCP | `0.0.0.0/0` | Nginx HTTP 웹 서버 (HTTPS 301 리다이렉트용) |
   | 443 | TCP | `0.0.0.0/0` | Nginx HTTPS 보안 웹 서비스 및 API 통신 (모니터링 스크래핑 포함) |
 
-* **Telemetry Scraping Proxy**<br>
-  Grafana Cloud Mimir의 원격 프로메테우스 수집기(Prometheus Pull)가 지표를 수집할 때도 외부 8080 포트 직접 접근을 금지합니다. 수집기는 Nginx HTTPS(443)로 요청을 전송하며, Nginx 단에서 Bearer 토큰 보안 검증을 통과한 통신에 한해 로컬 루프백망의 Spring Boot Actuator(/actuator/prometheus)로 프록시 중재하도록 설계되어 안전성을 보장합니다.
-
-* **Outbound (Egress) Rules**<br>
   | 허용 포트 (Port) | 프로토콜 (Protocol) | 대상 (Destination) | 비고 |
   | :---: | :---: | :---: | :--- |
   | All | All | `0.0.0.0/0` | 패키지 업데이트, 외부 API 호출 및 DB 백업 S3 업로드용 |
 
-#### 1.3.2.2. IAM Least Privilege Design
-EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적용된 IAM 권한과 인증 메커니즘을 명시하여 보안 정합성을 보장합니다.
+---
 
-| 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
-| :--- | :--- | :--- | :--- |
-| **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>Staging: `CloudWatchAgentServerPolicy` (관리형)<br>Production: `nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화, CloudWatch 로그 실시간 포워딩(Staging/Production 별 정책 차등 적용), DB 백업 S3 업로드 권한 제어 |
-| **CI/CD Runner (GitHub)** | AWS OIDC (Keyless) | `nemologic-staging-github-policy`<br>`nemologic-production-github-policy` (커스텀) | `sts:AssumeRoleWithWebIdentity`를 통해 GitHub Actions OIDC 토큰으로 1회용 단기 자격 증명을 획득하여 Terraform 및 배포 수행 (Secret Key 하드코딩 배제 및 최소 권한 수립) |
-
-* **OIDC Keyless Authentication**<br>
-  하드코딩된 AWS API Access Key 사용을 지양하고, GitHub OIDC(OpenID Connect) 연동을 수립하여 매 빌드 및 배포 시점에 AWS Security Token Service(STS)로부터 1회용 단기 자격 증명을 획득(AssumeRole)합니다. 이로써 자격 증명 유출 경로를 원천 차단하고 보안 안전성을 확보했습니다.
-
-* **Service-Level Least Privilege Policy**<br>
-  테라폼 및 Ansible 배포 범위에 정확히 부합하는 서비스 수준 최소 권한 정책(Staging/Production 별 커스텀 IAM Policy)을 바인딩했습니다. 이를 통해 허용 서비스 이외의 타 서비스 자원(예: RDS, Lambda, KMS 등) 관리를 원천 차단하여 Least Privilege 통제를 완결했습니다.
-
-  | 대상 서비스 (Service) | 허용 작업 (Actions) | 대상 리소스 범위 (Resource Constraints) | 사용 목적 및 용도 (Purpose) |
-  | :--- | :--- | :--- | :--- |
-  | **EC2 / VPC** | `ec2:*` | `*` (Wildcard) | VPC, 서브넷, Route Table, Internet Gateway, 보안 그룹, 인스턴스 및 EIP 생성/관리 |
-  | **S3 Storage** | `s3:*` | `arn:aws:s3:::nemologic-*`<br>`arn:aws:s3:::rogic-*` | 테라폼 상태 파일(State), 데이터베이스 백업 버킷 관리 및 프론트엔드 정적 파일 배포 동기화 |
-  | **DynamoDB** | `dynamodb:*` | `arn:aws:dynamodb:*:*:table/nemologic-tfstate-lock` | 테라폼 상태 파일의 동시 수정 충돌을 예방하기 위한 원격 상태 잠금(Locking) 제어 |
-  | **IAM** | `iam:*` | `arn:aws:iam::*:role/nemologic-*`<br>`arn:aws:iam::*:policy/nemologic-*`<br>`arn:aws:iam::*:instance-profile/nemologic-*`<br>`arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com` | EC2 IAM 역할/인스턴스 프로필 프로비저닝 및 OIDC Runner 역할 자체의 AssumeRole 정책 제어 |
-  | **CloudWatch Logs** | `logs:*` | `*` (Wildcard) | 호스트 내부 시스템 및 애플리케이션 로그 그룹 생성, 수명주기 조회 및 스트림 수집 관리 |
-  | **CloudWatch Alarms** | `cloudwatch:*` | `arn:aws:cloudwatch:*:*:alarm:nemologic-*` | 시스템 하드웨어 장애(Status Check Failed) 감지 시 호스트 자동 복구(Auto Recovery) 트리거 |
-  | **SNS Alerts** | `sns:*` | `arn:aws:sns:*:*:nemologic-*` | 장애/경고 상황 발생 시 시스템 관리자 이메일 수신을 위한 알림 토픽 및 구독(Subscription) 관리 |
-  | **SSM** | `ssm:*` | `*` (Wildcard) | Ansible Playbook 가동 시 22번 포트 외부 노출을 방지하기 위한 SSM Session Manager 터널링 연결 |
-  | **CloudFront (CDN)** | `cloudfront:*` | `*` (Wildcard) | 정적 자산 배포용 CDN 배포판 정보 조회 및 신규 버전 배포 시 엣지 캐시 무효화(Invalidation) 실행 |
-  | **ACM Certificate** | `acm:*` | `*` (Wildcard) | HTTPS 적용을 위한 SSL/TLS 인증서 검증 및 CloudFront 연결 전용 us-east-1 인증서 조회 |
-  | **Route 53 (DNS)** | `route53:*` | `*` (Wildcard) | 퍼블릭 도메인(`rogic.io`, `stage.rogic.io`) 매핑 및 네임서버 DNS 레코드셋 생성/조정 제어 |
-
-#### 1.3.2.3. Ansible SSM Tunneling Specification
-Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
-
-```ini
-[nemologic_servers]
-nemologic-app-server ansible_host=<EC2_Instance_ID> ansible_user=ubuntu ansible_ssh_private_key_file=<PEM_File_Path> ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p"'
-```
-
-### 1.3.3. SSL/TLS Certificate Management
-* **Let's Encrypt 및 Certbot 갱신**<br>
-  HTTPS(443) 통신 및 HTTP(80) 301 리다이렉트 정책을 구현하였으며, 3개월 만료 인증서 자동 갱신을 지원하는 pre/post 쉘 스크립트 훅을 Certbot 데몬에 바인딩했습니다.
-
-### 1.3.4. State Management Security
-* **테라폼 원격 상태 잠금**<br>
-  AWS S3 버킷과 DynamoDB 테이블(`LockID`)을 Backend로 연동해 개발자 배포 시 형상 관리(State)의 동시 수정 충돌을 원천 방지했습니다.
+### 1.3.3. Data Protection
+* **인증서 자동 갱신 자동화**<br>
+  - Let's Encrypt 무료 SSL 인증서를 발급받아 HTTPS(443) 통신 및 HTTP(80) 301 리다이렉트 정책 구현
+  - 3개월 주기 만료 전에 인증서를 자동 갱신할 수 있도록 pre/post 쉘 스크립트 훅을 Certbot 데몬에 연동하여 만료 다운타임 예방
+* **원격 상태 형상 보안**<br>
+  - AWS S3 버킷과 DynamoDB 테이블(`LockID`)을 테라폼 Backend로 지정하여 협업 및 배포 시 상태 파일(State)의 동시 수정 충돌 및 손상 원천 방지
+  - 상태 파일 암호화 정책을 연동하여 인프라 형상 자산 정보 보호
 
 ---
 
@@ -607,5 +653,12 @@ docker compose up --build
   ```bash
   ssh -i ~/.ssh/nemologic-key.pem ubuntu@i-xxxxxxxxxxxxxxxxx
   ```
+
+* **Ansible SSM SSH Tunneling Configuration (hosts.ini)**<br>
+  22번 포트 차단 상태에서 Ansible Playbook 가동을 위해 호스트의 SSM 에이전트를 프록시 터널로 삼아 연결할 수 있도록 아래와 같이 `hosts.ini` 설정을 구성하여 SSH 연결을 캡슐화합니다.
+```ini
+[nemologic_servers]
+nemologic-app-server ansible_host=<EC2_Instance_ID> ansible_user=ubuntu ansible_ssh_private_key_file=<PEM_File_Path> ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p"'
+```
 
 
