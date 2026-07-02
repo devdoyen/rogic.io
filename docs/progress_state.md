@@ -325,6 +325,10 @@
 - **해결 내역**:
   - **시드 데이터 비활성화 장애 극복**: Staging 서버 기동 시 `stages.json` 의 기본값(`active = false`)이 그대로 들어가 `/api/stages` 가 빈 데이터(`[]`)를 반환해 캔버스 렌더링이 안 되던 결함을 패치함. `DataSeeder.java` 의 적용 프로파일 범위에 `local` 및 `stage` 를 영입하고, 이미 비활성화되어 DB에 들어가 있는 레코드들도 컨테이너 구동 단계에서 자동으로 `active = true, approved = true` 로 갱신(자가 회복)하여 웹 화면에 퍼즐들이 전면 노출되도록 완치함.
 
+### Production 환경 Nginx 비특권(nginxinc/nginx-unprivileged) 및 비특권 포트 정합 정비 (Step 82) - 완료
+- **해결 내역**:
+  - **순차 배포 규칙 수호 및 일치화**: Staging 환경의 완전 개통 성공을 검증한 직후, 사용자 규칙에 따라 Production 환경 구성 파일군(`docker-compose.prod.yml`, `nginx.prod.conf`)을 비특권 표준으로 일치화함. 프로덕션 Nginx 이미지를 `nginxinc/nginx-unprivileged:alpine` 으로 갱신하고, 비특권 계정 기동 요건 충족을 위해 listen 포트를 `8080` 및 `8443` 으로, 컴포즈 외부 수신 포트를 `80:8080` 및 `443:8443` 으로 정비하여 완벽한 보안 하드닝 및 환경 정합을 최종 완료함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
