@@ -65,83 +65,53 @@ C4Context
 
 ### 1.1.2. Component Specification
 * **Global Edge Delivery (Route 53 / CloudFront / S3)**<br>
-  Vite 컴파일 결과물을 `Amazon S3` 버킷(OAC 차단)에 호스팅하고, `Amazon CloudFront` CDN 및 `Route 53` DNS와 결합하여 전 세계 유저에게 정적 정적 리소스를 엣지 단에서 안정적으로 전송합니다.
+  Vite 컴파일 결과물을 `Amazon S3` 버킷(OAC 설정을 통한 전면 차단)에 배포하고, `Amazon CloudFront` CDN을 통해 글로벌 엣지에 캐싱 배포하여 지연 시간을 최소화하고 S3 직접 요청 요금을 차단했습니다.
 * **Core API Server & Database (EC2 / PostgreSQL)**<br>
-  단일 EC2 인스턴스 내에서 SSL/TLS 종단 처리를 전담하는 Nginx 리버스 프록시, REST API 비즈니스 로직을 구동하는 Spring Boot 애플리케이션 컨테이너, 그리고 영속성 데이터를 보관하는 PostgreSQL DB 컨테이너를 가상 네트워크망 상에서 격리 및 중재 구동합니다.
-
----
+  단일 EC2 인스턴스 내에서 SSL/TLS 종단 및 포트 포워딩을 수행하는 Nginx 프록시, REST API를 처리하는 Spring Boot 컨테이너, 게임 데이터를 영속화하는 PostgreSQL DB 컨테이너를 가상 Docker 브릿지 네트워크로 분리 가동합니다.
 
 ## 1.2. Cost Optimization
-* **인프라 월간 운영 비용 분석 (Monthly Billing Summary)**<br>
-  자원 다중화 및 관리형 DB 서비스 대신 가상 컨테이너 기술과 복구 지향형 설계를 연동하여 월 $11.45 (세후 실청구액 기준, 기존 대비 약 80% 비용 절감)의 상용 인프라 운영을 달성했습니다.
+### 1.2.1. Compute
+* **최적화 조치 (Optimization)**<br>
+  - 월 $3.5 대의 초경량 t3a.nano 인스턴스(512MB RAM) 환경 도입
+  - Spring Boot 런타임 메모리 풋프린트를 30MB 이하로 낮추기 위해 GraalVM Native Image 빌드 도입
+  - Jackson 역직렬화 오류 예방을 위해 [NemologicRuntimeHints.java](backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트 명시
+  - 호스트 디스크 용량 관리를 위해 매일 새벽 3시마다 Docker GC prune 스케줄 크론탭 구동
+* **기술적 제약 (Trade-off)**<br>
+  - 512MB 메모리 제약으로 인해 서버 내에서 직접 GraalVM 컴파일 빌드가 불가능하며, 빌드 연산 시 JVM 컴파일 대비 10배 이상의 시간 소요
+* **완화 대책 (Mitigation)**<br>
+  - CI/CD 파이프라인 상에서 GitHub Actions가 제공하는 외부 빌드 인프라(2 Core, 7GB RAM)에 컴파일 연산 부하를 오프로딩하고, 호스트 서버는 30MB 수준의 무부하 바이너리 실행만 전담하도록 분리
 
-  | 구분 (Category) | 기존 구성 예상 비용 (Estimated) | 최적화 구성 실제 비용 (2026년 6월) | 주요 비고 (Key Notes) |
-  | :--- | :--- | :--- | :--- |
-  | **컴퓨팅 및 스토리지** | $20.00 / 월 (t3.micro) | $5.50 / 월 (t3a.nano + EBS) | GraalVM 네이티브 컨테이너화를 통해 메모리 스레싱 극복 |
-  | **로드 밸런서** | $20.00 / 월 (AWS ALB) | $0.00 / 월 (Self-hosted Nginx) | ALB 제거 후 Route 53 고정 EIP 다이렉트 매핑 |
-  | **데이터베이스** | $15.00 / 월 (RDS PostgreSQL) | $0.00 / 월 (PostgreSQL Container) | EC2 호스트 내부 Docker Compose 환경 가동 |
-  | **네트워크 & 도메인** | N/A *1 | $4.74 / 월 (IP 주소 + Route 53) | 퍼블릭 IPv4 사용료 ($3.70) + 호스팅 영역 ($1.04) |
-  | **기타 (데이터 전송 등)** | N/A *1 | $1.21 / 월 | 데이터 트래픽 전송 및 유틸리티 자원 비용 |
-  | **합계 (Total)** | **약 $55.00 / 월** | **총 $11.45 / 월** | **기존 대비 약 80% 비용 절감 달성 (세후 실청구액)** |
+### 1.2.2. Network & Delivery
+* **최적화 조치 (Optimization)**<br>
+  - 월 $20 상당의 AWS ALB(Application Load Balancer)를 배제하고 Route 53 도메인과 고정 Elastic IP 다이렉트 매핑
+  - Docker Nginx 컨테이너 단일 프록시 가동을 통한 SSL/TLS 종단 및 백엔드 API 포트(8080) 포워딩 처리 전담
+  - Vite 빌드 정적 컴파일 자산을 S3 버킷에 OAC(Origin Access Control) 보안 설정으로 배포하고 CloudFront CDN을 연동해 글로벌 에지 캐싱 전송을 구현하여 지연 시간 단축 및 S3 직접 요청 요금 차단
+* **기술적 제약 (Trade-off)**<br>
+  - 다중 가용구역(Multi-AZ) 무중단 이중화 및 롤링 배포를 달성할 수 없어, 호스트 물리 장애 시 서비스 전체 정전(SPOF) 리스크에 노출됨
+* **완화 대책 (Mitigation)**<br>
+  - AWS CloudWatch Status Check Metric Alarms를 결합해 물리 하드웨어 결함 발생 시 1분 이내에 인스턴스를 정상 물리 호스트로 자동 복원(Auto Recovery) 및 EIP 재바인딩 처리
 
-  *1: 기존 구성 단계에서 산출되지 않은 네트워크 유지 및 도메인 고정 비용입니다.
+### 1.2.3. Database & Storage
+* **최적화 조치 (Optimization)**<br>
+  - 월 $15~20 이상의 RDS 서비스 비용 절감을 위해 EC2 내부 Docker Compose 환경에서 PostgreSQL 컨테이너를 직접 가동
+* **기술적 제약 (Trade-off)**<br>
+  - AWS RDS의 완전관리형 이중화 복구 및 시점 복구(PITR) 편의성을 상실하였으며, 재해 복구 시 백업 덤프 기반 수동 복원 처리가 요구됨에 따라 복구 목표 시간(RTO) 약 20분 및 최대 데이터 손실 한계(RPO) 6시간으로 조정됨
+* **완화 대책 (Mitigation)**<br>
+  - 6시간 주기 DB dump 데이터를 S3 독립 백업 버킷으로 전송하는 쉘 스크립트와 Cron 배포 및 30일 경과 백업 자동 파기 정책 연동
+  - Terraform/Ansible 코드화를 통해 전체 유실 발생 시에도 5분 이내 인프라 재설치 및 데이터 수동 복구 절차 수립 (ROA)
 
-### 1.2.1. Compute Resource Downsizing
-* **t3a.nano/t4g.nano (512MB RAM) 타겟팅**<br>
-  월 $3.5 대 컴퓨팅 인스턴스 사양에 맞추어 리소스를 튜닝했습니다.
-* **GraalVM Native Image 메모리 최적화**<br>
-  Spring Boot 애플리케이션의 런타임 메모리 점유율을 30MB 이하로 낮추어 초경량 인스턴스 사양에 부합하도록 튜닝했습니다. 자세한 리플렉션 힌트 및 Native 빌드 상세 내역은 [1.6.1. Host Memory Exhaustion Incident](#161-host-memory-exhaustion-incident)를 참고하십시오.
-* **Jackson 역직렬화 DTO Reflection 힌트**<br>
-  Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
-* **Docker Garbage Collection 자동화**<br>
-  디스크 용량 고갈 장애 예방을 위해 새벽 3시마다 72시간 경과 도커 리소스를 강제 소거하는 prune 스크립트를 크론탭으로 자동 배치했습니다.
-
-### 1.2.2. Load Balancer Elimination
-* **ALB 제거 및 고정 EIP 구성**<br>
-  월 $20 상당의 AWS ALB를 배제하고 DNS 도메인(Route 53)과 고정 Elastic IP를 매핑했습니다. SPOF와 자동 복구 관련 상세 완화 대책은 [1.3.2. Single Point of Failure (SPOF)](#132-single-point-of-failure-spof) 및 [1.3.3. Recovery Indicators](#133-recovery-indicators)를 참고하십시오.
-* **EC2 Auto Recovery 및 복구 지향 아키텍처(ROA)**<br>
-  ALB 부재에 따른 장애 전파를 줄이기 위해 시스템 알람 연동 호스트 자동 복구(Auto Recovery)를 결합하고, 재해 복구 시 IaC 코드를 활용해 5분 이내 인프라를 복원하도록 구성했습니다.
-
-### 1.2.3. Database Cost Minimization
-* **Self-hosted PostgreSQL 컨테이너**<br>
-  월 $15~20 이상의 RDS 비용을 아끼기 위해 EC2에 DB 컨테이너를 기동했습니다.
-* **S3 정기 백업 및 Lifecycle 제어**<br>
-  6시간 주기로 DB dump 데이터를 S3로 업로드하는 쉘 스크립과 Cron을 배포하고, S3 백업 버킷에 30일 경과 백업 자동 파기 정책을 적용했습니다.
-
-### 1.2.4. Staging Resource Stop/Start Scheduling
-* **Staging 인스턴스 평시 정지**<br>
-  개발/검증 환경인 Staging EC2 인스턴스는 불필요한 컴퓨팅 비용 낭비를 막기 위해 평시에 중지(Stopped) 상태를 유지합니다.
-* **CI/CD 파이프라인 연동 기동**<br>
-  GitHub Actions 워크플로우 실행 시 `deploy-staging` 작업 내에서 AWS CLI를 통해 인스턴스를 자동으로 기동(Start)하고, 배포 및 검증(Playwright E2E)을 마친 뒤 별도의 스케줄 및 정책을 통해 비용 효율성을 극대화합니다.
+### 1.2.4. Staging Environment
+* **최적화 조치 (Optimization)**<br>
+  - 개발/검증용 Staging EC2 인스턴스는 불필요한 컴퓨팅 자원 요금 낭비를 막기 위해 평시에 중지(Stopped) 상태 유지
+* **워크플로우 연동 (Workflow / Mitigation)**<br>
+  - GitHub Actions `deploy-staging` 실행 시 AWS CLI로 인스턴스를 자동으로 기동(Start)하여 배포 및 Playwright 브라우저 E2E 테스트 검증 진행
+  - 검증 완료 후 야간(매일 새벽 2시 KST)에 정지 자동화 스케줄([staging-cleanup.yml](.github/workflows/staging-cleanup.yml))을 구동하여 비용 효율성 확보
 
 ---
 
-## 1.3. Technical Trade-offs
-비용 최적화를 달성하기 위해 포기한 기술적 혜택(Trade-offs)과 이를 극복하기 위해 설계한 완화 대책(Mitigations)을 명시적으로 투명하게 공개합니다.
+## 1.3. Security Infrastructure
 
-### 1.3.1. Build Resource Constraints
-* **물리 메모리 고갈에 따른 컴파일 리스크 (Trade-off)**<br>
-  t3a.nano(512MB RAM) 환경에서는 메모리 제약으로 인해 서버 내에서 직접 GraalVM 컴파일 빌드가 불가능하며, 빌드 속도 또한 JVM 컴파일에 비해 10배 이상 오래 소요됩니다.
-* **외부 컴퓨팅 오프로딩 (Mitigation)**<br>
-  CI/CD 파이프라인에서 GitHub Actions가 제공하는 외부 빌드 인프라(2 Core, 7GB RAM)에 컴파일 연산 부하를 위임하고, 운영 서버 호스트는 30MB 수준의 무부하 바이너리 구동만 전담하도록 분리 구조화했습니다.
-
-### 1.3.2. Single Point of Failure (SPOF)
-* **다중 AZ 로드밸런싱 포기 (Trade-off)**<br>
-  AWS Load Balancer(ALB) 배제로 인해 다중 가용구역(Multi-AZ) 무중단 이중화 및 롤링 배포를 달성할 수 없으며, 호스트 물리 장애 시 전체 정전이 발생하는 단일 장애점(SPOF)을 노출하게 됩니다.
-* **호스트 자동 복구 결합 (Mitigation)**<br>
-  AWS CloudWatch Status Check Metric Alarms를 결합해 물리 하드웨어 결함 발생 시 1분 이내에 인스턴스를 정상 물리 호스트로 자동 복원(Auto Recovery)하여 EIP를 바인딩하도록 인프라 복원력을 강화했습니다.
-
-### 1.3.3. Recovery Indicators
-* **관리형 DB Failover 및 시점 복구 상실 (Trade-off)**<br>
-  AWS RDS의 완전관리형 이중화 복구 및 시점 복구(PITR) 편의성을 상실하였으며, 재해 복구 시 백업 덤프 파일 기반의 수동 복원 처리가 요구됨에 따라 RPO가 최대 6시간(백업 주기), RTO가 약 20분 수준으로 하향 조정됩니다.
-* **복구 지향 아키텍처(ROA) 구현 (Mitigation)**<br>
-  인프라를 코드로 구성(Terraform/Ansible)하여 재설치 과정을 자동화하고, 6시간 주기 백업 덤프 자산을 독립 버킷 S3에 안전하게 보관하여 전체 데이터 유실 및 가상 머신 소멸 시에도 5분 이내 수동 복구 가능한 절차를 수립했습니다.
-
----
-
-## 1.4. Security Infrastructure
-
-### 1.4.1. Network Isolation
+### 1.3.1. Network Isolation
 ```mermaid
 C4Container
     title Container Diagram for rogic.io (Level 2: Network & Containers)
@@ -200,13 +170,13 @@ C4Container
 * **보안 로드맵 (Security Roadmap)**<br>
   향후 컨테이너 내부 애플리케이션의 Non-root User 실행 권한 전환 및 Read-Only root 파일시스템 제한을 적용하여 컨테이너 샌드박스 보안을 더욱 강화할 예정입니다. DB 백업은 호스트 단의 표준 출력 파이프라인(`docker exec pg_dump`)으로 중재 처리하므로 기능적 장애가 없습니다.
 
-### 1.4.2. Host Access Control
+### 1.3.2. Host Access Control
 * **SSM Session Manager 및 SSH(22) 포트 완전 차단**<br>
   EC2 호스트 터미널 접근 경로의 무작위 대입 공격과 SSH 키 유출 리스크를 제거하기 위해 인바운드 보안 그룹에서 SSH(22) 포트를 완전히 차단했습니다. 외부 직접 접속은 거부하고 IAM 자격 증명 기반의 AWS System Manager 세션을 경유해서만 터미널 접근이 가능하도록 구성했습니다.
 * **SSM 터널 캡슐화를 통한 Ansible SSH 인증**<br>
   인스턴스의 인바운드 22포트를 막아두는 대신, 로컬 및 러너 환경의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 터널로 삼아 캡슐화했습니다. 이 터널 내부에서 기존 SSH 인증 키(PEM)를 활용한 2차 인증을 거치도록 구성하여 Ansible Playbook을 통한 무작위 SSH 노출 리스크를 차단하고 안전하게 호스트를 관리합니다.
 
-#### 1.4.2.1. Security Group Configuration
+#### 1.3.2.1. Security Group Configuration
 * **Inbound (Ingress) Rules & Port Control**<br>
   본 프로젝트에서는 Staging 및 Production 환경 모두 외부 서비스 및 모니터링 연동을 위한 Nginx 포트(80, 443)만 인바운드로 최소 허용합니다. 그 외 SSH(22), Spring Boot API(8080), Vite Frontend 개발(5173) 포트는 보안 그룹 규칙에서 완전히 배제되어 인터넷 직접 노출이 불가능합니다.
 
@@ -223,7 +193,7 @@ C4Container
   | :---: | :---: | :---: | :--- |
   | All | All | `0.0.0.0/0` | 패키지 업데이트, 외부 API 호출 및 DB 백업 S3 업로드용 |
 
-#### 1.4.2.2. IAM Least Privilege Design
+#### 1.3.2.2. IAM Least Privilege Design
 EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적용된 IAM 권한과 인증 메커니즘을 명시하여 보안 정합성을 보장합니다.
 
 | 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
@@ -251,7 +221,7 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적
   | **ACM Certificate** | `acm:*` | `*` (Wildcard) | HTTPS 적용을 위한 SSL/TLS 인증서 검증 및 CloudFront 연결 전용 us-east-1 인증서 조회 |
   | **Route 53 (DNS)** | `route53:*` | `*` (Wildcard) | 퍼블릭 도메인(`rogic.io`, `stage.rogic.io`) 매핑 및 네임서버 DNS 레코드셋 생성/조정 제어 |
 
-#### 1.4.2.3. Ansible SSM Tunneling Specification
+#### 1.3.2.3. Ansible SSM Tunneling Specification
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
 
 ```ini
@@ -259,19 +229,19 @@ Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `host
 nemologic-app-server ansible_host=<EC2_Instance_ID> ansible_user=ubuntu ansible_ssh_private_key_file=<PEM_File_Path> ansible_ssh_common_args='-o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p"'
 ```
 
-### 1.4.3. SSL/TLS Certificate Management
+### 1.3.3. SSL/TLS Certificate Management
 * **Let's Encrypt 및 Certbot 갱신**<br>
   HTTPS(443) 통신 및 HTTP(80) 301 리다이렉트 정책을 구현하였으며, 3개월 만료 인증서 자동 갱신을 지원하는 pre/post 쉘 스크립트 훅을 Certbot 데몬에 바인딩했습니다.
 
-### 1.4.4. State Management Security
+### 1.3.4. State Management Security
 * **테라폼 원격 상태 잠금**<br>
   AWS S3 버킷과 DynamoDB 테이블(`LockID`)을 Backend로 연동해 개발자 배포 시 형상 관리(State)의 동시 수정 충돌을 원천 방지했습니다.
 
 ---
 
-## 1.5. Observability
+## 1.4. Observability
 
-### 1.5.1. Metric Collection & Scraping
+### 1.4.1. Metric Collection & Scraping
 ```mermaid
 C4Container
     title Telemetry Diagram for rogic.io (Level 3: Observability & Alerting)
@@ -304,21 +274,21 @@ C4Container
 * **Agentless Pull 아키텍처**<br>
   호스트 리소스를 소모하는 수집기(Alloy) 대신, Nginx 프록시가 `Authorization: Bearer` 헤더 토큰을 대조 검증하는 가상 경로를 열고 외부 Grafana Cloud Mimir가 직접 긁어가도록 구조화했습니다.
 
-### 1.5.2. Centralized Log Management
+### 1.4.2. Centralized Log Management
 * **awslogs Docker 드라이버 연동**<br>
   컨테이너 출력을 AWS CloudWatch Logs(`/aws/ec2/nemologic`)로 실시간 포워딩하여 디스크 점유율을 줄였으며, 헬스체크 및 메트릭 수집 API 경로는 Nginx Access Log에서 제외(off) 처리했습니다.
 
-### 1.5.3. Alerting & Notification
+### 1.4.3. Alerting & Notification
 * **장애 감지 경보 연동**<br>
   CloudWatch Logs Metric Filter 오류 발생 시 AWS SNS를 경유해 개발자 메일로 상황이 실시간 통보되며, 도쿄·싱가포르·시드니 리전에서 동시에 `/actuator/health` 헬스체크 실패가 감지되면 Grafana 경보가 트리거됩니다.
 
-### 1.5.4. SLO Visualization
+### 1.4.4. SLO Visualization
 * **통합 관제 SLA 대시보드 ([current_dashboard.json](infra/monitoring/current_dashboard.json))**<br>
   SRE 핵심 품질 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 Grafana 전역 시간 범위(Time Range Picker)에 동적으로 연동되도록 설계하여 단일 행 4열 KPI 카드 레이아웃에 맞춰 배치했습니다.
 * **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)**<br>
   레이아웃 구성 예시용 퍼블릭 링크 (인프라 보안 정책 준수를 위해 민감한 라이브 메트릭 대신 데모용 샘플 메트릭이 시각화됩니다.)
 
-#### 1.5.4.1. PromQL Query Formulation
+#### 1.4.4.1. PromQL Query Formulation
 > [!NOTE]
 > 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다. 초기 수집 시점에 가용 상태가 0(장애)으로 시작하는 경우, 첫 번째 변화(0 → 1)가 장애 복구임에도 홀수 변화 횟수가 반환되어 나눗셈 결과에 소수점이 발생할 수 있으므로 쿼리에서는 정수 나눗셈(내림) 처리를 적용합니다.
 
@@ -364,22 +334,9 @@ $$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\text{clamp
 
 * $\text{clamp}_{\text{min}}(x, d) = \max(x, d)$을 의미하며, 측정 대상 기간 중 장애/복구 전환 이벤트가 0회 발생할 경우 발생하는 분모 0 오류(Zero-division) 방지를 위해 PromQL 함수로 보정한 것입니다.
 
-#### 1.5.4.2. Target Service Level Indicators
-본 프로젝트는 단일 EC2 인스턴스 및 도커 가상화 환경의 물리적 제약 조건 하에, 아래와 같은 가용성 및 재해 복구 최대 허용 한계 목표(SLA/SLO Target)를 수립하여 모니터링합니다.
+## 1.5. Troubleshooting
 
-| 서비스 수준 지표 (SLI) | 최대 허용 한계 목표 (Target Constraints / SLA) | 비고 및 설계 근거 (Design Rationale) |
-| :--- | :--- | :--- |
-| **Availability (가용성)** | **99.0%** (월간 누적 장애 약 7.3시간 이내) | 단일 EC2 사양에 따른 AWS 하드웨어 물리 가용 한계치 감안 |
-| **RPO (복구 시점 목표)** | **최대 6시간** (장애 시 최대 6시간치 데이터 유실 허용) | 6시간 주기의 S3 백업 덤프 자산 소산 주기 기준 |
-| **RTO (복구 시간 목표)** | **최대 20분** (재해 선언 후 20분 이내 서비스 정상화) | IaC 코드 기반 EC2 인프라 재구축 및 DB 덤프 복원 소요 시간 |
-| **MTBF (평균 고장 간격)** | **720시간 (30일)** 이상 무장애 지속 | 스왑 가상 메모리 구성 및 도커 가비지 컬렉션 자동화를 통한 리소스 방어 |
-| **MTTR (평균 복구 시간)** | **10분 이내** (장애 전파 감지 후 정상화) | AWS Auto Recovery 호스트 복구 및 백업 수동 복원 절차 수립 |
-
----
-
-## 1.6. Troubleshooting
-
-### 1.6.1. Host Memory Exhaustion Incident
+### 1.5.1. Host Memory Exhaustion Incident
 * **배경**<br>
   인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
 * **해결 방안**<br>
@@ -463,7 +420,7 @@ stateDiagram-v2
 
 ### 2.2.1. Compute Offloading
 * **Actions Runner 컴파일 오프로딩**<br>
-  512MB 호스트 내부의 빌드 제약을 극복하기 위해 빌드 연산 부하를 GitHub Actions로 오프로딩했습니다. 상세 완화 구조는 [1.3.1. Build Resource Constraints](#131-build-resource-constraints)를 참고하십시오.
+  512MB 호스트 내부의 빌드 제약을 극복하기 위해 빌드 연산 부하를 GitHub Actions로 오프로딩했습니다. 상세 완화 구조는 [1.2.1. Compute](#121-compute)를 참고하십시오.
 
 ### 2.2.2. Static Asset Delivery
 * **Vite Static Asset 동적 업로드**<br>
@@ -542,12 +499,56 @@ stateDiagram-v2
 
 ---
 
-# 4. Appendices
+# 4. Performance & Cost Analysis
+초경량 인프라 자원을 바탕으로 구축된 서비스의 재무적 비용 효율성과 시스템 신뢰성(Reliability) 및 이용자 지표 실측 결과를 대조 분석하여 기술 의사결정의 타당성을 검증합니다.
 
-## 4.1. Local Development Setup
+## 4.1. Operational Cost Comparison
+* **인프라 월간 운영 비용 분석 (Monthly Billing Summary)**<br>
+  자원 다중화 및 관리형 DB 배제 등으로 기존 예상 운영비 대비 약 80%의 비용 절감을 유지하고 있습니다.
+
+  | 구분 (Category) | 기존 구성 예상 비용 (Estimated) | 최적화 구성 실제 비용 (2026년 6월) | 주요 비고 (Key Notes) |
+  | :--- | :--- | :--- | :--- |
+  | **컴퓨팅 및 스토리지** | $20.00 / 월 (t3.micro) | $5.50 / 월 (t3a.nano + EBS) | GraalVM 네이티브 컨테이너화를 통해 메모리 스레싱 극복 |
+  | **로드 밸런서** | $20.00 / 월 (AWS ALB) | $0.00 / 월 (Self-hosted Nginx) | ALB 제거 후 Route 53 고정 EIP 다이렉트 매핑 |
+  | **데이터베이스** | $15.00 / 월 (RDS PostgreSQL) | $0.00 / 월 (PostgreSQL Container) | EC2 호스트 내부 Docker Compose 환경 가동 |
+  | **네트워크 & 도메인** | N/A *1 | $4.74 / 월 (IP 주소 + Route 53) | 퍼블릭 IPv4 사용료 ($3.70) + 호스팅 영역 ($1.04) |
+  | **기타 (데이터 전송 등)** | N/A *1 | $1.21 / 월 | 데이터 트래픽 전송 및 유틸리티 자원 비용 |
+  | **합계 (Total)** | **약 $55.00 / 월** | **총 $11.45 / 월** | **기존 대비 약 80% 비용 절감 달성 (세후 실청구액)** |
+
+  *1: 기존 구성 단계에서 산출되지 않은 네트워크 유지 및 도메인 고정 비용입니다.
+
+## 4.2. SLO Targets vs Actual Performance
+* **서비스 수준 및 신뢰도 비교 분석 (Reliability Performance Dashboard)**<br>
+  최근 30일(6월 4일 ~ 7월 2일)간 Grafana Cloud를 통해 관제한 실측 데이터 기반 대조 분석입니다. 초기 인프라 튜닝 단계에서의 OOM 및 배포 정합성 오류로 인해 누적 가용성은 목표치 대비 낮게 측정되었으나, 해결 이후 안정화 단계에 진입했습니다.
+
+  | 서비스 수준 지표 (SLI) | 목표 한계치 (SLO Target) | 실측 성과 (30일 누적 실측치) | 주요 분석 및 설계 근거 (Design Rationale) |
+  | :--- | :--- | :--- | :--- |
+  | **Availability (가용성)** | **99.0%** | **82.1%** | 초기 메모리 고갈(OOM) 및 빌드 튜닝 중 발생한 다운타임 반영 |
+  | **MTBF (평균 고장 간격)** | **720시간 (30일)** 이상 | **10.0 ~ 11.7 시간** | 컴파일 부하 및 에이전트 메모리 충돌로 인한 잦은 컨테이너 중지 |
+  | **MTTR (평균 복구 시간)** | **10분 이내** | **1.49 ~ 2.56 시간** | 알림 스케줄링 미비 및 수동 재구축 조치 지연 시간 반영 |
+  | **RPO (복구 시점 목표)** | **최대 6시간** | **최대 6시간** (데이터 실유실 0건) | 일 4회 DB Dump 파일 Amazon S3 원격 소산 스케줄 가동 |
+  | **RTO (복구 시간 목표)** | **최대 20분** | **3분 이내** (복원 자동화 테스트 결과) | Terraform/Ansible 코드를 통한 원클릭 재빌드 및 덤프 자동 적재 |
+
+* **실측 지표에 대한 기술 회고 (Operational Metrics Retrospective)**<br>
+  - **가용성 저하 요인 분석**: 프로젝트 초기 t3a.nano(512MB RAM)의 극단적인 자원 제약 하에서 Nginx/Spring/PostgreSQL을 동시 구동할 때의 OOM(Out of Memory) 현상과 Docker 레이어를 통한 디스크 고갈이 주 장애 요인으로 기록되었습니다.
+  - **복구 시간(MTTR) 지연**: 초기 경보 채널(Slack/Email SNS) 및 SSM 세션 매니저를 통한 복구 자동화 인프라가 완전히 구축되기 전, 수동 SSH 접속 및 데몬 분석 처리에 많은 시간이 지연되었습니다.
+  - **안정화 성과**: 트러블슈팅([1.5.1. Host Memory Exhaustion Incident](#151-host-memory-exhaustion-incident)) 조치(Agentless Pull 스위칭, 30MB 이하 GraalVM Native Image 배포, swap 가상 메모리 구성, Docker GC 스크립트 및 SSM 터널링 고도화)를 완료한 최근 7일 가동 기준으로는 **가용성 99% 이상** 및 **장애 발생 빈도 0회**를 달성하여 시스템 안정화 상태를 검증했습니다.
+
+## 4.3. User & System Traffic Metrics
+* **구축 이후 서비스 누적 실측 지표 (Google Analytics 4 / Actuator)**<br>
+  - **활성 사용자 수 (Active Users)**: 57명 (최근 30일 Google Analytics 4 실측 기준)
+  - **총 이벤트 수 (Total Events)**: 655회 (사용자 상호작용 및 게임 플레이 행위 로그)
+  - **사용자당 평균 참여 시간 (Average Engagement Time)**: 2분 8초
+  - **AI 자동 생성 퍼즐 수 (Daily Generated)**: 60+ 개 (데일리 생성기 및 무결성 솔버 검증 통과 데이터 누적)
+
+---
+
+# 5. Appendices
+
+## 5.1. Local Development Setup
 To run `rogic.io` on your local workstation, select one of the options below:
 
-### 4.1.1. Docker Compose Stack Deployment
+### 5.1.1. Docker Compose Stack Deployment
 전체 애플리케이션 스택(Database, Backend, Frontend)을 한 번에 빌드하고 기동하려는 경우 아래 옵션을 선택합니다.
 
 ```bash
@@ -560,7 +561,7 @@ docker compose up --build
 
 ---
 
-### 4.1.2. Local and Container Hybrid Run
+### 5.1.2. Local and Container Hybrid Run
 코드 수정 시 즉각적인 라이브 반영 및 핫 리로딩(Vite dev server)을 원하는 경우 아래 단계별로 서비스를 기동합니다.
 
 * **Step 1: PostgreSQL 데이터베이스 기동**<br>
@@ -588,7 +589,7 @@ docker compose up --build
 
 ---
 
-### 4.1.3. AWS SSM Session Manager Setup
+### 5.1.3. AWS SSM Session Manager Setup
 보안 그룹 22번 포트 폐쇄 환경 하에서 원격 EC2 인스턴스 터미널에 접속하거나 Ansible 터널을 설정하는 방법입니다.
 
 * **AWS CLI 및 Session Manager Plugin 설치**<br>
