@@ -293,6 +293,10 @@
 - **해결 내역**:
   - **링크 수준 경로 탐색 차단 해소**: LetsEncrypt 개별 경로 루프 처리 시 일부 심볼릭 링크 파일 자체나 갱신 파일들의 권한 장벽이 남아 Nginx 기동에 실패하던 크래시를 패치함. 최상위 `/etc/letsencrypt` 전역에 대해 **`recurse: yes`** 및 **`o-rwx,g+rX`** 모드를 부여하여 모든 서브디렉터리 및 파일의 그룹 권한을 완치 및 개통함.
 
+### Nginx 임시 캐시 디렉터리 /tmp 우회 매핑 및 비특권 기동 완료 (Step 74) - 완료
+- **해결 내역**:
+  - **임시 캐시 쓰기 차단 극복**: Nginx 비특권 사용자 기동 시 `/var/cache/nginx/client_temp` 생성이 거부되어 컨테이너가 즉사하던 결함을 패치함. `nginx.conf` 및 `nginx.stage.conf` 의 `server` 블록 내부에 `client_body_temp_path` 등 5가지 임시 파일 쓰기 지시어를 주입하여, 스티키 비트가 활성화된 메모리 개방 임시 공간인 **`/tmp`** 하위로 쓰기 경로를 변경함으로써 `read_only: true` 격리 가동을 최종 완수함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
