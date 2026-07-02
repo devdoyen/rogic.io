@@ -251,6 +251,15 @@
       become: true
       when: not ssl_cert_check.stat.exists
 
+    - name: Allow root group read access to LetsEncrypt keys
+      file:
+        path: "/etc/letsencrypt/archive/{{ cert_domain }}/"
+        owner: root
+        group: root
+        mode: 'g+rX'
+        recurse: yes
+      become: true
+
     - name: Ensure Certbot renewal-hooks directories exist
       file:
         path: "{{ item }}"

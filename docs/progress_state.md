@@ -274,6 +274,12 @@
 - **해결 내역**:
   - **PID 파일 쓰기 차단 극복**: Staging 환경 배포 시 Nginx 가 Dockerfile 빌드 과정(sed 치환) 없이 공식 이미지를 기동함에 따라, `read_only` 상태에서 `/var/run/nginx.pid` 생성이 거부되던 장애를 패치함. `docker-compose` 설정 내 Nginx 서비스의 `tmpfs` 마운트 목록에 **`/var/run`** 을 명시적으로 추가하여 비특권/읽기 전용 Nginx 의 정상 기동을 완성함.
 
+### LetsEncrypt 개인키 0600 권한 완화(640) 및 non-root Nginx SSL 복원 (Step 70) - 완료
+- **해결 내역**:
+  - **비특권 기동과 보안성 균형 달성**: LetsEncrypt 가 발급하는 비공개 개인키(`privkey.pem`)의 소유자 전용 `0600` 권한으로 인해 비특권 컨테이너(`user: nginx` 및 `group_add: - root`)가 SSL 읽기에 실패하던 장애의 궁극적 해법을 이식함.
+  - **그룹 읽기(g+rX) 권한 추가**: `playbook.yml` 내에 `Allow root group read access to LetsEncrypt keys` 태스크를 신설하여, 키 원본 저장소인 `/etc/letsencrypt/archive/{{ cert_domain }}/` 경로의 권한을 `640`/`750` 권한으로 자동 개정함.
+  - **보안 무결성 수호**: `other` (타인) 권한은 `0` 으로 완벽히 묶어두어 호스트 머신의 보안을 해치지 않고, 오직 `root` 그룹에 속한 컨테이너 내부의 `nginx` 비특권 계정만 개인키를 안정적으로 읽어 구동되도록 핫픽스를 완결함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
