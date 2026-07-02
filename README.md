@@ -68,7 +68,6 @@ C4Context
   Vite 컴파일 결과물을 `Amazon S3` 버킷(OAC 설정을 통한 전면 차단)에 배포하고, `Amazon CloudFront` CDN을 통해 글로벌 엣지에 캐싱 배포하여 지연 시간을 최소화하고 S3 직접 요청 요금을 차단했습니다.
 * **Core API Server & Database (EC2 / PostgreSQL)**<br>
   단일 EC2 인스턴스 내에서 SSL/TLS 종단 및 포트 포워딩을 수행하는 Nginx 프록시, REST API를 처리하는 Spring Boot 컨테이너, 게임 데이터를 영속화하는 PostgreSQL DB 컨테이너를 가상 Docker 브릿지 네트워크로 분리 가동합니다.
-
 ## 1.2. Cost Optimization
 ### 1.2.1. Compute
 * **최적화 조치 (Optimization)**<br>
