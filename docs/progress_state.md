@@ -242,6 +242,12 @@
   - **자산화 및 복사**: 에이전트 미디어 아티팩트 보관함에 존재하는 실제 GA4 보고서 원본과 Grafana 대시보드 캡처본을 리포지토리의 로컬 경로인 `docs/assets/` 로 안전하게 복사하여 Git 형상 관리 하에 등록함.
   - **증빙 임베딩 연동**: README.md의 `4.2` SLO 분석 본문 하위에 Grafana Live Snapshot 링크 및 `grafana_sla_snapshot.png` 상대경로 이미지를, `4.3` 트래픽 메트릭 하위에 `ga4_report.png` 이미지를 결합 수록하여 포트폴리오 문서의 객관적 증빙 신뢰성을 최고 수준으로 격상시킴.
 
+### README.md CI/CD(2) DevOps 표준 정규화 및 죽은 앵커 링크 패치 (Step 62) - 완료
+- **해결 내역**:
+  - **DevOps 표준 기둥 정규화**: `2. CI/CD` 하위 구성을 업계 표준 DevOps 분류 3대 영역인 `2.1. Pipeline Workflow` (배포 파이프라인 흐름), `2.2. Artifact & Release Management` (산출물 및 릴리즈 관리), `2.3. Continuous Validation` (지속적 검증 및 품질 통제)로 정규화하고 2단 개괄식 목록화로 리팩토링함.
+  - **죽은 앵커 링크 보정**: 이전 1.2 섹션 구조조정 시 유실되어 클릭이 고장났던 `2.2.1` 내부의 `[1.2.1. Compute](#121-compute)` 앵커 링크를 유효한 앵커인 `[1.2. Cost Optimization](#12-cost-optimization)` 내 Compute 단락 참조로 현행화 패치함.
+  - **대분류 유실 핫픽스**: 치환 슬라이싱 과정에서 유실되었던 `# 2. CI/CD` 및 `# 3. AI Engineering` H1 대분류 헤더를 안전하게 원상복구 완료함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

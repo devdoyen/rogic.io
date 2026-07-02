@@ -346,7 +346,13 @@ C4Container
   - 극단적인 512MB RAM 환경에서도 엔지니어가 리눅스 저수준 도구(`top`, `vmstat`)를 활용한 실시간 리소스 감색 및 메트릭 이식을 거쳐 병목 지점을 과학적으로 밝히고 극복한 사례입니다.
   - 자원 스케일업 대신 애플리케이션의 런타임 자체를 Native화하고 도커 로컬 캐시 메커니즘과 SWAP 설정을 결합하여, 최소 비용 서버에서도 고가용성 및 복구 지향적 운영(ROA)이 가능함을 실증했습니다.
 
+
+---
+
+# 2. CI/CD
+
 ## 2.1. Pipeline Workflow
+본 프로젝트는 코드 형상 통합부터 운영계 실배포까지의 생애주기를 제어하기 위해 4단계 GitOps 배포 워크플로우를 적용했습니다.
 
 ### 2.1.1. GitOps Flowchart
 ```mermaid
@@ -404,38 +410,44 @@ stateDiagram-v2
 ```
 
 ### 2.1.2. Pipeline Trigger Optimization
-* **경로 필터(Path Filtering)**<br>
-  단순 문서나 로컬 마크다운 수정 커밋 유입 시에는 빌드/컴파일 단계를 스킵하여 배포 속도를 최적화했습니다.
-* **배포 대기 취소(Concurrency)**<br>
-  Staging 진행 중 추가 커밋이 유입되는 즉시 이전 배포 작업을 강제 취소(`cancel-in-progress: true`)해 배포의 꼬임 현상을 방지했습니다.
+* **경로 기반 빌드 스킵 (Path Filtering)**<br>
+  - 단순 마크다운 문서 수정(`*.md`) 이나 로컬 설정 커밋 유입 시에는 빌드/컴파일 단계를 스킵하여 Actions 컴퓨팅 자원 및 배포 속도 최적화
+* **배포 경합 및 대기 자동 취소 (Concurrency)**<br>
+  - Staging 환경 배포가 기동 중인 상태에서 신규 변경 커밋이 추가 유입되는 즉시 이전 배포 단계를 자동 강제 취소(`cancel-in-progress: true`)하여 배포 꼬임 현상 원천 배제
 
 ---
 
-## 2.2. Artifact Management
+## 2.2. Artifact & Release Management
+안정적인 빌드 파일 생성, 배포 가용성 확보 및 정기 릴리즈 주기를 제어하기 위한 산출물과 자산 배포 관리 체계입니다.
 
 ### 2.2.1. Compute Offloading
 * **Actions Runner 컴파일 오프로딩**<br>
-  512MB 호스트 내부의 빌드 제약을 극복하기 위해 빌드 연산 부하를 GitHub Actions로 오프로딩했습니다. 상세 완화 구조는 [1.2.1. Compute](#121-compute)를 참고하십시오.
+  - 512MB RAM 극단 사양을 지닌 운영 서버의 컴파일 부하 고갈을 예방하기 위해 빌드 및 패키징 연산을 GitHub Actions 클라우드 환경으로 완전 오프로딩 (상세 완화 구조는 [1.2. Cost Optimization](#12-cost-optimization) 내 Compute 최적화 단락 참고)
 
 ### 2.2.2. Static Asset Delivery
-* **Vite Static Asset 동적 업로드**<br>
-  프론트엔드는 도커 이미지 생성 대신 컴파일된 정적 자산(index.html, JS 번들)을 S3 버킷으로 다이렉트 동기화(`aws s3 sync`)하고 CloudFront Edge 무효화(Invalidation)를 호출하는 초경량 정적 호스팅 배포 방식을 수립했습니다.
+* **Vite 정적 자산 다이렉트 동기화**<br>
+  - 프론트엔드 빌드 시 무거운 도커 이미지 캡슐화 배포 대신, 컴파일 완료된 정적 파일 번들(index.html, JS/CSS)을 AWS S3 버킷으로 다이렉트 동기화(`aws s3 sync`)하고 CloudFront Edge Invalidation을 트리거하여 초경량 CDN 에지 딜리버리 수립
+
+### 2.2.3. Release Versioning Automation
+* **자동화된 SemVer 및 Release 작성**<br>
+  - 커밋 메시지 헤더 토큰(`feat:`, `fix:`) 규격을 기계적으로 파싱하여 Semantic Versioning 버전을 자동 갱신
+  - 변경 이력(Changelog) 작성 및 릴리즈 발행 과정을 100% 자동화하여 배포 신뢰성과 변경 추적 가독성 획득
 
 ---
 
-## 2.3. Release Automation
+## 2.3. Continuous Validation
+코드 통합 시점부터 프로덕션 배포 완료 시점까지 시스템의 안전성과 정합성을 실시간 입증하는 품질 검증 및 승인 게이트 통제 체계입니다.
 
-### 2.3.1. Automated End-to-End Testing
-* **Playwright E2E 테스트**<br>
-  Staging 배포 완료 즉시 Playwright 브라우저(`frontend/e2e/staging.spec.ts`)를 헤드리스 기동하여 홈 화면 로딩, 캔버스 노노그램 상호작용 및 익명 가입 로직을 실제 유저 브라우저 환경에서 자동 점검해 품질 게이트를 가동합니다.
+### 2.3.1. Verification Gates
+* **다단계 코드 정합성 검증**<br>
+  - **컴파일 & 단위 테스트**: 로컬 PR 생성 시점 및 Actions 파이프라인에서 Spring Boot 단위 테스트(Gradle) 및 Vue 단위 테스트(Vitest)를 자동 검증
+  - **Ansible Lint 정적 검사**: 인프라 변경 시 플레이북의 문법 규격 어긋남을 컴파일 전에 자동 진단해 설정 결함 사전 차단
+* **Playwright E2E 브라우저 테스트**<br>
+  - Staging 서버 배포 완료 즉시 실제 헤드리스 브라우저(`frontend/e2e/staging.spec.ts`)를 가동하여 홈 화면 로딩, 노노그램 캔버스 클릭/색칠 및 익명 가입 로직을 유저 관점에서 자동 점검하여 품질 결함 유입 예방
 
-### 2.3.2. Deployment Gate & Approvals
-* **수동 승인 배포(Manual Gate)**<br>
-  Staging 테스트가 100% 성공하면 빌드를 일시 정지시키고 관리자가 직접 GitHub Environment 상에서 릴리즈를 검증/승인해야만 Production으로 롤링 배포를 승격시키는 안전 장치를 구성했습니다.
-
-### 2.3.3. Automated Versioning
-* **Auto-SemVer 및 Release 자동 작성**<br>
-  커밋 메시지 토큰(`feat:`, `fix:`) 규격을 파싱해 SemVer 버전을 갱신하고, 변경 이력(Changelog) 작성과 GitHub Release 릴리즈 발행 과정을 100% 자동화했습니다.
+### 2.3.2. Delivery Gates
+* **수동 승인 배포 통제 (Manual Gate)**<br>
+  - Staging 환경에서 유닛/E2E 테스트가 100% 합격하면 배포 워크플로우를 일시 정지시키고, 관리자가 직접 GitHub Environment 승인 콘솔에서 릴리즈 안정성을 검토/승인해야만 Production 환경으로 승격 배포되도록 설계하여 오배포 리스크 차단
 
 ---
 
@@ -452,6 +464,9 @@ stateDiagram-v2
     중요 서버 설정 배포 단계(`deploy-production`)에서 `cancel-in-progress: false`를 명시하여 이전 작업이 중도 파기되는 설정 정합성 훼손을 원천 차단.
   - **배포 단계의 느슨한 결합(Loose Coupling)**<br>
     CloudFront TLS 및 SSL 인증서 교체 등의 상호 의존적인 작업들이 실제 서버 준비 상태를 검증한 후에 이루어지도록 수동 승인 게이트(Manual Approval Gate)를 도입해 인프라 프로모션 방식을 개선함.
+
+---
+
 
 ---
 
