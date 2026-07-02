@@ -66,12 +66,10 @@ C4Context
 ```
 
 ### 1.1.2. Component Specification
-* **Frontend Static Hosting**<br>
-  Vite 컴파일 결과물을 `Amazon S3` 버킷(OAC 차단)에 호스팅하고, `Amazon CloudFront` CDN을 통해 정적 웹 리소스를 배포합니다.
-* **Backend API Gateway**<br>
-  Spring Boot 애플리케이션을 단일 EC2 인스턴스 내 Docker 컨테이너로 가동하며, 프론트엔드 레벨에는 Nginx 리버스 프록시를 배치하여 `api.rogic.io` / `api.stage.rogic.io` 경로에 SSL/TLS 종단 처리를 수행합니다.
-* **Telemetry Proxy**<br>
-  지표 수집을 위해 호스트 내부 에이전트(Alloy) 설치를 배제하고 Nginx Bearer 토큰 검증 메커니즘을 적용해 메모리 점유율을 줄였습니다. 자세한 연동 메커니즘은 [1.5.1. Metric Collection & Scraping](#151-metric-collection--scraping)을 참고하십시오.
+* **Global Edge Delivery (Route 53 / CloudFront / S3)**<br>
+  Vite 컴파일 결과물을 `Amazon S3` 버킷(OAC 차단)에 호스팅하고, `Amazon CloudFront` CDN 및 `Route 53` DNS와 결합하여 전 세계 유저에게 정적 정적 리소스를 엣지 단에서 안정적으로 전송합니다.
+* **Core API Server & Database (EC2 / PostgreSQL)**<br>
+  단일 EC2 인스턴스 내에서 SSL/TLS 종단 처리를 전담하는 Nginx 리버스 프록시, REST API 비즈니스 로직을 구동하는 Spring Boot 애플리케이션 컨테이너, 그리고 영속성 데이터를 보관하는 PostgreSQL DB 컨테이너를 가상 네트워크망 상에서 격리 및 중재 구동합니다.
 
 ---
 
