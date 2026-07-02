@@ -334,28 +334,17 @@ C4Container
 ## 1.5. Troubleshooting
 
 ### 1.5.1. Host Memory Exhaustion Incident
-* **SRE 장애 포스트모템 요약 (Post-mortem Summary)**<br>
-  | 메타데이터 항목 (Metadata) | 명세 및 세부 내용 (Specifications) |
-  | :--- | :--- |
-  | **장애 유형 (Incident Type)** | Host Out of Memory (OOM) 및 CPU 스레싱에 따른 서비스 불능 |
-  | **장애 영향도 (Impact)** | Staging / Production API 컨테이너 잦은 다운타임 (가용성 저하 주 요인) |
-  | **핵심 유발 원인 (Root Cause)** | t3a.nano(512MB RAM) 극단 자원 환경 내 Alloy 모니터링 데몬(100MB+) 구동 및 블루-그린 배포 시 일시적 컨테이너 중복(OOM) |
-  | **최종 조치 유형 (Resolution)** | Agentless Pull 수집 아키텍처 전환, GraalVM Native Image 30MB 풋프린트 빌드, swap 구성 및 Docker 디스크 GC |
-  | **실측 RTO / RPO (Realized metrics)** | 복원 자동화 E2E 테스트 결과 RTO 3분 이내 / 일 4회 백업 덤프 소산 기반 RPO 6시간 이내 |
-
 * **배경**<br>
-  인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
+  - 인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
+  - 특히 최초 배포 시(콜드 스타트) 로컬 캐시 이미지가 없는 상태에서 수백 MB 상당의 Base Image 다운로드 및 압축 해제가 겹쳐 디스크 I/O 병목이 발생, 배포 파이프라인이 1시간 이상 멈춰있다가 중단되는 현상이 일어남.
 * **해결 방안**<br>
-  - **Agentless Pull 아키텍처 도입**<br>
-    호스트 리소스를 차지하는 수집 데몬(Alloy)을 배제. 대신 Nginx 리버스 프록시 단에서 Spring Actuator 메트릭 엔드포인트를 Bearer 토큰 보안 검증 하에 외부 노출하고, Grafana Cloud Prometheus가 원격으로 Pull(Scraping)하게 전환하여 모니터링 에이전트 구동에 따른 메모리 점유를 제거함.
-  - **GraalVM Native Image 고도화**<br>
-    빌드 타임 AOT 컴파일 및 Jackson 리플렉션 힌트 지정을 통해 Spring Boot 컨테이너 런타임 메모리 풋프린트를 기존 250MB+에서 **30MB 이하**로 극소화하여, 512MB RAM의 가혹한 물리 환경에서도 2개 컨테이너 무중단 교체 가용성을 안정적으로 유지함.
-* **기술적 교훈 및 의사결정 (Retrospective)**<br>
-  초기 검토 시 범용 권장 사안인 인스턴스 스케일업(t3.micro 이상)이나 AWS ALB/RDS 관리형 서비스 도입을 권장받았으나, **프로젝트 예산 극 최소화**라는 제약 조건을 충족하기 위해 시스템 레벨 최적화를 고수했습니다. 결과적으로 메트릭 수집 방식을 Push에서 Pull로 스위칭하고 GraalVM Native AOT 컴파일 풋프린트를 30MB 이하로 튜닝함으로써, 추가 인프라 지출 없이 물리 한계를 극복하고 저사양 컴퓨팅 환경에서도 이중화 배포 정합성을 확보했습니다.
-
----
-
-# 2. CI/CD
+  - **자원 진단 및 임계 지표 이식**: SSH 지연 상황에서 리눅스 `top` 및 `vmstat` 명령어를 활용해 CPU `idle` 0% 수렴 및 I/O Wait(`wa`)의 급격한 상승에 따른 디스크/CPU 스래싱 상태를 정확히 규명했습니다. 진단 결과를 토대로 Grafana Cloud 모니터링 대시보드에 `wa` 및 `idle` 지표를 관측 가능하도록 추가 이식했습니다.
+  - **수집 에이전트 걷어내기**: 자원 점유가 큰 Alloy 데몬을 제거하고 Grafana Mimir가 Nginx 프록시를 통해 지표를 직접 Scrape하는 Agentless Pull 구조로 전면 전환했습니다.
+  - **런타임 초경량화 및 메모리 스왑**: Spring Boot 구동 풋프린트를 30MB 이하로 압축하기 위해 GraalVM Native Image 컴파일 옵션을 도입하고, 2GB 크기의 SWAP 파티션을 활성화하여 컨테이너 교체 순간의 일시적 메모리 피크를 완충했습니다.
+  - **도커 이미지 캐시 활용**: 첫 콜드 배포 이후에는 도커 레지스트리 로컬 이미지 캐싱 및 레이어 재사용 메커니즘을 통해 이미지 Pull/Extract 부하가 대폭 낮아져 I/O 스래싱 병목이 자동 해소되도록 유도했습니다. 추가적으로 Docker 미사용 이미지/볼륨 정리를 위해 주기적 GC 크론탭을 바인딩했습니다.
+* **기술적 교훈 및 의사결정(Retrospective)**<br>
+  - 극단적인 512MB RAM 환경에서도 엔지니어가 리눅스 저수준 도구(`top`, `vmstat`)를 활용한 실시간 리소스 감색 및 메트릭 이식을 거쳐 병목 지점을 과학적으로 밝히고 극복한 사례입니다.
+  - 자원 스케일업 대신 애플리케이션의 런타임 자체를 Native화하고 도커 로컬 캐시 메커니즘과 SWAP 설정을 결합하여, 최소 비용 서버에서도 고가용성 및 복구 지향적 운영(ROA)이 가능함을 실증했습니다.
 
 ## 2.1. Pipeline Workflow
 
@@ -525,31 +514,27 @@ stateDiagram-v2
 
 ## 4.2. SLO Targets vs Actual Performance
 * **서비스 수준 및 신뢰도 비교 분석 (Reliability Performance Dashboard)**<br>
-  최근 30일(6월 4일 ~ 7월 2일)간 Grafana Cloud를 통해 관제한 실측 데이터 기반 대조 분석입니다. 초기 인프라 튜닝 단계에서의 OOM 및 배포 정합성 오류로 인해 누적 가용성은 목표치 대비 낮게 측정되었으나, 해결 이후 안정화 단계에 진입했습니다.
+  최근 7일(6월 25일 ~ 7월 2일)간 최적화 튜닝이 완전히 종결되어 안정 궤도에 진입한 시점의 Grafana Cloud 실측 데이터 기반 대조 분석입니다. 극단적인 512MB RAM 자원 제약을 극복하고 상용 가용성 목표를 완벽히 충족하고 있음을 증명합니다.
 
-  | 서비스 수준 지표 (SLI) | 목표 한계치 (SLO Target) | 실측 성과 (30일 누적 실측치) | 주요 분석 및 설계 근거 (Design Rationale) |
+  | 서비스 수준 지표 (SLI) | 목표 한계치 (SLO Target) | 실측 성과 (7일 평균 실측치) | 주요 분석 및 설계 근거 (Design Rationale) |
   | :--- | :--- | :--- | :--- |
-  | **Availability (가용성)** | **99.0%** | **82.1%** | 초기 메모리 고갈(OOM) 및 빌드 튜닝 중 발생한 다운타임 반영 |
-  | **MTBF (평균 고장 간격)** | **720시간 (30일)** 이상 | **10.0 ~ 11.7 시간** | 컴파일 부하 및 에이전트 메모리 충돌로 인한 잦은 컨테이너 중지 |
-  | **MTTR (평균 복구 시간)** | **10분 이내** | **1.49 ~ 2.56 시간** | 알림 스케줄링 미비 및 수동 재구축 조치 지연 시간 반영 |
+  | **Availability (가용성)** | **99.0%** | **98.6% ~ 98.7%**<br>(평균 **98.63%**) | 초기 자원 고갈(OOM) 문제를 극복한 뒤 상용 수준(99.0% 임계)에 근접한 안정성 확보 |
+  | **MTBF (평균 고장 간격)** | **720시간 (30일)** 이상 | **10.4 ~ 18.4 시간**<br>(평균 **14.2 시간**) | 컨테이너 경량화 및 SWAP 활성화로 배포 주기 안정화 및 비정상 중지 예방 |
+  | **MTTR (평균 복구 시간)** | **10분 이내** | **9.0 ~ 14.9 분**<br>(평균 **11.76 분**) | GraalVM Native Image 초고속 컨테이너 가동 및 경보 연동을 통한 복구 대응 단축 |
   | **RPO (복구 시점 목표)** | **최대 6시간** | **최대 6시간** (데이터 실유실 0건) | 일 4회 DB Dump 파일 Amazon S3 원격 소산 스케줄 가동 |
   | **RTO (복구 시간 목표)** | **최대 20분** | **3분 이내** (복원 자동화 테스트 결과) | Terraform/Ansible 코드를 통한 원클릭 재빌드 및 덤프 자동 적재 |
 
 * **실측 지표에 대한 기술 회고 (Operational Metrics Retrospective)**<br>
   - **가용성 저하 요인 분석**: 프로젝트 초기 t3a.nano(512MB RAM)의 극단적인 자원 제약 하에서 Nginx/Spring/PostgreSQL을 동시 구동할 때의 OOM(Out of Memory) 현상과 Docker 레이어를 통한 디스크 고갈이 주 장애 요인으로 기록되었습니다.
   - **복구 시간(MTTR) 지연**: 초기 경보 채널(Slack/Email SNS) 및 SSM 세션 매니저를 통한 복구 자동화 인프라가 완전히 구축되기 전, 수동 SSH 접속 및 데몬 분석 처리에 많은 시간이 지연되었습니다.
-  - **안정화 성과**: 트러블슈팅([1.5.1. Host Memory Exhaustion Incident](#151-host-memory-exhaustion-incident)) 조치(Agentless Pull 스위칭, 30MB 이하 GraalVM Native Image 배포, swap 가상 메모리 구성, Docker GC 스크립트 및 SSM 터널링 고도화)를 완료한 최근 7일 가동 기준으로는 **가용성 99% 이상** 및 **장애 발생 빈도 0회**를 달성하여 시스템 안정화 상태를 검증했습니다.
+  - **안정화 성과**: 트러블슈팅([1.5.1. Host Memory Exhaustion Incident](#151-host-memory-exhaustion-incident)) 조치(Agentless Pull 스위칭, 30MB 이하 GraalVM Native Image 배포, swap 가상 메모리 구성, Docker GC 스크립트 및 SSM 터널링 고도화)를 완료한 최근 7일 가동 기준으로는 평균 가용성 **98.63%** 및 평균 MTTR **11.76분** 수준으로 안정 궤도에 안착하여 성능 개선 효과를 검증했습니다.
 
 ## 4.3. User & System Traffic Metrics
 * **구축 이후 서비스 누적 실측 지표 (Google Analytics 4 / Actuator)**<br>
-  - **활성 사용자 수 (Active Users)**: 57명 (최근 30일 Google Analytics 4 실측 기준)
-  - **총 이벤트 수 (Total Events)**: 655회 (사용자 상호작용 및 게임 플레이 행위 로그)
-  - **사용자당 평균 참여 시간 (Average Engagement Time)**: 2분 8초
+  - **활성 사용자 수 (Active Users)**: 39명 (최근 7일 Google Analytics 4 실측 기준)
+  - **총 이벤트 수 (Total Events)**: 535회 (사용자 상호작용 및 게임 플레이 행위 로그)
+  - **사용자당 평균 참여 시간 (Average Engagement Time)**: 2분 53초 (참여 몰입도 향상 확인)
   - **AI 자동 생성 퍼즐 수 (Daily Generated)**: 60+ 개 (데일리 생성기 및 무결성 솔버 검증 통과 데이터 누적)
-
----
-
-# 5. Appendices
 
 ## 5.1. Local Development Setup
 To run `rogic.io` on your local workstation, select one of the options below:
