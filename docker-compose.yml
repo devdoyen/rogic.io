@@ -48,7 +48,7 @@ services:
       - root
     tmpfs:
       - /tmp
-      - /var/run
+      - /run
     ports:
       - "5173:8080"
     volumes:

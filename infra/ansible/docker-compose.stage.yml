@@ -26,7 +26,7 @@ services:
       - root
     tmpfs:
       - /tmp
-      - /var/run
+      - /run
     ports:
       - "80:8080"
       - "443:8443"

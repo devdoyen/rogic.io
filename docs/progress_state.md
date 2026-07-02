@@ -305,6 +305,10 @@
 - **해결 내역**:
   - **Docker Compose 호환 구문 전환**: 원격 호스트의 Docker Compose 파서가 `volumes.tmpfs` 객체 내의 `uid`, `gid` 속성을 해석하지 못하고 빌드를 차단시키던 장애(`additional properties not allowed`)를 패치함. 호환 구문 규격에 맞춰 `uid` 와 `gid`를 완전 제거하고, 모든 Compose 버전에서 표준 지원하는 **`mode: 0777`** 속성을 부여하여 일반 비특권 Nginx 계정이 캐시 영역에 제약 없이 파일을 쓸 수 있도록 구문 정합성과 비특권 보안성을 동시에 완결함.
 
+### Nginx /run tmpfs 매핑 전환을 통한 PID 생성 실패 핫픽스 (Step 77) - 완료
+- **해결 내역**:
+  - **심볼릭 링크 실제 경로 개통**: Nginx 컨테이너 내 프로세스가 `/run/nginx.pid` 에 직접 파일을 기록하려 할 때, `/var/run`만 임시 메모리 마운트되어 실제 경로인 `/run`은 쓰기 제한으로 기동이 거부되던 장애를 패치함. `docker-compose` 및 `docker-compose.stage.yml` 설정 내 `tmpfs` 마운트 대상을 **`/run`** 으로 개정함으로써 PID 생성 에러를 완전히 해소함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
