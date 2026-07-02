@@ -60,6 +60,15 @@ resource "aws_s3_bucket" "frontend_prod_bucket" {
   }
 }
 
+resource "aws_s3_bucket_public_access_block" "frontend_prod_bucket_public_access_block" {
+  bucket = aws_s3_bucket.frontend_prod_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # --- CloudFront Origin Access Control (OAC) ---
 resource "aws_cloudfront_origin_access_control" "oac" {
   name                              = "rogic-prod-oac-${random_string.suffix.result}"

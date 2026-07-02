@@ -349,11 +349,16 @@
   - **컨테이너 보안 하드닝**: `frontend/Dockerfile`에 명시적인 `USER nginx` 지시어를 주입하여 root 실행 위험 경고(DS-0002, HIGH)를 해결.
   - **Staging IaC 보안 하드닝**: Staging 환경 Terraform 파일에 `aws_s3_bucket_public_access_block` 리소스를 명시하여 DB 백업 및 프론트엔드 S3 버킷에 대한 퍼블릭 액세스를 완전히 차단했으며, Staging EC2 서버에 IMDSv2 옵션(`http_tokens = "required"`)을 인가하여 인스턴스 메타데이터 탈취 위험성 제거.
 
+### Production 보안 취약점 진단 결과 반영 및 개선 (Step 87) - 완료
+- **해결 내역**:
+  - **Production IaC 보안 하드닝**: Production 환경의 `main.tf`와 `cdn.tf`에 Staging과 완전히 동일한 규격의 보안 패치 적용.
+  - **S3 퍼블릭 액세스 차단**: Production DB 백업 버킷(`backup_bucket`), 정적 프론트엔드 배포 버킷(`frontend_prod_bucket`), Terraform State 저장용 버킷(`tfstate_bucket`) 전체에 `aws_s3_bucket_public_access_block` 리소스를 연결하여 퍼블릭 노출 취약점 사전 차단.
+  - **EC2 IMDSv2 강제화**: Production EC2 인스턴스(`nemologic_server`)의 메타데이터 서비스 설정 내에 `http_tokens = "required"`를 명시하여 토큰 없는 IMDSv1 접근 차단 완료.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **Staging 파이프라인 검증 및 빌드 확인**: 변경된 보안 강화 구성이 Staging 파이프라인에서 성공적으로 빌드되고 스캔 통과 및 Playwright E2E 검증을 마칠 수 있도록 확인.
-- **Production 보안 취약점 진단 결과 반영**: Staging 환경 검증이 완료된 직후, 동일한 보안 강화(IMDSv2 및 S3 public access block)를 Production 환경 Terraform 파일(`production/main.tf`, `production/cdn.tf`)에 반영하고 배포 진행.
+- **CI/CD 파이프라인 배포 및 Trivy 결과 검증**: 로컬 보안 개선 사항을 GitHub에 푸시하여 전체 빌드, Trivy 보안 검사 통과 및 Staging/Production 인프라 무장애 배포 최종 검증.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
 - **Nginx 웹 방화벽(WAF) 도입 검토**: 리소스 제약을 극복하고 Nginx 레벨의 보안 강화를 위한 방화벽 구성안 비교 및 적용 설계 수립.
 
