@@ -7,7 +7,7 @@
 `rogic.io`는 전통적인 사각형 격자판에서 퍼즐을 해결하는 네모로직(노노그램) 게임입니다. 단, 출제 시점에 임의의 각도로 회전된 퍼즐을 해결하면, 완료되는 순간 원래 방향으로 자동 회전 복원되며 완성된 패턴을 올바르게 보여주는 메커니즘을 내장하고 있습니다.
 
 <p align="center">
-  <img src="./docs/assets/rogic_gameplay_demo.webp" width="70%" alt="rogic.io Gameplay Demo" />
+  <img src="./docs/assets/rogic_gameplay_demo.webp" width="100%" alt="rogic.io Gameplay Demo" />
 </p>
 
 ## 0.2. Service Environments
