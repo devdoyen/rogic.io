@@ -39,7 +39,11 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(new User(null, "Player3", 1000, 5));
         }
 
-        boolean isTestProfile = java.util.Arrays.asList(env.getActiveProfiles()).contains("test");
+        java.util.List<String> activeProfiles = java.util.Arrays.asList(env.getActiveProfiles());
+        boolean isTestOrDevProfile = activeProfiles.contains("test")
+                || activeProfiles.contains("local")
+                || activeProfiles.contains("stage")
+                || activeProfiles.isEmpty();
 
         // Seed stages from puzzles/stages.json directly to support GraalVM Native Image
         ClassPathResource resource = new ClassPathResource("puzzles/stages.json");
@@ -47,9 +51,10 @@ public class DataSeeder implements CommandLineRunner {
             try (InputStream is = resource.getInputStream()) {
                 List<StageDto> dtos = objectMapper.readValue(is, new TypeReference<List<StageDto>>() {});
                 for (StageDto dto : dtos) {
-                    if (stageRepository.findByName(dto.getName()).isEmpty()) {
+                    java.util.Optional<Stage> existingStageOpt = stageRepository.findByName(dto.getName());
+                    if (existingStageOpt.isEmpty()) {
                         Stage stage = new Stage(null, dto.getName(), dto.getWidth(), dto.getHeight(), dto.getSolutionGrid());
-                        if (isTestProfile) {
+                        if (isTestOrDevProfile) {
                             stage.setActive(true);
                             stage.setApproved(true);
                         } else {
@@ -57,6 +62,14 @@ public class DataSeeder implements CommandLineRunner {
                             stage.setApproved(dto.isApproved());
                         }
                         stageRepository.save(stage);
+                    } else {
+                        // Self-Healing: Update existing stages to active=true, approved=true if in dev/test/staging environments
+                        Stage stage = existingStageOpt.get();
+                        if (isTestOrDevProfile && (!stage.isActive() || !stage.approved())) {
+                            stage.setActive(true);
+                            stage.setApproved(true);
+                            stageRepository.save(stage);
+                        }
                     }
                 }
             } catch (Exception e) {

@@ -321,6 +321,10 @@
 - **해결 내역**:
   - **파이프라인 강제 빌드**: 이전 IAM 정책 수정 커밋 시 `frontend/` 경로 변경이 인지되지 않아 S3 싱크 배포가 강제 스킵되던 현상을 해결함. `frontend/README.md` 에 더미 트리거 주석을 추가하여 GitHub Actions path filter 가 `frontend: true` 를 인식하게 만듦으로써 S3 배포 단계와 Playwright E2E 최종 검증을 무사히 수행하도록 파이프라인 트리거를 기동함.
 
+### DataSeeder 자가 회복 플래그 활성화 및 Staging 퍼즐 개통 (Step 81) - 완료
+- **해결 내역**:
+  - **시드 데이터 비활성화 장애 극복**: Staging 서버 기동 시 `stages.json` 의 기본값(`active = false`)이 그대로 들어가 `/api/stages` 가 빈 데이터(`[]`)를 반환해 캔버스 렌더링이 안 되던 결함을 패치함. `DataSeeder.java` 의 적용 프로파일 범위에 `local` 및 `stage` 를 영입하고, 이미 비활성화되어 DB에 들어가 있는 레코드들도 컨테이너 구동 단계에서 자동으로 `active = true, approved = true` 로 갱신(자가 회복)하여 웹 화면에 퍼즐들이 전면 노출되도록 완치함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
