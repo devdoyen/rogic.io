@@ -31,7 +31,7 @@
 본 프로젝트는 초경량/초저가 인프라 환경에서 높은 시스템 안정성을 확보하기 위해 아래와 같은 3대 엔지니어링 제약 조건 및 극복 원칙을 수립하여 설계되었습니다.
 
 <p align="center">
-  <img src="./docs/assets/engineering_principles.png" width="90%" alt="rogic.io Engineering Principles & Constraints" />
+  <img src="./docs/assets/engineering_principles.png" width="100%" alt="rogic.io Engineering Principles & Constraints" />
 </p>
 
 ---
