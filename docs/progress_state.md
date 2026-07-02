@@ -159,6 +159,32 @@
   - **해결 조치**:
     1. [.github/workflows/staging-cleanup.yml](file:///c:/Users/82107/dev/project/nemologic/.github/workflows/staging-cleanup.yml) 워크플로우 파일 내의 `schedule` cron 트리거(`0 17 * * *` - 매일 새벽 2시 KST 실행) 주석을 해제하여 야간 자동 중지 로직을 복구함.
 
+### README.md 비용 최적화 및 타협 섹션 중복 해결 (Step 47) - 완료
+- **해결 내역**:
+  - **중복 섹션 통합**: `README.md` 내에서 인프라 구성 비용 최적화(기존 1.2)와 기술적 타협 및 완화 대책(기존 1.3) 간에 심각하게 중복되던 내용을 하나의 통합 섹션인 `1.2. Cost-Effective Architecture` 하위로 병합 완료함. 각 요소(Compute, Load Balancer, Database, Staging)별로 최적화 조치(Optimization), 기술적 제약(Trade-off), 완화 대책(Mitigation)을 유기적으로 서술하여 독자의 가독성을 극대화함.
+  - **오류 및 중복 제거**: 1.2.4 섹션 내에 깨진 텍스트(S3 백업 등) 및 중복 기입되어 있던 `Staging Resource Stop/Start Scheduling`을 단일화하고 올바른 내용으로 정제하여 문서 품질을 개선함.
+  - **인덱스 및 링크 정합성 재구축**: 기존 1.3 섹션이 제거됨에 따라 후속 장표들(Security Infrastructure, Observability, Troubleshooting)의 인덱스 번호를 순차적으로 하나씩 당겨서 현행화함 (`1.4 -> 1.3`, `1.5 -> 1.4`, `1.6 -> 1.5`). 또한 CI/CD 컴파일 오프로딩 섹션 내에서 기존 `1.3.1`을 지칭하던 마크다운 앵커 링크를 신규 통합된 `1.2.1` 참조 앵커로 전면 수정하여 원활한 문서 내부 탐색을 보장함.
+
+### README.md 비용 최적화 섹션 보편화 및 개괄식 목록화 (Step 48) - 완료
+- **해결 내역**:
+  - **아키텍처 분류 체계 보편화**: 사용자 피드백에 따라 `1.2. Cost-Effective Architecture` 하위 소제목들을 보편적인 리소스 분류인 `Compute`, `Network & Delivery`, `Database & Storage`, `Staging Environment`로 전면 리팩토링 및 구조화함.
+  - **개괄식 포맷 변환**: 기존 서술식 문장들을 가독성 높은 글머리 기호(`- `) 기반의 개괄식 리스트 포맷으로 변경하여 핵심 정보(최적화 조치, 기술적 제약, 완화 대책)의 시인성을 극대화함.
+  - **S3 OAC 및 CloudFront 최적화 통합**: S3 OAC 및 CDN 캐싱 배포가 네트워크/스토리지 리소스 최적화 효과를 유발하는 점을 반영하여 `Network & Delivery` 섹션 내의 최적화 조치 리스트로 통합 매핑함.
+  - **앵커 링크 재보정**: 분류 체계가 보편적 소제목 규격으로 수정됨에 따라, 컴파일 오프로딩 설명(2.2.1) 등 문서 내의 참조 앵커들을 `[1.2.1. Compute](#121-compute)`로 맞추어 재보정 완료함.
+
+### README.md 인프라 종합 성과 분석(Performance & Cost Analysis) 섹션 신설 (Step 49) - 완료
+- **해결 내역**:
+  - **종합 성과 분석 섹션 구성**: `README.md` 내에 `1.5. Performance & Cost Analysis` 대단원 독립 섹션을 신설함.
+  - **재무 및 신뢰성 지표 통합**: 기존에 1.2 하단에 파편화되어 있던 인프라 월간 운영 비용 분석 테이블과 1.4 하단에 타겟 제약으로 고정되어 있던 가용성 및 신뢰성(SLI) 지표를 한곳으로 모아 비용 대비 서비스 수준 분석을 종합화함.
+  - **실측 데이터 정직한 반영 및 회고**: GA4(활성 사용자 57명, 누적 이벤트 655회, 체류 시간 2분 8초) 및 Grafana Cloud 실측치(가용성 82.1%, MTBF 10~11.7h, MTTR 1.49~2.56h)를 투명하게 공표함. 또한, 초기 OOM 장애 단계에서부터 자원 최적화 조치를 통해 시스템이 점진적으로 안정화(최근 7일 Uptime 99% 이상 달성)에 이르는 과정의 **운영 지표 기술 회고(Operational Metrics Retrospective)**를 작성하여 엔지니어링 신뢰도를 제고함.
+  - **인덱스 계층화**: 기존의 `1.5. Troubleshooting`을 `1.6. Troubleshooting` 및 `1.6.1`로 순차적으로 밀고 내부 앵커 참조들이 온전하게 기능하도록 리팩토링함.
+
+### README.md 성과 분석 대단원(# 4) 승격 및 부록 인덱스 보정 (Step 50) - 완료
+- **해결 내역**:
+  - **대단원 승격 리팩토링**: `Performance & Cost Analysis` 섹션이 인프라(1), CI/CD(2), AI(3) 영역의 종합 성과를 포괄하므로 인프라 하위(1.5)가 아닌 최상위 대분류 대단원인 `# 4. Performance & Cost Analysis` 로 격상 및 이동 완료함.
+  - **인프라 Troubleshooting 복원**: 이전에 1.6으로 이동했던 Troubleshooting 단원을 원래 자리인 `## 1.5. Troubleshooting` 및 `### 1.5.1` 로 당겨서 복원하고, 성과 회고(4.2) 내의 앵커 참조도 1.5.1로 정상 복원함.
+  - **부록(Appendices) 인덱스 하향 조정**: 기존 `# 4. Appendices` 대단원을 `# 5. Appendices` 로 한 칸 하향 이동하고 하위 구조(`## 5.1`, `### 5.1.1~3`)를 전면 보정함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
