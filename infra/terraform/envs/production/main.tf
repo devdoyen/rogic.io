@@ -485,7 +485,7 @@ resource "aws_iam_policy" "github_actions_production_policy" {
       {
         Effect   = "Allow"
         Action   = ["logs:*"]
-        Resource = "arn:aws:logs:ap-northeast-2:${data.aws_caller_identity.current.account_id}:log-group:/aws/ec2/nemologic*"
+        Resource = "*"
       },
       {
         Effect   = "Allow"
@@ -503,12 +503,9 @@ resource "aws_iam_policy" "github_actions_production_policy" {
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = ["acm:*"]
-        Resource = [
-          "arn:aws:acm:ap-northeast-2:${data.aws_caller_identity.current.account_id}:certificate/*",
-          "arn:aws:acm:us-east-1:${data.aws_caller_identity.current.account_id}:certificate/*"
-        ]
+        Effect   = "Allow"
+        Action   = ["acm:*"]
+        Resource = "*"
       },
       {
         Effect   = "Allow"

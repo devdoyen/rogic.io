@@ -141,8 +141,9 @@
 - **해결 내역**:
   - **현상**: GitHub Actions OIDC 역할에 `AdministratorAccess` 전권 정책이 부여되어 있어 최소 권한 통제 원칙에 위배됨.
   - **해결 조치**:
-    1. **Staging 반영 (Phase 1)**: [staging/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/main.tf) 내에 `github_actions_staging_policy` 커스텀 IAM 정책을 정의하고 역할을 바인딩하여 전권 권한을 회수함. EC2, VPC, S3, DynamoDB, IAM, CloudWatch, SNS, SSM, CloudFront 범위로 한정함.
-    2. **Production 반영 (Phase 2)**: [production/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf) 내에 `github_actions_production_policy` 커스텀 IAM 정책을 추가 연동함. Production 환경에서 관리하는 ACM(us-east-1 포함), CloudFront 및 Route 53 자원 관리 권한을 명시적으로 추가 바인딩하여 안전하게 권한 축소 적용함.
+    1. **Staging 반영 (Phase 1)**: [staging/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/staging/main.tf) 내에 `github_actions_staging_policy` 커스텀 IAM 정책을 정의하고 역할을 바인딩하여 전권 권한을 회수함. EC2, VPC, S3, DynamoDB, IAM, CloudWatch, SNS, SSM, CloudFront 범위로 한정함. (이후 ACM/Route53/로그 목록 조회 대응을 위한 `*` 와일드카드 보완 완료)
+    2. **Production 반영 (Phase 2)**: [production/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf) 내에 `github_actions_production_policy` 커스텀 IAM 정책을 추가 연동함.
+    3. **로그 및 인증서 와일드카드 보완**: 테라폼 상태 리프레시 시 `DescribeLogGroups` 및 `DescribeCertificate` 등 리소스 종속성 없는 메타데이터 API 접근 차단 문제를 해결하기 위해, Staging 및 Production의 커스텀 정책 모두 `logs:*` 및 `acm:*` 리소스 제한을 `*` 와일드카드로 완화 적용하고 로컬 Admin 권한을 통한 선반영(`terraform apply -target`)을 수립하여 배포 병목을 해결함.
 
 ---
 
