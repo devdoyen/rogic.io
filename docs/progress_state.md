@@ -329,6 +329,14 @@
 - **해결 내역**:
   - **순차 배포 규칙 수호 및 일치화**: Staging 환경의 완전 개통 성공을 검증한 직후, 사용자 규칙에 따라 Production 환경 구성 파일군(`docker-compose.prod.yml`, `nginx.prod.conf`)을 비특권 표준으로 일치화함. 프로덕션 Nginx 이미지를 `nginxinc/nginx-unprivileged:alpine` 으로 갱신하고, 비특권 계정 기동 요건 충족을 위해 listen 포트를 `8080` 및 `8443` 으로, 컴포즈 외부 수신 포트를 `80:8080` 및 `443:8443` 으로 정비하여 완벽한 보안 하드닝 및 환경 정합을 최종 완료함.
 
+### 프로덕션 EC2 인스턴스 재생성 장애에 따른 인시던트 리포트 작성 (Step 83) - 완료
+- **해결 내역**:
+  - **인시던트 포스트모템 수립**: 테라폼 IAM 정책 변경이 유발한 단일 프로덕션 EC2 인스턴스 파괴 및 재생성(Destroy and Recreate)으로 인한 약 20분간의 전면 다운타임 장애 상황을 인지하여 [incident-reporting.md](file:///c:/Users/82107/dev/project/nemologic/.agents/rules/incident-reporting.md) 규격에 따라 [20260702_production_ec2_recreation_outage.md](file:///c:/Users/82107/dev/project/nemologic/docs/incidents/20260702_production_ec2_recreation_outage.md) 포스트모템 보고서를 신규 작성 및 형상 관리화함.
+
+### 인프라 보안 준수 분류 표준안(Network/Host 및 Container) 개정 (Step 84) - 완료
+- **해결 내역**:
+  - **보안 명세 표준 고도화**: `README.md` 내 인프라 보안 아키텍처 분류 방식을 실무 위협 모델링 표준에 부합하도록 **`Network & Host Security`**와 **`Container Security`** 대분류로 분리 정렬함. 단순 "완료"라는 이력 기재 방식을 지양하고, CIS Benchmark 및 STRIDE 위협 체계의 핵심 보안 키워드(VPC Isolation, Least Access, Network Partitioning, Non-root Execution, Read-Only rootfs 등) 중심으로 실용적 기술 명세를 재구성함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

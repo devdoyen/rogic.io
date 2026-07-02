@@ -192,7 +192,7 @@ C4Container
         
         System_Boundary(vpc_prod, "Production VPC (10.0.0.0/16)") {
             System_Boundary(fnet_prod, "frontend-net (Docker Bridge)") {
-                Container(nginx, "Nginx Reverse Proxy", "Docker Container", "SSL/TLS termination, API routing, and Bearer token auth validation.")
+                Container(nginx, "Nginx Reverse Proxy", "Docker Container", "SSL/TLS termination (Non-root / Port 8443), API routing, and Bearer token auth validation.")
             }
             
             System_Boundary(bnet_prod, "backend-net (Docker Bridge)") {
@@ -207,7 +207,7 @@ C4Container
         
         System_Boundary(vpc_stage, "Staging VPC (10.1.0.0/16)") {
             System_Boundary(fnet_stg, "frontend-net (Stage Bridge)") {
-                Container(nginx_stg, "Nginx Reverse Proxy (Stage)", "Docker Container", "Staging SSL/TLS termination and API routing.")
+                Container(nginx_stg, "Nginx Reverse Proxy (Stage)", "Docker Container", "Staging SSL/TLS termination (Non-root / Port 8443) and API routing.")
             }
             
             System_Boundary(bnet_stg, "backend-net (Stage Bridge)") {
@@ -226,30 +226,39 @@ C4Container
 
     Rel(player, cloudfront, "Fetches static web pages", "HTTPS / Port 443")
     Rel(cloudfront, s3, "Refreshes cache from origin", "S3 Protocol")
-    Rel(player, nginx, "Calls API endpoints", "HTTPS / Port 443")
-    Rel(sre, nginx_stg, "Calls API endpoints (Stage) during tests", "HTTPS / Port 443")
+    Rel(player, nginx, "Calls API endpoints", "HTTPS / Port 443 (Forwarded to 8443)")
+    Rel(sre, nginx_stg, "Calls API endpoints (Stage) during tests", "HTTPS / Port 443 (Forwarded to 8443)")
 ```
 
-* **물리 격리형 VPC 구성**<br>
-  - Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝
-  - 망간 교차 접근을 원천 차단하여 테스트 환경의 불안정성이 운영계에 전이되지 않도록 격리 안전성 확보
-* **다계층 도커 브리지 네트워크 격리**<br>
-  - 단일 EC2 내부 컨테이너 통신 시 인터넷 개방점인 Nginx 프록시(`frontend-net`)가 DB(`backend-net`)에 직접 접근할 수 없도록 가상 네트워크 분리
-  - 백엔드 API 컨테이너만 양쪽 브리지 네트워크에 동시 소속되어 가교 역할을 전담하게 함으로써 횡적 이동(Lateral Movement) 위협 제한
-* **Database 아웃바운드 완전 차단**<br>
-  - 데이터베이스 컨테이너가 상주하는 `backend-net` 브리지망에 `internal: true` 옵션 인라인 지정
-  - 데이터베이스의 외부 인터넷 아웃바운드 시도를 봉쇄하여 RCE(원격 코드 실행) 침투 시 리버스 커넥션 및 데이터 무단 유출(Exfiltration) 시도 원천 차단
-* **최소 인바운드 포트 제한**<br>
-  - Staging 및 Production 환경 모두 외부 서비스 및 모니터링 연동을 위한 Nginx 포트(80, 443)만 외부 인바운드 개방
-  - SSH(22), Spring API(8080), Vite Frontend 개발(5173) 포트는 보안 그룹 규칙에서 완전히 제외하여 외부 접근 차단
-* **원격 메트릭 수집 프록시 중재**<br>
-  - Grafana Cloud Mimir의 원격 프로메테우스 수집기가 메트릭을 수집(Pull)할 때 외부 Actuator 포트(8080) 직접 호출 차단
-  - Nginx HTTPS(443) 인터페이스로 스크래핑을 요청하면, Nginx가 Bearer 토큰 보안 검증을 완료한 통신에 한해 로컬 루프백망의 `/actuator/prometheus`로 포워딩 중재
-* **컨테이너 보안 로드맵**<br>
-  - 향후 컨테이너 내부 애플리케이션의 Non-root User 실행 권한 전환 및 Read-Only root 파일시스템 제한 적용 예정
-  - DB 백업은 호스트 단에서 Docker API 표준 출력 파이프라인(`docker exec pg_dump`)으로 안전하게 중재 처리하여 백업 무결성 유지
+#### 1.3.2.1. Network & Host Security
+* **물리 격리형 VPC 구성 (VPC Isolation)**<br>
+  - Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 망간 교차 접근을 원천 차단
+  - 테스트 환경의 영향이 실제 운영계(Production) 네트워크로 전이되는 위협 방지
+* **최소 인바운드 포트 제한 (Least Inbound Access)**<br>
+  - 외부 서비스 및 모니터링 연동을 위한 Nginx 포트(80, 443)만 보안 그룹(Security Group) 인바운드에서 개방
+  - SSH(22), Spring API(8080), Vite Frontend 개발(5173) 포트는 보안 그룹에서 차단하여 호스트 노출 반경 축소
+* **원격 메트릭 수집 프록시 중재 (Metrics Scraping Proxy)**<br>
+  - Prometheus 메트릭 수집기가 외부에서 백엔드 Actuator 포트(8080)를 직접 노출 호출하는 것을 차단
+  - Nginx HTTPS(443) 인터페이스의 Bearer 토큰 보안 검증을 통과한 통신에 한하여 로컬 루프백망(`/actuator/prometheus`)으로 요청을 포워딩 및 중재
 
-#### 1.3.2.1. Security Group Configuration
+#### 1.3.2.2. Container Security
+* **다계층 도커 브리지 네트워크 격리 (Multi-tier Network Partitioning)**<br>
+  - 단일 EC2 호스트 내부의 인터넷 개방점인 Nginx 프록시(`frontend-net`)가 DB 컨테이너(`backend-net`)에 직접 통신하지 못하도록 도커 가상 네트워크를 물리 분리
+  - 백엔드 API 컨테이너만 두 브리지망에 동시 참여하는 가교(Bridge) 역할을 수행하여 횡적 이동(Lateral Movement) 위협을 격리
+* **데이터베이스 아웃바운드 인터넷 격리 (Internal Database Isolation)**<br>
+  - Database 컨테이너가 상주하는 `backend-net` 브리지 네트워크에 `internal: true` 속성을 지정하여 외부 아웃바운드 인터넷 시도를 전면 봉쇄
+  - RCE(원격 코드 실행) 침투 시 리버스 커넥션 수립 및 무단 데이터 유출(Data Exfiltration)을 구조적으로 무력화
+* **비특권 사용자 실행 권한 격리 (Non-root Execution)**<br>
+  - Nginx 공식 비특권 이미지(`nginxinc/nginx-unprivileged:alpine`)를 채택하여 컨테이너가 호스트의 root가 아닌 비특권 전용 계정(UID 101)으로 가동되도록 통제
+  - 컨테이너 내부 탈취 시 호스트 계정 권한 상승(Privilege Escalation) 위협 차단
+* **읽기 전용 파일시스템 및 임시 쓰기 격리 (Read-Only rootfs & tmpfs)**<br>
+  - 컨테이너 구동 명세에 `read_only: true` 옵션을 인라인 부여하여 애플리케이션 루트 파일시스템 전체를 읽기 전용 상태로 불변화(Immutability)
+  - PID 파일 등 런타임에 필수적으로 발생하는 파일 쓰기 활동은 인스턴스 전용 `tmpfs` 메모리 마운트(`/tmp`) 및 특정 Let's Encrypt SSL 파일 권한 맵핑(`group_add: - root`)으로 우회 허용
+* **Docker API 파이프라인 데이터 보호 (Safe Backup)**<br>
+  - 컨테이너 외부나 호스트 디바이스에 DB 패스워드를 노출하지 않고, 호스트 단에서 Docker API 표준 출력 파이프라인(`docker exec pg_dump`)으로 직접 캡슐화 처리하여 백업 데이터 무결성 획득
+
+
+#### 1.3.2.3. Security Group Configuration
 * **보안 그룹 인바운드 제어 (Security Group Ingress/Egress Rule)**<br>
   외부 인터넷과의 경계점 포트를 제어하고, 아웃바운드 전송 트래픽 규격을 명확히 고정합니다.
 
