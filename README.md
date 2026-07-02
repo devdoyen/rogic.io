@@ -1,6 +1,13 @@
 # rogic.io: Project Portfolio & Infrastructure
 
-## 0.1. Game Concept
+## 0.1. Engineering Constraints & Principles
+본 프로젝트는 초경량/초저가 인프라 환경에서 높은 시스템 안정성을 확보하기 위해 아래와 같은 3대 엔지니어링 제약 조건 및 극복 원칙을 수립하여 설계되었습니다.
+
+<p align="center">
+  <img src="./docs/assets/engineering_principles.png" width="100%" alt="rogic.io Engineering Principles & Constraints" />
+</p>
+
+## 0.2. Game Concept
 
 `rogic.io`는 전통적인 사각형 격자판에서 퍼즐을 해결하는 네모로직(노노그램) 게임입니다. 단, 출제 시점에 임의의 각도로 회전된 퍼즐을 해결하면, 완료되는 순간 원래 방향으로 자동 회전 복원되며 완성된 패턴을 올바르게 보여주는 메커니즘을 내장하고 있습니다.
 
@@ -8,14 +15,14 @@
   <img src="./docs/assets/rogic_gameplay_demo.webp" width="100%" alt="rogic.io Gameplay Demo" />
 </p>
 
-## 0.2. Service Environments
+## 0.3. Service Environments
 
 | Service Environment | Live URL | Deployment Status |
 | :--- | :--- | :--- |
 | 🚀 **Production** | [rogic.io](https://rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-brightgreen) |
 | 🧪 **Staging** | [stage.rogic.io](https://stage.rogic.io) | ![Idle / On-Demand](https://img.shields.io/badge/Status-Idle%20%2F%20On--Demand-blue) |
 
-## 0.3. Technology Stack
+## 0.4. Technology Stack
 | Category | Technologies |
 | :--- | :--- |
 | **Frontend** | ![Vue 3](https://img.shields.io/badge/Vue_3-35495E?style=flat-square&logo=vuedotjs&logoColor=4FC08D) ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white) ![Canvas API](https://img.shields.io/badge/HTML5_Canvas-E34F26?style=flat-square&logo=html5&logoColor=white) |
@@ -24,13 +31,6 @@
 | **Infra & IaC** | ![AWS](https://img.shields.io/badge/AWS-232F3E?style=flat-square&logo=amazonwebservices&logoColor=FF9900) ![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=flat-square&logo=terraform&logoColor=white) ![Ansible](https://img.shields.io/badge/Ansible-EE0000?style=flat-square&logo=ansible&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) |
 | **CI/CD** | ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white) ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white) ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=flat-square&logo=playwright&logoColor=white) |
 | **Telemetry** | ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white) ![Grafana](https://img.shields.io/badge/Grafana_Cloud-F46800?style=flat-square&logo=grafana&logoColor=white) ![CloudWatch](https://img.shields.io/badge/Amazon_CloudWatch-FF4F8B?style=flat-square&logo=amazoncloudwatch&logoColor=white) |
-
-## 0.4. Engineering Constraints & Principles
-본 프로젝트는 초경량/초저가 인프라 환경에서 높은 시스템 안정성을 확보하기 위해 아래와 같은 3대 엔지니어링 제약 조건 및 극복 원칙을 수립하여 설계되었습니다.
-
-<p align="center">
-  <img src="./docs/assets/engineering_principles.png" width="100%" alt="rogic.io Engineering Principles & Constraints" />
-</p>
 
 ---
 
