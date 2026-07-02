@@ -93,6 +93,12 @@
         cache_valid_time: 86400
       when: docker_check.rc != 0 or (force_setup | default(false) | bool)
 
+    - name: Enable universe repository
+      apt_repository:
+        repo: "deb http://archive.ubuntu.com/ubuntu/ jammy universe"
+        state: present
+      when: docker_check.rc != 0 or (force_setup | default(false) | bool)
+
     - name: Install prerequisite packages
       apt:
         name:

@@ -262,6 +262,10 @@
 - **해결 내역**:
   - **Chrome 연동 AI 도구 활용처 명세**: 크롬 브라우저 상에 연동된 Gemini 3.5 Flash 모델의 실전 사용 시나리오(AWS CloudWatch/Grafana 실시간 인프라 장애 로그 추적, Chrome DevTools 연계 프론트엔드 캔버스 및 CSS 디자인 검증, 브라우저 콘솔 오류 디버깅)를 명시하여 개발 다각화 성과를 완성함.
 
+### Ansible playbook.yml awscli 설치 유실 핫픽스 (Step 67) - 완료
+- **해결 내역**:
+  - **universe 리포지토리 활성화**: 도커 미설치 신규 서버 구축 분기 진입 시, 우분투 universe 패키지 저장소가 누락되어 `awscli` 및 `prometheus-node-exporter` 설치가 취소되던 결함을 패치함. `Update apt package cache` 태스크 바로 다음에 `Enable universe repository` 태스크를 주입하여, apt가 정상적으로 해당 패키지를 탐색해 낼 수 있도록 가용화함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
