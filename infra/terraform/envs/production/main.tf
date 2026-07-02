@@ -232,6 +232,10 @@ resource "aws_instance" "nemologic_server" {
     http_tokens   = "required"
   }
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = {
     Name = "nemologic-server"
   }

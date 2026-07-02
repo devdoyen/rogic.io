@@ -434,8 +434,8 @@
       copy:
         content: |
           #!/bin/bash
-          # Find backup bucket name automatically from S3 list
-          BUCKET_NAME=$(aws s3 ls | grep nemologic-db-backup{{ '-stage' if env_name == 'stage' else '' }}{{ ' | grep -v stage' if env_name == 'prod' else '' }} | head -n1 | awk '{print $3}')
+          # Hardcoded bucket name configured via Ansible variable
+          BUCKET_NAME="{{ backup_bucket_name }}"
           if [ -z "$BUCKET_NAME" ]; then
               echo "Error: S3 Backup Bucket not found"
               exit 1

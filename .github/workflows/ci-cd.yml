@@ -500,7 +500,9 @@ jobs:
             echo "[nemologic_servers]" > hosts.ini
             echo "nemologic-app-server ansible_host=$STAGING_IP ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60" >> hosts.ini
           fi
-          ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=stage"
+          # Discover staging backup bucket name using runner AWS credentials
+          BACKUP_BUCKET=$(aws s3 ls | grep nemologic-db-backup-stage | head -n1 | awk '{print $3}')
+          ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=stage backup_bucket_name=$BACKUP_BUCKET"
 
       - name: Download Frontend Build Artifact
         if: needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch'
@@ -625,7 +627,9 @@ jobs:
               echo "[nemologic_servers]" > hosts.ini
               echo "nemologic-app-server ansible_host=${{ secrets.EC2_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/nemologic-key.pem ansible_become_timeout=60 ansible_timeout=60" >> hosts.ini
             fi
-            ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=prod"
+            # Discover production backup bucket name using runner AWS credentials
+            PROD_BACKUP_BUCKET=$(aws s3 ls | grep nemologic-db-backup | grep -v stage | head -n1 | awk '{print $3}')
+            ansible-playbook -i hosts.ini playbook.yml --extra-vars "env=prod backup_bucket_name=$PROD_BACKUP_BUCKET"
           else
             echo "Skipping Production Deploy: EC2_IP secret not set."
           fi

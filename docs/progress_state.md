@@ -355,10 +355,16 @@
   - **S3 퍼블릭 액세스 차단**: Production DB 백업 버킷(`backup_bucket`), 정적 프론트엔드 배포 버킷(`frontend_prod_bucket`), Terraform State 저장용 버킷(`tfstate_bucket`) 전체에 `aws_s3_bucket_public_access_block` 리소스를 연결하여 퍼블릭 노출 취약점 사전 차단.
   - **EC2 IMDSv2 강제화**: Production EC2 인스턴스(`nemologic_server`)의 메타데이터 서비스 설정 내에 `http_tokens = "required"`를 명시하여 토큰 없는 IMDSv1 접근 차단 완료.
 
+### 프로덕션 DB 데이터 유실 장애 포스트모템 작성 및 백업/수명주기 보호 패치 (Step 88) - 완료
+- **해결 내역**:
+  - **인시던트 리포트 작성**: EC2 인스턴스 재생성으로 인한 프로덕션 데이터베이스 유실 사고의 사후 분석 문서 [20260702_production_db_initialization.md](file:///c:/Users/82107/dev/project/nemologic/docs/incidents/20260702_production_db_initialization.md) 작성 완료.
+  - **인프라 파괴 방지 수명주기 보호**: Staging 및 Production의 EC2 인스턴스 테라폼 설정에 `lifecycle { prevent_destroy = true }`를 주입하여 향후 테라폼 형상 변경 과정에서 의도치 않게 인스턴스가 파괴되는 현상을 원천 방지함.
+  - **S3 백업 무음 실패 해결**: EC2 IAM에 불필요하게 넓은 전역 S3 조회 권한(`s3:ListAllMyBuckets`)을 요구하던 동적 S3 버킷 찾기 로직(`aws s3 ls`)을 제거하고, GitHub Actions 러너가 버킷 명칭을 빌드 시점 변수(`backup_bucket_name`)로 직접 주입하도록 Ansible 플레이북(`playbook.yml`) 및 워크플로우(`ci-cd.yml`)를 대폭 보완 개선함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **CI/CD 파이프라인 배포 및 Trivy 결과 검증**: 로컬 보안 개선 사항을 GitHub에 푸시하여 전체 빌드, Trivy 보안 검사 통과 및 Staging/Production 인프라 무장애 배포 최종 검증.
+- **CI/CD 파이프라인 배포 및 인프라 수명주기 보호 최종 검증**: 로컬 패치 변경 사항을 GitHub에 푸시하여 빌드, Trivy 보안 진단, Playwright E2E 검사 및 Staging/Production 인프라 무장애 최종 배포 재검증.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
 - **Nginx 웹 방화벽(WAF) 도입 검토**: 리소스 제약을 극복하고 Nginx 레벨의 보안 강화를 위한 방화벽 구성안 비교 및 적용 설계 수립.
 
