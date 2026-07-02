@@ -145,7 +145,17 @@
     2. **Production 반영 (Phase 2)**: [production/main.tf](file:///c:/Users/82107/dev/project/nemologic/infra/terraform/envs/production/main.tf) 내에 `github_actions_production_policy` 커스텀 IAM 정책을 추가 연동함.
     3. **로그 및 인증서 와일드카드 보완**: 테라폼 상태 리프레시 시 `DescribeLogGroups` 및 `DescribeCertificate` 등 리소스 종속성 없는 메타데이터 API 접근 차단 문제를 해결하기 위해, Staging 및 Production의 커스텀 정책 모두 `logs:*` 및 `acm:*` 리소스 제한을 `*` 와일드카드로 완화 적용하고 로컬 Admin 권한을 통한 선반영(`terraform apply -target`)을 수립하여 배포 병목을 해결함.
 
+### README.md 프로젝트 포트폴리오 문서 고도화 및 정합성 검증 (Step 45) - 완료
+- **해결 내역**:
+  - **아키텍처 및 트래픽 흐름 불일치 해결**: Level 1 System Context 다이어그램 내 DNS 라우팅 및 EC2 EIP Nginx 연결 흐름을 명확히 하고, Level 2 다이어그램에서 Player가 Staging Nginx에 접근하는 오류를 SRE/QA(CI/CD)로 교정함.
+  - **SLO/SLA 수학적 오류 및 보정**: Incident Count PromQL 수식의 floor 연산 및 MTTR/MTBF 분모 보정 함수 `clamp_min` LaTeX 기호 통일, 측정 지연 보정 주의사항 기재.
+  - **논리적 모순 및 수치 정정**: Staging 환경 상태 배지를 `Idle / On-Demand`로 현실화(기존 Active) 및 DB Failover/PITR 상실에 따른 RPO(최대 6시간)와 RTO(약 20분) 지표가 혼동된 오류를 정정함.
+  - **구조 및 가독성 개선**: 5단계 깊이의 복잡한 헤더 체계를 제거하고 H1/H2/H3/H4 영어 헤딩 통일 및 볼드 리스트로 평탄화함. 또한 동일한 인프라 설명(Agentless Pull, GraalVM 풋프린트, ALB 제거, 컴파일 오프로딩)이 중복 배치된 곳을 삭제하고 상호 앵커 링크로 대체함.
+  - **문맥 정제 및 오타 교정**: 개발자 회고 문장을 1인칭 어조에서 전문적인 포트폴리오 결과 중심 어조로 압축하고, "수입되는" -> "유입되는" 오타를 수정함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
+- **Nginx 웹 방화벽(WAF) 도입 검토**: 리소스 제약을 극복하고 Nginx 레벨의 보안 강화를 위한 방화벽 구성안 비교 및 적용 설계 수립.
+

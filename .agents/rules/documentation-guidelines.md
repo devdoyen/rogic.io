@@ -20,12 +20,41 @@
 ## 3. Data Representation for Numerical & Performance Comparison
 - 비용(Billing), 시스템 사양, 벤치마크 지표, 처리량(Throughput) 등 기존 아키텍처 대비 개선 사항을 대조하여 설득력을 제시해야 하는 수치형 데이터는 괄호 및 문장을 이용한 일반 나열식 포맷을 지양합니다.
 - 독자가 최적화 전후의 리소스와 비용 증감을 명확하고 직관적으로 인지할 수 있도록 마크다운 표(Table) 형식의 비교 테이블을 작성하여 구조화해야 합니다.
+- 비교 테이블 내 기존 구성의 비용이나 수치를 측정하지 않은 경우, 의미가 불명확한 `-` 기호 대신 반드시 `N/A` 또는 `미측정`과 같은 명시적인 표기를 사용하고, 필요 시 각주(footnote)로 이유를 보충 기술합니다.
 
 ## 4. Heading Concision & Table of Contents Omission
 - 마크다운 문서 내의 모든 대제목/소제목(Heading)을 설계할 때 다중 명사를 엔드 기호(`&`)로 길게 열거하여 가독성을 저해하는 장황한 형태를 지양합니다. 핵심을 관통하는 명확하고 간결한 단일 명사나 약어로 대표화하거나, 분할이 필요한 경우 계층적 하위 캡슐화(Subheading)를 수행하여 직관성을 극대화합니다.
 - GitHub 마크다운 렌더러가 문서 제목들을 기반으로 아웃라인 목차(TOC)를 자동 파싱하여 제공하므로, `README.md` 등 주요 문서 상단에 불필요하고 유지보수가 번거로운 수동 링크식 목차 구문을 명시하지 않고 완전히 제거하여 관리합니다.
 
-## 5. Strict Hierarchical Structure for Core Content
-- 핵심 콘텐츠나 기술 상세 기술 시 비정형 알림 블록(예: `> [!NOTE]`, `> [!WARNING]` 등)에 핵심 설명이나 테이블을 무분별하게 삽입하여 본문 문맥과 내용을 중복 서술하는 형태를 지양합니다.
-- 주요 명세와 원격 프록시 통신 메커니즘 등은 반드시 공식적인 하위 헤더 계층(예: `##### 1.x.x.x.x`)으로 격상 및 캡슐화하여, 목차(TOC)와 문서 아웃라인에서 자연스럽게 추적이 가능하고 내용의 중복이 원천 예방되도록 엄격히 계층화합니다.
+## 5. Heading Depth Limit & Flat Bold List
+- 마크다운 헤딩 계층은 **최대 H4(`####`)까지만** 허용합니다. H5(`#####`) 이상의 깊이는 앵커 링크 없이는 탐색 자체가 불가능하여 독자 경험을 심각하게 저해합니다.
+- H5 이상이 필요한 세부 항목은 반드시 볼드 리스트(`* **항목명**<br>`) 형식으로 평탄화하여 본문 내에 인라인으로 배치합니다. 이 방식은 TOC 추적이 필요 없는 세부 명세에 적합하며, 구조적 가독성을 유지합니다.
 
+*예시*:
+```markdown
+#### 1.4.2.2. IAM Least Privilege Design
+* **OIDC Keyless Authentication**<br>
+  하드코딩된 AWS API Access Key 사용을 지양하고...
+* **Service-Level Least Privilege Policy**<br>
+  테라폼 및 Ansible 배포 범위에 정확히 부합하는...
+```
+
+## 6. Content Deduplication & Cross-Reference
+- 동일한 기술 내용(예: GraalVM 메모리 최적화, Agentless Pull 구조, ALB 제거 근거)이 문서 내 여러 섹션에 분산 배치되는 중복 서술을 엄격히 금지합니다.
+- 핵심 설명은 가장 적합한 섹션에 **단 한 곳**에만 서술하고, 나머지 위치에서는 반드시 마크다운 앵커 링크(예: `[1.3.1. Build Resource Constraints](#131-build-resource-constraints)`)를 통해 해당 섹션으로 참조 유도합니다.
+
+## 7. Heading Language Consistency
+- 하나의 문서 내에서 헤딩(Heading) 언어는 영어 또는 한국어 중 하나로 일관되게 통일합니다.
+- 기술 문서(예: `README.md`)에서는 영어 헤딩을 기본으로 채택하며, 한국어 본문과 혼용하는 경우 헤딩만큼은 영어로 단일화합니다. 한국어 헤딩 혼입은 탐색 일관성을 무너뜨리고 앵커 링크 참조 오류를 유발할 수 있습니다.
+
+*잘못된 예*:
+```markdown
+#### 1.4.2.1. 보안 그룹 (Security Group) 설정 및 허용 규칙   ← 한국어 혼입
+#### 1.4.2.2. IAM Least Privilege Design                      ← 영어
+```
+
+*올바른 예*:
+```markdown
+#### 1.4.2.1. Security Group Configuration
+#### 1.4.2.2. IAM Least Privilege Design
+```

@@ -1,4 +1,4 @@
-# 0. Project Overview
+# rogic.io: Project Portfolio & Infrastructure
 
 본 저장소는 `rogic.io` 프로젝트의 빌드 및 배포에 필요한 CI/CD 파이프라인, IaC 기반 인프라 구성 코드(Terraform/Ansible), 그리고 모니터링 환경의 구축 명세를 담고 있습니다.
 
@@ -15,7 +15,7 @@
 | Service Environment | Live URL | Deployment Status |
 | :--- | :--- | :--- |
 | 🚀 **Production** | [rogic.io](https://rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-brightgreen) |
-| 🧪 **Staging** | [stage.rogic.io](https://stage.rogic.io) | ![Active](https://img.shields.io/badge/Status-Active-blue) |
+| 🧪 **Staging** | [stage.rogic.io](https://stage.rogic.io) | ![Idle / On-Demand](https://img.shields.io/badge/Status-Idle%20%2F%20On--Demand-blue) |
 
 ## 0.3. Technology Stack
 | Category | Technologies | Description |
@@ -41,20 +41,20 @@ C4Context
     Person(player, "Player / User", "Accesses the puzzle game through a web browser.")
     
     System_Boundary(dns_cdn, "Global Edge Delivery") {
-        System_Ext(route53, "Route 53", "DNS management mapping domains to CloudFront/EC2.")
+        System_Ext(route53, "Route 53", "DNS management mapping domains to CloudFront & EC2.")
         System_Ext(cloudfront, "Amazon CloudFront", "CDN distributing static web assets globally.")
         System(s3, "Amazon S3 Bucket", "Stores Vite-built Vue static compilation files.")
     }
 
     System_Boundary(backend, "Core API Server") {
-        System(api, "rogic.io REST API", "Spring Boot backend handling gameplay, XP levels, and leadership stats.")
+        System(api, "rogic.io REST API (EC2)", "Spring Boot backend handling gameplay, XP levels, and leadership stats.")
         SystemDb(postgres, "PostgreSQL DB", "Relational database storing user logs, statistics, and stage metadata.")
     }
 
-    Rel(player, route53, "Queries DNS entries", "DNS Protocol")
-    Rel(player, cloudfront, "Requests static assets (HTML/JS/CSS)", "HTTPS / Port 443")
+    Rel(player, route53, "Queries DNS for rogic.io / api.rogic.io", "DNS Protocol")
+    Rel(player, cloudfront, "Requests static assets", "HTTPS / Port 443")
     Rel(cloudfront, s3, "Pulls origin static files", "S3 Protocol")
-    Rel(player, api, "Calls REST API services", "HTTPS / Port 443")
+    Rel(player, api, "Calls REST API services (via DNS mapped to EC2 EIP)", "HTTPS / Port 443")
     Rel(api, postgres, "Reads/Writes game state", "JDBC & JPA / Port 5432")
 ```
 
@@ -64,7 +64,7 @@ C4Context
 * **Backend API Gateway**<br>
   Spring Boot 애플리케이션을 단일 EC2 인스턴스 내 Docker 컨테이너로 가동하며, 프론트엔드 레벨에는 Nginx 리버스 프록시를 배치하여 `api.rogic.io` / `api.stage.rogic.io` 경로에 SSL/TLS 종단 처리를 수행합니다.
 * **Telemetry Proxy**<br>
-  수집 데몬(Alloy) 설치를 배제하고 Nginx Bearer 토큰 검증을 이용해 Prometheus Actuator 엔드포인트를 외부에 간접 노출하여 수집 부하를 제거했습니다.
+  지표 수집을 위해 호스트 내부 에이전트(Alloy) 설치를 배제하고 Nginx Bearer 토큰 검증 메커니즘을 적용해 메모리 점유율을 줄였습니다. 자세한 연동 메커니즘은 [1.5.1. Metric Collection & Scraping](#151-metric-collection--scraping)을 참고하십시오.
 
 ---
 
@@ -77,23 +77,25 @@ C4Context
   | **컴퓨팅 및 스토리지** | $20.00 / 월 (t3.micro) | $5.50 / 월 (t3a.nano + EBS) | GraalVM 네이티브 컨테이너화를 통해 메모리 스레싱 극복 |
   | **로드 밸런서** | $20.00 / 월 (AWS ALB) | $0.00 / 월 (Self-hosted Nginx) | ALB 제거 후 Route 53 고정 EIP 다이렉트 매핑 |
   | **데이터베이스** | $15.00 / 월 (RDS PostgreSQL) | $0.00 / 월 (PostgreSQL Container) | EC2 호스트 내부 Docker Compose 환경 가동 |
-  | **네트워크 & 도메인** | - | $4.74 / 월 (IP 주소 + Route 53) | 퍼블릭 IPv4 사용료 ($3.70) + 호스팅 영역 ($1.04) |
-  | **기타 (데이터 전송 등)** | - | $1.21 / 월 | 데이터 트래픽 전송 및 유틸리티 자원 비용 |
+  | **네트워크 & 도메인** | N/A *1 | $4.74 / 월 (IP 주소 + Route 53) | 퍼블릭 IPv4 사용료 ($3.70) + 호스팅 영역 ($1.04) |
+  | **기타 (데이터 전송 등)** | N/A *1 | $1.21 / 월 | 데이터 트래픽 전송 및 유틸리티 자원 비용 |
   | **합계 (Total)** | **약 $55.00 / 월** | **총 $11.45 / 월** | **기존 대비 약 80% 비용 절감 달성 (세후 실청구액)** |
+
+  *1: 기존 구성 단계에서 산출되지 않은 네트워크 유지 및 도메인 고정 비용입니다.
 
 ### 1.2.1. Compute Resource Downsizing
 * **t3a.nano/t4g.nano (512MB RAM) 타겟팅**<br>
   월 $3.5 대 컴퓨팅 인스턴스 사양에 맞추어 리소스를 튜닝했습니다.
 * **GraalVM Native Image 메모리 최적화**<br>
-  런타임 메모리 사용량을 컨테이너당 30MB 이하로 낮추어, 초경량 컴퓨팅 환경 내에서도 배포 시 두 버전의 Spring Boot 컨테이너를 함께 띄울 수 있는 기반을 다졌습니다.
-  * **Jackson 역직렬화 DTO Reflection 힌트**<br>
-    Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
+  Spring Boot 애플리케이션의 런타임 메모리 점유율을 30MB 이하로 낮추어 초경량 인스턴스 사양에 부합하도록 튜닝했습니다. 자세한 리플렉션 힌트 및 Native 빌드 상세 내역은 [1.6.1. Host Memory Exhaustion Incident](#161-host-memory-exhaustion-incident)를 참고하십시오.
+* **Jackson 역직렬화 DTO Reflection 힌트**<br>
+  Native 빌드 오류 방지를 위해 [NemologicRuntimeHints.java](backend/src/main/java/com/devdoyen/nemologic/config/NemologicRuntimeHints.java)에 리플렉션 힌트를 명시했습니다.
 * **Docker Garbage Collection 자동화**<br>
   디스크 용량 고갈 장애 예방을 위해 새벽 3시마다 72시간 경과 도커 리소스를 강제 소거하는 prune 스크립트를 크론탭으로 자동 배치했습니다.
 
 ### 1.2.2. Load Balancer Elimination
 * **ALB 제거 및 고정 EIP 구성**<br>
-  월 $20 상당의 AWS ALB를 배제하고 DNS 도메인(Route 53)과 고정 Elastic IP를 매핑했습니다.
+  월 $20 상당의 AWS ALB를 배제하고 DNS 도메인(Route 53)과 고정 Elastic IP를 매핑했습니다. SPOF와 자동 복구 관련 상세 완화 대책은 [1.3.2. Single Point of Failure (SPOF)](#132-single-point-of-failure-spof) 및 [1.3.3. Recovery Indicators](#133-recovery-indicators)를 참고하십시오.
 * **EC2 Auto Recovery 및 복구 지향 아키텍처(ROA)**<br>
   ALB 부재에 따른 장애 전파를 줄이기 위해 시스템 알람 연동 호스트 자동 복구(Auto Recovery)를 결합하고, 재해 복구 시 IaC 코드를 활용해 5분 이내 인프라를 복원하도록 구성했습니다.
 
@@ -101,7 +103,7 @@ C4Context
 * **Self-hosted PostgreSQL 컨테이너**<br>
   월 $15~20 이상의 RDS 비용을 아끼기 위해 EC2에 DB 컨테이너를 기동했습니다.
 * **S3 정기 백업 및 Lifecycle 제어**<br>
-  6시간 주기로 DB dump 데이터를 S3로 업로드하는 쉘 스크립트와 Cron을 배포하고, S3 백업 버킷에 30일 경과 백업 자동 파기 정책을 적용했습니다.
+  6시간 주기로 DB dump 데이터를 S3로 업로드하는 쉘 스크립과 Cron을 배포하고, S3 백업 버킷에 30일 경과 백업 자동 파기 정책을 적용했습니다.
 
 ### 1.2.4. Staging Resource Stop/Start Scheduling
 * **Staging 인스턴스 평시 정지**<br>
@@ -126,9 +128,9 @@ C4Context
 * **호스트 자동 복구 결합 (Mitigation)**<br>
   AWS CloudWatch Status Check Metric Alarms를 결합해 물리 하드웨어 결함 발생 시 1분 이내에 인스턴스를 정상 물리 호스트로 자동 복원(Auto Recovery)하여 EIP를 바인딩하도록 인프라 복원력을 강화했습니다.
 
-### 1.3.3. Recovery Indicators (RTO / RPO)
+### 1.3.3. Recovery Indicators
 * **관리형 DB Failover 및 시점 복구 상실 (Trade-off)**<br>
-  AWS RDS의 완전관리형 이중화 복구(RTO 0초 타겟) 및 시점 복구(RPO 5분 이내 PITR) 편의성을 누릴 수 없으며, 재해 복구 시 백업 덤프 수동 복원이 필요하므로 RTO/RPO 지표가 수 분에서 최대 6시간 수준으로 후퇴합니다.
+  AWS RDS의 완전관리형 이중화 복구 및 시점 복구(PITR) 편의성을 상실하였으며, 재해 복구 시 백업 덤프 파일 기반의 수동 복원 처리가 요구됨에 따라 RPO가 최대 6시간(백업 주기), RTO가 약 20분 수준으로 하향 조정됩니다.
 * **복구 지향 아키텍처(ROA) 구현 (Mitigation)**<br>
   인프라를 코드로 구성(Terraform/Ansible)하여 재설치 과정을 자동화하고, 6시간 주기 백업 덤프 자산을 독립 버킷 S3에 안전하게 보관하여 전체 데이터 유실 및 가상 머신 소멸 시에도 5분 이내 수동 복구 가능한 절차를 수립했습니다.
 
@@ -142,6 +144,7 @@ C4Container
     title Container Diagram for rogic.io (Level 2: Network & Containers)
 
     Person(player, "Player / User", "Accesses the puzzle game through a web browser.")
+    Person(sre, "SRE / QA (CI/CD)", "Deploys and tests the staging application.")
 
     System_Boundary(aws, "AWS Cloud (ap-northeast-2)") {
         
@@ -182,13 +185,17 @@ C4Container
     Rel(player, cloudfront, "Fetches static web pages", "HTTPS / Port 443")
     Rel(cloudfront, s3, "Refreshes cache from origin", "S3 Protocol")
     Rel(player, nginx, "Calls API endpoints", "HTTPS / Port 443")
-    Rel(player, nginx_stg, "Calls API endpoints (Stage)", "HTTPS / Port 443")
+    Rel(sre, nginx_stg, "Calls API endpoints (Stage) during tests", "HTTPS / Port 443")
 ```
 
 * **물리 격리형 VPC 구성**<br>
   Staging VPC(`10.1.0.0/16`)와 Production VPC(`10.0.0.0/16`)를 개별 서브넷 대역과 독립 인프라망으로 분리 프로비저닝하여 상호 간의 간섭을 완전히 격리했습니다.
 * **다계층 도커 브리지 네트워크 격리**<br>
-  단일 EC2 인스턴스 내부 컨테이너 통신 시, 인터넷 개방점인 Nginx(`frontend-net`에만 소속)가 데이터베이스(`backend-net`에만 소속)에 직접 접근할 수 없도록 가상 네트워크를 이중 분리했습니다. 백엔드 API 컨테이너가 양쪽 네트워크의 다리 역할을 수행함으로써, Nginx 침투 시 DB에 직접 가해지는 SQL 주입 및 무작위 접속(횡적 이동, Lateral Movement) 위험을 구조적으로 제한합니다. 특히 데이터베이스가 상주하는 **`backend-net` 브리지망은 `internal: true` 옵션으로 인터넷 연결을 완전히 차단**하여, 해킹 시 내부 데이터베이스의 외부 C2 리버스 커넥션 수립이나 외부 데이터 유출(Exfiltration) 시도를 네트워크 레벨에서 원천 봉쇄했습니다. DB 백업은 호스트 단의 표준 출력 파이프라인(`docker exec pg_dump`)으로 중재 처리하므로 기능적 장애가 없습니다. (보안 로드맵: 향후 컨테이너 이미지의 Non-root User 실행 및 Read-Only root 파일시스템 제한 적용 예정)
+  단일 EC2 내부 통신 시 인터넷 개방점인 Nginx(`frontend-net`)가 DB(`backend-net`)에 직접 접근할 수 없도록 가상 네트워크를 분리하고, 백엔드 API 컨테이너가 가교 역할을 전담하게 하여 횡적 이동(Lateral Movement) 위협을 제한했습니다.
+* **Database Outbound 차단 (`internal: true`)**<br>
+  데이터베이스가 상주하는 `backend-net` 브리지망에 `internal: true`를 지정하여 인터넷 아웃바운드를 완전 봉쇄함으로써 RCE 침투 시 리버스 커넥션 수립 및 데이터 무단 유출(Exfiltration) 시도를 원천 차단했습니다.
+* **보안 로드맵 (Security Roadmap)**<br>
+  향후 컨테이너 내부 애플리케이션의 Non-root User 실행 권한 전환 및 Read-Only root 파일시스템 제한을 적용하여 컨테이너 샌드박스 보안을 더욱 강화할 예정입니다. DB 백업은 호스트 단의 표준 출력 파이프라인(`docker exec pg_dump`)으로 중재 처리하므로 기능적 장애가 없습니다.
 
 ### 1.4.2. Host Access Control
 * **SSM Session Manager 및 SSH(22) 포트 완전 차단**<br>
@@ -196,36 +203,35 @@ C4Container
 * **SSM 터널 캡슐화를 통한 Ansible SSH 인증**<br>
   인스턴스의 인바운드 22포트를 막아두는 대신, 로컬 및 러너 환경의 `aws ssm start-session` 프록시 명령(`ProxyCommand`)을 SSH 터널로 삼아 캡슐화했습니다. 이 터널 내부에서 기존 SSH 인증 키(PEM)를 활용한 2차 인증을 거치도록 구성하여 Ansible Playbook을 통한 무작위 SSH 노출 리스크를 차단하고 안전하게 호스트를 관리합니다.
 
-#### 1.4.2.1. 보안 그룹 (Security Group) 설정 및 허용 규칙
+#### 1.4.2.1. Security Group Configuration
+* **Inbound (Ingress) Rules & Port Control**<br>
+  본 프로젝트에서는 Staging 및 Production 환경 모두 외부 서비스 및 모니터링 연동을 위한 Nginx 포트(80, 443)만 인바운드로 최소 허용합니다. 그 외 SSH(22), Spring Boot API(8080), Vite Frontend 개발(5173) 포트는 보안 그룹 규칙에서 완전히 배제되어 인터넷 직접 노출이 불가능합니다.
 
-##### 1.4.2.1.1. 인바운드 (Ingress) 규칙 및 포트 차단 통제
-본 프로젝트에서는 Staging 및 Production 환경 모두 외부 서비스 및 모니터링 연동을 위한 Nginx 포트(80, 443)만 인바운드로 최소 허용합니다. 그 외 SSH(22), Spring Boot API(8080), Vite Frontend 개발(5173) 포트는 보안 그룹 규칙에서 완전히 배제되어 인터넷 직접 노출이 불가능합니다.
+  | 허용 포트 (Port) | 프로토콜 (Protocol) | 소스 (Source) | 목적 및 대상 서비스 |
+  | :---: | :---: | :---: | :--- |
+  | 80 | TCP | `0.0.0.0/0` | Nginx HTTP 웹 서버 (HTTPS 301 리다이렉트용) |
+  | 443 | TCP | `0.0.0.0/0` | Nginx HTTPS 보안 웹 서비스 및 API 통신 (모니터링 스크래핑 포함) |
 
-| 허용 포트 (Port) | 프로토콜 (Protocol) | 소스 (Source) | 목적 및 대상 서비스 |
-| :---: | :---: | :---: | :--- |
-| 80 | TCP | `0.0.0.0/0` | Nginx HTTP 웹 서버 (HTTPS 301 리다이렉트용) |
-| 443 | TCP | `0.0.0.0/0` | Nginx HTTPS 보안 웹 서비스 및 API 통신 (모니터링 스크래핑 포함) |
+* **Telemetry Scraping Proxy**<br>
+  Grafana Cloud Mimir의 원격 프로메테우스 수집기(Prometheus Pull)가 지표를 수집할 때도 외부 8080 포트 직접 접근을 금지합니다. 수집기는 Nginx HTTPS(443)로 요청을 전송하며, Nginx 단에서 Bearer 토큰 보안 검증을 통과한 통신에 한해 로컬 루프백망의 Spring Boot Actuator(/actuator/prometheus)로 프록시 중재하도록 설계되어 안전성을 보장합니다.
 
-##### 1.4.2.1.2. 텔레메트리 스크래핑 Nginx 프록시 중재
-Grafana Cloud Mimir의 원격 프로메테우스 수집기(Prometheus Pull)가 지표를 수집할 때도 외부 8080 포트 직접 접근을 금지합니다. 수집기는 Nginx HTTPS(443)로 요청을 전송하며, Nginx 단에서 Bearer 토큰 보안 검증을 통과한 통신에 한해 로컬 루프백망의 Spring Boot Actuator(/actuator/prometheus)로 프록시 중재하도록 설계되어 안전성을 보장합니다.
+* **Outbound (Egress) Rules**<br>
+  | 허용 포트 (Port) | 프로토콜 (Protocol) | 대상 (Destination) | 비고 |
+  | :---: | :---: | :---: | :--- |
+  | All | All | `0.0.0.0/0` | 패키지 업데이트, 외부 API 호출 및 DB 백업 S3 업로드용 |
 
-##### 1.4.2.1.3. 아웃바운드 (Egress) 규칙
-| 허용 포트 (Port) | 프로토콜 (Protocol) | 대상 (Destination) | 비고 |
-| :---: | :---: | :---: | :--- |
-| All | All | `0.0.0.0/0` | 패키지 업데이트, 외부 API 호출 및 DB 백업 S3 업로드용 |
-
-#### 1.4.2.2. IAM 최소 권한 (Least Privilege) 설계
+#### 1.4.2.2. IAM Least Privilege Design
 EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적용된 IAM 권한과 인증 메커니즘을 명시하여 보안 정합성을 보장합니다.
 
 | 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
 | :--- | :--- | :--- | :--- |
 | **EC2 Host Role** | Instance Profile | `AmazonSSMManagedInstanceCore`<br>Staging: `CloudWatchAgentServerPolicy` (관리형)<br>Production: `nemologic-cloudwatch-log-policy` (커스텀)<br>`s3_backup_policy` (커스텀) | SSM 터널링 활성화, CloudWatch 로그 실시간 포워딩(Staging/Production 별 정책 차등 적용), DB 백업 S3 업로드 권한 제어 |
-| **CI/CD Runner (GitHub)** | AWS OIDC (Keyless) | `nemologic-staging-github-policy`<br>`nemologic-production-github-policy` (커스텀)* | `sts:AssumeRoleWithWebIdentity`를 통해 GitHub Actions OIDC 토큰으로 1회용 단기 자격 증명을 획득하여 Terraform 및 배포 수행 (Secret Key 하드코딩 배제 및 최소 권한 수립) |
+| **CI/CD Runner (GitHub)** | AWS OIDC (Keyless) | `nemologic-staging-github-policy`<br>`nemologic-production-github-policy` (커스텀) | `sts:AssumeRoleWithWebIdentity`를 통해 GitHub Actions OIDC 토큰으로 1회용 단기 자격 증명을 획득하여 Terraform 및 배포 수행 (Secret Key 하드코딩 배제 및 최소 권한 수립) |
 
-##### 1.4.2.2.1. OIDC 무키(Keyless) 인증 설계<br>
+* **OIDC Keyless Authentication**<br>
   하드코딩된 AWS API Access Key 사용을 지양하고, GitHub OIDC(OpenID Connect) 연동을 수립하여 매 빌드 및 배포 시점에 AWS Security Token Service(STS)로부터 1회용 단기 자격 증명을 획득(AssumeRole)합니다. 이로써 자격 증명 유출 경로를 원천 차단하고 보안 안전성을 확보했습니다.
 
-##### 1.4.2.2.2. 서비스 범위 최소 권한 정책<br>
+* **Service-Level Least Privilege Policy**<br>
   테라폼 및 Ansible 배포 범위에 정확히 부합하는 서비스 수준 최소 권한 정책(Staging/Production 별 커스텀 IAM Policy)을 바인딩했습니다. 이를 통해 허용 서비스 이외의 타 서비스 자원(예: RDS, Lambda, KMS 등) 관리를 원천 차단하여 Least Privilege 통제를 완결했습니다.
 
   | 대상 서비스 (Service) | 허용 작업 (Actions) | 대상 리소스 범위 (Resource Constraints) | 사용 목적 및 용도 (Purpose) |
@@ -242,7 +248,7 @@ EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적
   | **ACM Certificate** | `acm:*` | `*` (Wildcard) | HTTPS 적용을 위한 SSL/TLS 인증서 검증 및 CloudFront 연결 전용 us-east-1 인증서 조회 |
   | **Route 53 (DNS)** | `route53:*` | `*` (Wildcard) | 퍼블릭 도메인(`rogic.io`, `stage.rogic.io`) 매핑 및 네임서버 DNS 레코드셋 생성/조정 제어 |
 
-#### 1.4.2.3. SSM 터널링 Ansible 접속 구성 명세
+#### 1.4.2.3. Ansible SSM Tunneling Specification
 Ansible이 SSH 22 포트가 막힌 호스트에 접근할 때 활용하는 `hosts.ini` 내 ProxyCommand 연결 아키텍처 스키마입니다.
 
 ```ini
@@ -303,15 +309,15 @@ C4Container
 * **장애 감지 경보 연동**<br>
   CloudWatch Logs Metric Filter 오류 발생 시 AWS SNS를 경유해 개발자 메일로 상황이 실시간 통보되며, 도쿄·싱가포르·시드니 리전에서 동시에 `/actuator/health` 헬스체크 실패가 감지되면 Grafana 경보가 트리거됩니다.
 
-### 1.5.4. SLO (Service Level Objective) Visualization
+### 1.5.4. SLO Visualization
 * **통합 관제 SLA 대시보드 ([current_dashboard.json](infra/monitoring/current_dashboard.json))**<br>
   SRE 핵심 품질 지표(Uptime SLA, Incident Count, MTTR, MTBF)를 Grafana 전역 시간 범위(Time Range Picker)에 동적으로 연동되도록 설계하여 단일 행 4열 KPI 카드 레이아웃에 맞춰 배치했습니다.
 * **[Grafana Live Public Dashboard](https://grandwalrus3189.grafana.net/public-dashboards/ec9e06b0d1ea4540b97af6b56abb1380)**<br>
-  레이아웃 구성 예시용 퍼블릭 링크 (보안 정책 상 실제 메트릭 데이터 대신 구조 확인용 임의 지표가 노출됩니다.)
+  레이아웃 구성 예시용 퍼블릭 링크 (인프라 보안 정책 준수를 위해 민감한 라이브 메트릭 대신 데모용 샘플 메트릭이 시각화됩니다.)
 
-#### 1.5.4.1. SLA 지표 PromQL 연산 수식
+#### 1.5.4.1. PromQL Query Formulation
 > [!NOTE]
-> 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다.
+> 수식 내 기호 정의: $P_t \in \{0, 1\}$는 특정 측정 시점 $t$의 API 헬스체크 가용 성공 여부(`probe_success`)를 의미합니다. 초기 수집 시점에 가용 상태가 0(장애)으로 시작하는 경우, 첫 번째 변화(0 → 1)가 장애 복구임에도 홀수 변화 횟수가 반환되어 나눗셈 결과에 소수점이 발생할 수 있으므로 쿼리에서는 정수 나눗셈(내림) 처리를 적용합니다.
 
 * **API Health Status**
 
@@ -331,15 +337,15 @@ avg_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.
 
 * **Dynamic Incident Count**
 
-$$\text{Incident Count} = \frac{\text{changes}(P_t)}{2}$$
+$$\text{Incident Count} = \left\lfloor \frac{\text{changes}(P_t)}{2} \right\rfloor$$
 
 ```promql
-changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2
+floor(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2)
 ```
 
 * **Dynamic MTTR (Mean Time To Recovery)**
 
-$$\text{MTTR (sec)} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_{t \in \text{range}} P_t\right) \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
+$$\text{MTTR (sec)} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_{t \in \text{range}} P_t\right) \times 60}{\text{clamp\_min}\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
 
 ```promql
 ((count_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) - sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range])) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
@@ -347,13 +353,15 @@ $$\text{MTTR (sec)} = \frac{\left(\text{count}_{t \in \text{range}}(P_t) - \sum_
 
 * **Dynamic MTBF (Mean Time Between Failures)**
 
-$$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
+$$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\text{clamp\_min}\left(\frac{\text{changes}(P_t)}{2}, 1\right)}$$
 
 ```promql
 (sum_over_time(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) * 60) / clamp_min(changes(probe_success{job="nemologic-api-health", instance="https://rogic.io/actuator/health"}[$__range]) / 2, 1)
 ```
 
-#### 1.5.4.2. 가용성 및 재해 복구 지표 비교표
+* $\text{clamp\_min}(x, d) = \max(x, d)$을 의미하며, 측정 대상 기간 중 장애/복구 전환 이벤트가 0회 발생할 경우 발생하는 분모 0 오류(Zero-division) 방지를 위해 PromQL 함수로 보정한 것입니다.
+
+#### 1.5.4.2. Target Indicator Comparison
 | 지표 | 현재 사양 (단일 EC2 + S3 백업) | 향후 개선 목표 (Multi-AZ ALB + ECS/RDS) |
 | :--- | :--- | :--- |
 | **RPO (복구 시점)** | **6시간** (하루 4회 S3 백업 소산) | **5분 이내** (RDS Multi-AZ 및 PITR 자동 활성화) |
@@ -365,7 +373,7 @@ $$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\
 
 ## 1.6. Troubleshooting
 
-### 1.6.1. 호스트 메모리 고갈 장애 복구
+### 1.6.1. Host Memory Exhaustion Incident
 * **배경**<br>
   인프라 비용 극 최소화(월 $11.45 구성)를 위해 t3a.nano 인스턴스(512MB RAM) 환경을 선택하였으나, 모니터링 수집 에이전트(Grafana Alloy)의 메모리 점유(100MB+)와 블루/그린 배포 시점에 Spring Boot 컨테이너 2개가 일시적으로 동시에 기동하면서 물리 메모리 한계를 초과하여 OOM 및 CPU 스레싱 장애가 빈번히 발생함.
 * **해결 방안**<br>
@@ -373,10 +381,8 @@ $$\text{MTBF (sec)} = \frac{\sum_{t \in \text{range}} P_t \times 60}{\max\left(\
     호스트 리소스를 차지하는 수집 데몬(Alloy)을 배제. 대신 Nginx 리버스 프록시 단에서 Spring Actuator 메트릭 엔드포인트를 Bearer 토큰 보안 검증 하에 외부 노출하고, Grafana Cloud Prometheus가 원격으로 Pull(Scraping)하게 전환하여 모니터링 에이전트 구동에 따른 메모리 점유를 제거함.
   - **GraalVM Native Image 고도화**<br>
     빌드 타임 AOT 컴파일 및 Jackson 리플렉션 힌트 지정을 통해 Spring Boot 컨테이너 런타임 메모리 풋프린트를 기존 250MB+에서 **30MB 이하**로 극소화하여, 512MB RAM의 가혹한 물리 환경에서도 2개 컨테이너 무중단 교체 가용성을 안정적으로 유지함.
-* **개발자 회고 (Retrospective)**<br>
-  - 이 문제 해결 과정에서 코딩 AI 에이전트는 `t3a.nano` 환경의 리소스 임계치를 근거로 인스턴스 스케일업(micro/small로 업그레이드) 및 표준 관리형 아키텍처(ALB, RDS) 도입을 강력히 권장했습니다.
-  - 물론 정석적인 모범 사례(Best Practice)에 따르는 편이 쉬운 길이었겠으나, **극단적인 비용 효율화와 한계 최적화**라는 프로젝트의 기술적 지향점을 지키기 위해 기술적 수단을 집요하게 모색했습니다.
-  - 그 결과, 메트릭 수집 방식을 Push에서 Pull로 전환하고 GraalVM 메모리 풋프린트를 30MB 이하로 튜닝하는 등 깊이 있는 시스템 최적화 경험을 축적할 수 있었습니다. 도구(AI)의 제안을 맹신하지 않고, 프로젝트 상황에 맞게 주도적으로 아키텍처의 트레이드오프를 결정하는 역량의 중요성을 깨닫게 해준 값진 트러블슈팅 사례입니다.
+* **기술적 교훈 및 의사결정 (Retrospective)**<br>
+  초기 검토 시 범용 권장 사안인 인스턴스 스케일업(t3.micro 이상)이나 AWS ALB/RDS 관리형 서비스 도입을 권장받았으나, **프로젝트 예산 극 최소화**라는 제약 조건을 충족하기 위해 시스템 레벨 최적화를 고수했습니다. 결과적으로 메트릭 수집 방식을 Push에서 Pull로 스위칭하고 GraalVM Native AOT 컴파일 풋프린트를 30MB 이하로 튜닝함으로써, 추가 인프라 지출 없이 물리 한계를 극복하고 저사양 컴퓨팅 환경에서도 이중화 배포 정합성을 확보했습니다.
 
 ---
 
@@ -408,7 +414,7 @@ stateDiagram-v2
         state "Terraform Apply Staging" as TFA_S
         state "Deploy Backend via Ansible" as Deploy_S
         state "Run Playwright E2E Tests" as E2E
-
+ 
         [*] --> BuildB
         [*] --> BuildF
         BuildB --> TFA_S
@@ -427,7 +433,7 @@ stateDiagram-v2
         state "Terraform Apply Production" as TFA_P
         state "Deploy Production via Ansible" as Deploy_P
         state "Auto-SemVer Tag & Release" as Release
-
+ 
         [*] --> TFA_P
         TFA_P --> Deploy_P
         Deploy_P --> Release
@@ -443,7 +449,7 @@ stateDiagram-v2
 * **경로 필터(Path Filtering)**<br>
   단순 문서나 로컬 마크다운 수정 커밋 유입 시에는 빌드/컴파일 단계를 스킵하여 배포 속도를 최적화했습니다.
 * **배포 대기 취소(Concurrency)**<br>
-  Staging 진행 중 추가 커밋이 수입되는 즉시 이전 배포 작업을 강제 취소(`cancel-in-progress: true`)해 배포의 꼬임 현상을 방지했습니다.
+  Staging 진행 중 추가 커밋이 유입되는 즉시 이전 배포 작업을 강제 취소(`cancel-in-progress: true`)해 배포의 꼬임 현상을 방지했습니다.
 
 ---
 
@@ -451,7 +457,7 @@ stateDiagram-v2
 
 ### 2.2.1. Compute Offloading
 * **Actions Runner 컴파일 오프로딩**<br>
-  512MB 호스트 내부의 컴파일 한계를 극복하기 위해 GitHub Actions Runner(7GB RAM) 환경에서 GraalVM Native AOT 컴파일을 수행하고 완료 이미지(`sha-${{ github.sha }}`)를 GHCR에 업로드해 운영 노드의 메모리 부하를 방지했습니다.
+  512MB 호스트 내부의 빌드 제약을 극복하기 위해 빌드 연산 부하를 GitHub Actions로 오프로딩했습니다. 상세 완화 구조는 [1.3.1. Build Resource Constraints](#131-build-resource-constraints)를 참고하십시오.
 
 ### 2.2.2. Static Asset Delivery
 * **Vite Static Asset 동적 업로드**<br>
@@ -477,7 +483,7 @@ stateDiagram-v2
 
 ## 2.4. Troubleshooting
 
-### 2.4.1. 배포 파이프라인 충돌 오류 극복
+### 2.4.1. Deployment Pipeline Conflict
 * **배경**<br>
   - Staging과 Production 인프라 설정이 동일 Terraform 코드에 묶여 일괄 반영되던 중, 운영 환경 S3 버킷에 정적 자산이 시딩되지 않은 상태에서 DNS A 레코드가 CloudFront/S3로 먼저 스위칭되어 운영 전체 접속 차단(`AccessDenied`) 장애 발생 ([Access Failure Report](./docs/incidents/20260630_production_access_failure.md)).
   - 핫픽스 도중 GitHub Actions의 `cancel-in-progress: true` 설정으로 인해 Nginx 인증서 발급 프로세스 도중 후속 커밋이 이전 빌드를 강제 취소하면서 실서버 SSL 인증서 유실로 인한 HTTPS API 통신 불능 장애 발생 ([Handshake Failure Report](./docs/incidents/20260630_production_api_handshake_failure.md)).
@@ -522,7 +528,7 @@ stateDiagram-v2
 
 ## 3.3. Troubleshooting
 
-### 3.3.1. AI 생성 퍼즐 파싱 장애 복구
+### 3.3.1. AI Generation Parsing Incident
 * **배경**<br>
   초경량 LLM 모델이 30x30 대형 그리드 생성 시 응답 지연을 아끼기 위해 JSON 포맷 대신 `Array(30).fill(0)` 같은 JS 문법을 변형 반환하여 백엔드 Jackson 역직렬화 오류(`JsonParseException`) 및 배치 스케줄러 중단 장애 발생 ([Daily Puzzle Failure Report](./docs/incidents/20260701_daily_puzzle_generation_failure.md)).
 * **해결 방안**<br>
@@ -535,7 +541,7 @@ stateDiagram-v2
 ## 4.1. Local Development Setup
 To run `rogic.io` on your local workstation, select one of the options below:
 
-### 4.1.1. Option 1: Docker Compose 기반 일괄 기동 (추천)
+### 4.1.1. Docker Compose Stack Deployment
 전체 애플리케이션 스택(Database, Backend, Frontend)을 한 번에 빌드하고 기동하려는 경우 아래 옵션을 선택합니다.
 
 ```bash
@@ -548,52 +554,52 @@ docker compose up --build
 
 ---
 
-### 4.1.2. Option 2: 로컬 및 컨테이너 하이브리드 기동 (개발 환경)
+### 4.1.2. Local and Container Hybrid Run
 코드 수정 시 즉각적인 라이브 반영 및 핫 리로딩(Vite dev server)을 원하는 경우 아래 단계별로 서비스를 기동합니다.
 
-#### 4.1.2.1. Step 1: PostgreSQL 데이터베이스 기동
-```bash
-# Start only the database container in the background
-docker compose up -d db
-```
+* **Step 1: PostgreSQL 데이터베이스 기동**<br>
+  ```bash
+  # Start only the database container in the background
+  docker compose up -d db
+  ```
 
-#### 4.1.2.2. Step 2: 백엔드 API 서버 실행
-```bash
-cd backend
-./gradlew bootRun
-```
-* API Server 구동 주소: `http://localhost:8080`
-* **Prerequisites**: Java 17 JDK 설치 필요.
+* **Step 2: 백엔드 API 서버 실행**<br>
+  ```bash
+  cd backend
+  ./gradlew bootRun
+  ```
+  * API Server 구동 주소: `http://localhost:8080`
+  * **Prerequisites**: Java 17 JDK 설치 필요.
 
-#### 4.1.2.3. Step 3: 프론트엔드 클라이언트 실행
-```bash
-cd frontend
-npm install
-npm run dev
-```
-* Frontend Client 구동 주소: `http://localhost:5173`
-* **Prerequisites**: Node.js 20+ 설치 필요.
+* **Step 3: 프론트엔드 클라이언트 실행**<br>
+  ```bash
+  cd frontend
+  npm install
+  npm run dev
+  ```
+  * Frontend Client 구동 주소: `http://localhost:5173`
+  * **Prerequisites**: Node.js 20+ 설치 필요.
 
 ---
 
-### 4.1.3. Option 3: AWS SSM Session Manager 및 SSH 터널링 설정
+### 4.1.3. AWS SSM Session Manager Setup
 보안 그룹 22번 포트 폐쇄 환경 하에서 원격 EC2 인스턴스 터미널에 접속하거나 Ansible 터널을 설정하는 방법입니다.
 
-#### 4.1.3.1. AWS CLI 및 Session Manager Plugin 설치
-로컬 기기에 AWS CLI를 최신 상태로 유지하고, SSH 터널링을 지원하기 위해 AWS 공식 [session-manager-plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)을 설치합니다.
+* **AWS CLI 및 Session Manager Plugin 설치**<br>
+  로컬 기기에 AWS CLI를 최신 상태로 유지하고, SSH 터널링을 지원하기 위해 AWS 공식 [session-manager-plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)을 설치합니다.
 
-#### 4.1.3.2. 로컬 SSH Config 설정 (~/.ssh/config)
-보안 그룹에서 SSH(22) 포트가 폐쇄되었더라도 호스트의 SSM 에이전트를 프록시로 삼아 SSH 터널을 수립할 수 있도록 아래 설정을 로컬 SSH 환경 파일에 등록합니다.
-```ssh
-# SSH over SSM Tunnel Configuration
-Host i-* mi-*
-    ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p
-```
+* **로컬 SSH Config 설정 (~/.ssh/config)**<br>
+  보안 그룹에서 SSH(22) 포트가 폐쇄되었더라도 호스트의 SSM 에이전트를 프록시로 삼아 SSH 터널을 수립할 수 있도록 아래 설정을 로컬 SSH 환경 파일에 등록합니다.
+  ```ssh
+  # SSH over SSM Tunnel Configuration
+  Host i-* mi-*
+      ProxyCommand aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p
+  ```
 
-#### 4.1.3.3. EC2 호스트 원격 접속 명령어
-인스턴스 ID와 기존 SSH 인증 키를 사용해 22포트 방화벽 차단을 우회하여 쉘 세션을 안전하게 수립합니다.
-```bash
-ssh -i ~/.ssh/nemologic-key.pem ubuntu@i-xxxxxxxxxxxxxxxxx
-```
+* **EC2 Host Connection Command**<br>
+  인스턴스 ID와 기존 SSH 인증 키를 사용해 22포트 방화벽 차단을 우회하여 쉘 세션을 안전하게 수립합니다.
+  ```bash
+  ssh -i ~/.ssh/nemologic-key.pem ubuntu@i-xxxxxxxxxxxxxxxxx
+  ```
 
 
