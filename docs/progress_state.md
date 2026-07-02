@@ -301,6 +301,10 @@
 - **해결 내역**:
   - **tmpfs 소유자 권한 완치**: Nginx 초기화 전역 루틴에서 `/var/cache/nginx/client_temp` 등을 강제 생성하려고 시도하여 Permission Denied(13번) 에러를 유발하던 구동 장벽을 해결함. `docker-compose` 및 `docker-compose.stage.yml` 에 선언적 상세 tmpfs 마운트(`type: tmpfs`, `uid: 101`, `gid: 101`, `mode: 0770`)를 주입하여 Nginx 비특권 유저가 캐시 디렉터리 내부에 무제한 쓰기 및 디렉터리 생성을 수행할 수 있도록 완치함.
 
+### Nginx 캐시 영역 상세 tmpfs mode: 0777 조정을 통한 Compose 빌드 구문 결함 해소 (Step 76) - 완료
+- **해결 내역**:
+  - **Docker Compose 호환 구문 전환**: 원격 호스트의 Docker Compose 파서가 `volumes.tmpfs` 객체 내의 `uid`, `gid` 속성을 해석하지 못하고 빌드를 차단시키던 장애(`additional properties not allowed`)를 패치함. 호환 구문 규격에 맞춰 `uid` 와 `gid`를 완전 제거하고, 모든 Compose 버전에서 표준 지원하는 **`mode: 0777`** 속성을 부여하여 일반 비특권 Nginx 계정이 캐시 영역에 제약 없이 파일을 쓸 수 있도록 구문 정합성과 비특권 보안성을 동시에 완결함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

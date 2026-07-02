@@ -55,9 +55,7 @@ services:
       - type: tmpfs
         target: /var/cache/nginx
         tmpfs:
-          mode: 0770
-          uid: 101
-          gid: 101
+          mode: 0777
     depends_on:
       - backend
 
