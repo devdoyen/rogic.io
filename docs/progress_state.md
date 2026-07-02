@@ -205,6 +205,11 @@
   - **다이어그램 대체 및 시인성 극대화**: 본문 `1.3.1.1. IAM Least Privilege Design` 의 과도하게 길었던 11개 대상 서비스별 IAM Actions 세부 매핑 테이블을 완전히 삭제하고, 대신 전체 주체(Runner, EC2)와 인증 체계(OIDC, Instance Profile), IAM 역할/정책, AWS 타깃 자원 간의 유기적 흐름을 표상하는 **Mermaid IAM Architecture Flowchart**를 설계하여 삽입함.
   - **정보 간결성 획득**: 핵심 요약인 주체별 자격 증명 테이블만 다이어그램과 병치하고 불필요한 구현성 Policy 세부 테이블은 완전히 걷어냄으로써 전체 다큐먼트 아키텍처 리포트의 가독성과 정보 전달력을 완성함.
 
+### README.md IAM 다이어그램 C4 모델 표준 규격(Level 3) 업그레이드 (Step 55) - 완료
+- **해결 내역**:
+  - **C4 모델 표준 적용**: 기존 `1.3.1.1` 하위의 일반 `flowchart TD` 기반 보안 다이어그램을 C4 Component 다이어그램 규격으로 전면 전환하여, 프로젝트의 타 아키텍처 다이어그램들과의 기술 정합성 및 일관성을 확보함.
+  - **C4Component 구성**: 주체(GitHub Actions Runner, EC2)를 `Container`로, 신뢰점 및 역할/Policies를 `Component`로, 대상 자원군들을 `System` 경계로 정확하게 맵핑하여 클라우드 보안 토폴로지 가독성을 극대화함.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)

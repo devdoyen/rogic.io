@@ -129,58 +129,48 @@ C4Context
 EC2 호스트 및 CI/CD 파이프라인 각각의 실행 주체별로 실제 적용된 IAM 권한과 OIDC 단기 자격 증명 기반의 자원 통제 아키텍처는 다음과 같습니다.
 
 ```mermaid
-flowchart TD
-    subgraph GitHub_Actions ["CI/CD Pipeline (GitHub Actions Runner)"]
-        runner["GitHub Runner"]
-    end
+C4Component
+    title Component Diagram for Identity & Access Management (Level 3: Security & IAM)
 
-    subgraph AWS_Cloud ["AWS Cloud (ap-northeast-2)"]
-        subgraph IAM_Control ["Identity & Access Management (IAM)"]
-            oidc["OIDC Trust Provider<br>(token.actions.githubusercontent.com)"]
-            run_role["CI/CD Runner IAM Role<br>(Staging / Production Role)"]
-            host_role["EC2 Instance IAM Role<br>(Instance Profile)"]
-            
-            subgraph Policies ["IAM Least Privilege Policies"]
-                tf_policy["Terraform & Deploy Policy<br>(EC2, VPC, S3, DynamoDB, Route53, CloudFront)"]
-                ssm_policy["SSM Managed Policy<br>(SSM Access)"]
-                cw_policy["CloudWatch Log Policy<br>(Telemetry Access)"]
-                s3_back_policy["S3 Backup Write Policy<br>(Backup Access)"]
-            end
-        end
+    Container(runner, "GitHub Actions Runner", "GitHub Cloud", "Deploys infra/app using temporal credentials.")
+    Container(ec2, "EC2 App Server", "AWS EC2", "Runs application stack and background helpers.")
 
-        subgraph AWS_Resources ["AWS Resources"]
-            ec2["EC2 Instances<br>(Staging / Production)"]
-            s3_tf["S3 tfstate & deploy Bucket"]
-            ddb_lock["DynamoDB tfstate lock Table"]
-            cf_cdn["CloudFront CDN"]
-            r53_dns["Route 53 Hosted Zone"]
-            cw_logs["CloudWatch Logs / Alarms"]
-            s3_back["S3 Backup Bucket"]
-        end
-    end
+    System_Boundary(iam, "AWS IAM (Identity & Access Management)") {
+        Component(oidc, "OIDC Provider", "token.actions.githubusercontent.com", "Verifies GitHub Actions runner token.")
+        Component(run_role, "CI/CD Runner IAM Role", "IAM Role", "Assumed via OIDC federation.")
+        Component(host_role, "EC2 Host IAM Role", "IAM Role (Instance Profile)", "Attached to EC2 hosting profile.")
+        
+        Component(tf_policy, "Terraform & Deploy Policy", "Customer Managed Policy", "Allows EC2, VPC, S3, DynamoDB, Route 53, CloudFront management.")
+        Component(ssm_policy, "SSM Managed Policy", "AWS Managed Policy", "Allows SSM Systems Manager connectivity.")
+        Component(cw_policy, "CloudWatch Log Policy", "Customer Managed Policy", "Allows log groups/streams push operations.")
+        Component(s3_back_policy, "S3 Backup Write Policy", "Customer Managed Policy", "Allows database dump upload.")
+    }
 
-    %% OIDC Authentication Flow
-    runner -->|"1. Web Identity Token (Keyless)"| oidc
-    oidc -->|2. Assume Role| run_role
-    run_role -->|3. Bind Permissions| tf_policy
+    System_Boundary(aws_resources, "AWS Resources Boundary") {
+        System(s3_tf, "S3 tfstate & deploy Bucket", "Object Storage")
+        System(ddb_lock, "DynamoDB tfstate lock Table", "NoSQL Database")
+        System(cf_cdn, "CloudFront CDN / Route 53", "Edge Routing")
+        System(cw_logs, "CloudWatch Logs", "Telemetry Store")
+        System(s3_back, "S3 Backup Bucket", "Object Storage")
+    }
 
-    %% CI/CD Resource Access
-    tf_policy -.->|Manage VPC & Host| ec2
-    tf_policy -.->|Read/Write tfstate| s3_tf
-    tf_policy -.->|Lock state| ddb_lock
-    tf_policy -.->|Invalidate CDN cache| cf_cdn
-    tf_policy -.->|Update DNS record| r53_dns
+    Rel(runner, oidc, "1. Authenticates", "OIDC Web Identity Token")
+    Rel(oidc, run_role, "2. Issues short-term session", "AssumeRoleWithWebIdentity")
+    Rel(run_role, tf_policy, "3. Binds permissions")
+    
+    Rel_D(tf_policy, ec2, "Manage VPC & Host", "AWS API")
+    Rel_D(tf_policy, s3_tf, "Read/Write tfstate & deploy site", "AWS API")
+    Rel_D(tf_policy, ddb_lock, "Acquire/Release Lock", "AWS API")
+    Rel_D(tf_policy, cf_cdn, "Invalidate cache / Update DNS", "AWS API")
 
-    %% EC2 IAM Host Role Flow
-    ec2 -->|4. Assume Role| host_role
-    host_role -->|5. Bind Permissions| ssm_policy
-    host_role -->|5. Bind Permissions| cw_policy
-    host_role -->|5. Bind Permissions| s3_back_policy
+    Rel(ec2, host_role, "4. Obtains profile context", "Instance Metadata Service (IMDS)")
+    Rel(host_role, ssm_policy, "5. Binds permissions")
+    Rel(host_role, cw_policy, "5. Binds permissions")
+    Rel(host_role, s3_back_policy, "5. Binds permissions")
 
-    %% Host Resource Access
-    ssm_policy -.->|Enable Systems Manager Tunnel| ec2
-    cw_policy -.->|Push stdout streams| cw_logs
-    s3_back_policy -.->|Upload daily DB dump| s3_back
+    Rel_D(ssm_policy, ec2, "Establish secure tunnel", "SSM Tunnel")
+    Rel_D(cw_policy, cw_logs, "Push application stdout", "CloudWatch API")
+    Rel_D(s3_back_policy, s3_back, "Upload daily DB dump", "S3 API")
 ```
 
 | 주체 (Principal) | 인증 방식 (Auth Type) | 연결된 IAM 정책 및 권한 (IAM Policies) | 주요 역할 및 비고 (Key Role) |
