@@ -529,12 +529,22 @@ stateDiagram-v2
   - **복구 시간(MTTR) 지연**: 초기 경보 채널(Slack/Email SNS) 및 SSM 세션 매니저를 통한 복구 자동화 인프라가 완전히 구축되기 전, 수동 SSH 접속 및 데몬 분석 처리에 많은 시간이 지연되었습니다.
   - **안정화 성과**: 트러블슈팅([1.5.1. Host Memory Exhaustion Incident](#151-host-memory-exhaustion-incident)) 조치(Agentless Pull 스위칭, 30MB 이하 GraalVM Native Image 배포, swap 가상 메모리 구성, Docker GC 스크립트 및 SSM 터널링 고도화)를 완료한 최근 7일 가동 기준으로는 평균 가용성 **98.63%** 및 평균 MTTR **11.76분** 수준으로 안정 궤도에 안착하여 성능 개선 효과를 검증했습니다.
 
+* **Grafana Live Service SLA Dashboard**<br>
+  상세 가용성 메트릭, MTTR, MTBF 실시간 변동 추이를 증빙하는 [Grafana Live Service SLA Dashboard Snapshot](https://grandwalrus3189.grafana.net/dashboard/snapshot/NzCi2k1ikmMxMSvq3Y9Lgi6GyKQiuZ1O?orgId=1&from=2026-06-25T08:08:22.472Z&to=2026-07-02T08:08:22.472Z&timezone=browser&var-application=nemologic&var-instance=springboot-prod&var-env=prod&var-hikaricp=NemologicHikariCP&var-memory_pool_heap=$__all&var-memory_pool_nonheap=$__all&refresh=5s) 캡처본입니다.
+
+  ![Grafana SLA Dashboard](./docs/assets/grafana_sla_snapshot.png)
+
 ## 4.3. User & System Traffic Metrics
 * **구축 이후 서비스 누적 실측 지표 (Google Analytics 4 / Actuator)**<br>
   - **활성 사용자 수 (Active Users)**: 39명 (최근 7일 Google Analytics 4 실측 기준)
   - **총 이벤트 수 (Total Events)**: 535회 (사용자 상호작용 및 게임 플레이 행위 로그)
   - **사용자당 평균 참여 시간 (Average Engagement Time)**: 2분 53초 (참여 몰입도 향상 확인)
   - **AI 자동 생성 퍼즐 수 (Daily Generated)**: 60+ 개 (데일리 생성기 및 무결성 솔버 검증 통과 데이터 누적)
+
+* **Google Analytics 4 User Report**<br>
+  최근 7일간의 rogic.io 실 사용자 통계(활성 사용자 39명, 새 사용자 37명, 평균 참여 시간 2분 53초)를 증빙하는 구글 애널리틱스 4 획득 보고서 원본 캡처본입니다.
+
+  ![Google Analytics 4 User Report](./docs/assets/ga4_report.png)
 
 ## 5.1. Local Development Setup
 To run `rogic.io` on your local workstation, select one of the options below:
