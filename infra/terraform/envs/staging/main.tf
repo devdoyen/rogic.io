@@ -140,6 +140,15 @@ resource "aws_s3_bucket" "backup_bucket" {
   }
 }
 
+resource "aws_s3_bucket_public_access_block" "backup_bucket_public_access_block" {
+  bucket = aws_s3_bucket.backup_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # IAM Role & Instance Profile for EC2
 resource "aws_iam_role" "nemologic_staging_ec2_role" {
   name = "nemologic-staging-ec2-role"
@@ -218,6 +227,11 @@ resource "aws_instance" "nemologic_staging_server" {
   root_block_device {
     volume_size = 20
     volume_type = "gp3"
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
   }
 
   tags = {

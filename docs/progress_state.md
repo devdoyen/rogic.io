@@ -343,10 +343,17 @@
   - **다계층 보안 진단**: GitHub Actions 워크플로우에 `security-scan` 잡을 추가하여 소스코드 의존성(SCA)과 Terraform/Ansible 인프라 설정(IaC)을 검증함. 또한 `build` 잡 내에서 백엔드 Docker 이미지 빌드 직후, 레포지토리 푸시 전에 이미지 내부 취약점을 자동으로 스캔하는 3중 방어선을 수립함.
   - **보안 지표 수치화 및 문서화**: `README.md` 내 CI/CD 장표의 품질 검증 영역(`## 2.3. Continuous Validation`)에 Trivy 진단 명세를 통합하였으며, 정량적 취약점 관리 목표(Severity별 Target: `CRITICAL 0`, `HIGH 0`) 실측 보고 테이블을 신설하여 보안 수준을 정량화함.
 
+### Staging 보안 취약점 진단 결과 1차 반영 및 개선 (Step 86) - 완료
+- **해결 내역**:
+  - **의존성(SCA) 조치**: `frontend/package.json`에 `overrides` 옵션을 부여하여 `form-data` 패키지의 CRLF Injection 취약점(CVE-2026-12143, HIGH)에 대응하는 버전인 `4.0.6` 이상으로 강제 업그레이드 조치 완료 및 `package-lock.json` 무결성 갱신.
+  - **컨테이너 보안 하드닝**: `frontend/Dockerfile`에 명시적인 `USER nginx` 지시어를 주입하여 root 실행 위험 경고(DS-0002, HIGH)를 해결.
+  - **Staging IaC 보안 하드닝**: Staging 환경 Terraform 파일에 `aws_s3_bucket_public_access_block` 리소스를 명시하여 DB 백업 및 프론트엔드 S3 버킷에 대한 퍼블릭 액세스를 완전히 차단했으며, Staging EC2 서버에 IMDSv2 옵션(`http_tokens = "required"`)을 인가하여 인스턴스 메타데이터 탈취 위험성 제거.
+
 ---
 
 ## 2. 다음 목표 (Next Goals)
-- **Trivy 스캔 결과 모니터링**: CI/CD 가동 시 Trivy가 탐지하는 의존성 라이브러리 및 IaC 취약점 건수를 관찰하고 필요시 라이브러리 버전 업데이트 조치.
+- **Staging 파이프라인 검증 및 빌드 확인**: 변경된 보안 강화 구성이 Staging 파이프라인에서 성공적으로 빌드되고 스캔 통과 및 Playwright E2E 검증을 마칠 수 있도록 확인.
+- **Production 보안 취약점 진단 결과 반영**: Staging 환경 검증이 완료된 직후, 동일한 보안 강화(IMDSv2 및 S3 public access block)를 Production 환경 Terraform 파일(`production/main.tf`, `production/cdn.tf`)에 반영하고 배포 진행.
 - **배치 주기별 AI 퍼즐 자동 생성 경과 관찰**: 04:17 AM 크론탭 실행 시 30x30 및 각 그리드별 데일리 퍼즐 생성이 파싱 에러 없이 매끄럽게 수행되는지 추가 모니터링 수행.
 - **Nginx 웹 방화벽(WAF) 도입 검토**: 리소스 제약을 극복하고 Nginx 레벨의 보안 강화를 위한 방화벽 구성안 비교 및 적용 설계 수립.
 
