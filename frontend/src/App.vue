@@ -208,7 +208,27 @@
             </div>
           </div>
 
-          <div v-else-if="currentTab === 'home'" class="home-dashboard tab-fade-in">
+          <div v-else-if="currentTab === 'home'" class="home-dashboard tab-fade-in" :class="{ 'intro-animating': introActive && introPhase === 'centered', 'intro-revealing': introActive && introPhase === 'reveal' }">
+            <!-- Intro presentation overlay -->
+            <div v-if="introActive" class="intro-overlay" :class="[introPhase]">
+              <button class="intro-skip-btn" @click="skipIntro">Skip Intro</button>
+              <div class="intro-centered-content">
+                <div class="intro-logo-wrapper" :class="[introPhase]">
+                  <div class="logo-icon intro-large-logo" style="animation: spin 8s linear infinite;">
+                    <div class="logo-cell filled" style="background: linear-gradient(135deg, #38bdf8, #818cf8); border-radius: 6px;"></div>
+                    <div class="logo-cell" style="background: rgba(255,255,255,0.05); border-radius: 6px;"></div>
+                    <div class="logo-cell" style="background: rgba(255,255,255,0.05); border-radius: 6px;"></div>
+                    <div class="logo-cell filled" style="background: linear-gradient(135deg, #38bdf8, #818cf8); border-radius: 6px;"></div>
+                  </div>
+                  <h2 class="intro-logo-title">rogic.io</h2>
+                </div>
+                <div v-if="introPhase === 'reveal'" class="intro-stats-reveal">
+                  <span class="intro-stats-number">{{ displayedPuzzleCount }}</span>
+                  <span class="intro-stats-label">Puzzles Online</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Hero Slogan Card & Interactive 5x5 Demo Puzzle -->
             <div class="hero-section flex-row-layout" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 2rem; width: 100%; max-width: 800px; margin: 0 auto; padding: 6rem 2rem; box-sizing: border-box; flex-wrap: wrap; text-align: left;">
               
@@ -222,6 +242,10 @@
                     <div class="logo-cell filled" style="background: linear-gradient(135deg, #38bdf8, #818cf8); border-radius: 4px;"></div>
                   </div>
                   <h2 class="hero-title" style="margin: 0; font-size: 3.6rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1.25; background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; display: inline-block;">rogic.io</h2>
+                </div>
+                <!-- Hero stats under the title -->
+                <div class="hero-stats" style="margin-top: -0.25rem; display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-size: 0.95rem; font-weight: 500;">
+                  <span style="color: #38bdf8; font-weight: 700; font-size: 1.1rem; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);">{{ displayedPuzzleCount }}</span> puzzles available
                 </div>
                 <div class="conveyor-belt-container" style="width: 320px; height: 110px; overflow: hidden; position: relative; margin-top: 1.25rem; mask-image: linear-gradient(to bottom, transparent, white 20%, white 80%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, white 20%, white 80%, transparent);">
                   <div class="conveyor-track" style="display: flex; flex-direction: column; gap: 0.5rem; height: max-content; animation: marquee-vertical 12s linear infinite;">
@@ -255,6 +279,7 @@
                     :board="demoBoard" 
                     :rotationSteps="demoRotationSteps" 
                     :readOnly="demoSolved" 
+                    :renderTrigger="demoRenderTrigger"
                     @cell-click="handleDemoCellClick" 
                     @solve-animation-complete="handleDemoSolveAnimationComplete" 
                   />
@@ -270,6 +295,8 @@
                 <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>
                 <span class="footer-divider">|</span>
                 <a href="https://github.com/devdoyen/rogic.io" target="_blank" rel="noopener noreferrer">GitHub</a>
+                <span class="footer-divider">|</span>
+                <a href="#" @click.prevent="replayIntro" class="replay-intro-link">Replay Intro</a>
               </div>
               <p class="footer-copyright">&copy; 2026 rogic.io. All rights reserved.</p>
             </footer>
@@ -324,6 +351,13 @@ import AdminConsoleSection from './components/AdminConsoleSection.vue';
 import MyPageSection from './components/MyPageSection.vue';
 import LeaderboardPopup from './components/LeaderboardPopup.vue';
 
+const isTestEnv = typeof window !== 'undefined' && (
+  (globalThis as any).process?.env?.NODE_ENV === 'test' ||
+  (globalThis as any).vitest !== undefined ||
+  (globalThis as any).__vitest_worker__ !== undefined ||
+  navigator.userAgent.includes('jsdom')
+);
+
 async function handleStageUpdated() {
   await Promise.all([
     loadStagesList(),
@@ -353,6 +387,14 @@ const demoBoard = shallowRef<PuzzleBoard | null>(null);
 const demoSolved = ref(false);
 const demoSolveAnimationComplete = ref(false);
 const demoRotationSteps = ref(0);
+const demoRenderTrigger = ref(0);
+
+const introActive = ref(!isTestEnv && !sessionStorage.getItem('rogic_intro_played'));
+const introPhase = ref<'centered' | 'reveal' | 'done'>(
+  (isTestEnv || sessionStorage.getItem('rogic_intro_played')) ? 'done' : 'centered'
+);
+let autoSolveTimer: any = null;
+let introTimeoutId: any = null;
 
 const demoSolutionGrid = [
   [0, 1, 0, 1, 0],
@@ -419,6 +461,7 @@ function initDemoBoard() {
   demoSolved.value = false;
   demoSolveAnimationComplete.value = false;
   demoRotationSteps.value = 3;
+  demoRenderTrigger.value++;
 }
 
 function handleDemoCellClick() {
@@ -430,6 +473,127 @@ function handleDemoCellClick() {
 function handleDemoSolveAnimationComplete() {
   demoSolveAnimationComplete.value = true;
   demoRotationSteps.value = 4;
+  if (introActive.value) {
+    setTimeout(() => {
+      introPhase.value = 'done';
+      introActive.value = false;
+      sessionStorage.setItem('rogic_intro_played', 'true');
+    }, 600);
+  }
+}
+
+function startStatsCountUp() {
+  displayedPuzzleCount.value = 0;
+  const target = totalPuzzlesCount.value;
+  const duration = 1500;
+  const start = 0;
+  const startTime = performance.now();
+  
+  function animate(now: number) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = progress * (2 - progress);
+    displayedPuzzleCount.value = Math.floor(start + (target - start) * easeProgress);
+    
+    if (progress < 1 && introPhase.value === 'reveal') {
+      requestAnimationFrame(animate);
+    } else if (introPhase.value === 'done') {
+      displayedPuzzleCount.value = target;
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function triggerDemoAutoSolve() {
+  if (!demoBoard.value) return;
+  
+  for (let r = 0; r < demoBoard.value.rowCount; r++) {
+    for (let c = 0; c < demoBoard.value.colCount; c++) {
+      demoBoard.value.setCell(r, c, 0);
+    }
+  }
+  demoSolved.value = false;
+  demoSolveAnimationComplete.value = false;
+  demoRotationSteps.value = 3;
+  demoRenderTrigger.value++;
+
+  const cellsToFill: {r: number, c: number}[] = [];
+  const sol = demoBoard.value.solutionGrid;
+  for (let r = 0; r < demoBoard.value.rowCount; r++) {
+    for (let c = 0; c < demoBoard.value.colCount; c++) {
+      if (sol[r][c] === 1) {
+        cellsToFill.push({ r, c });
+      }
+    }
+  }
+
+  cellsToFill.sort((a, b) => a.r - b.r || a.c - b.c);
+
+  let index = 0;
+  if (autoSolveTimer) clearInterval(autoSolveTimer);
+  
+  autoSolveTimer = setInterval(() => {
+    if (!demoBoard.value) {
+      clearInterval(autoSolveTimer);
+      return;
+    }
+    if (index >= cellsToFill.length) {
+      clearInterval(autoSolveTimer);
+      demoSolved.value = true;
+      return;
+    }
+    const cell = cellsToFill[index];
+    demoBoard.value.setCell(cell.r, cell.c, 1);
+    demoRenderTrigger.value++;
+    index++;
+  }, 150);
+}
+
+function startIntroAnimation() {
+  if (isTestEnv) return;
+  
+  introPhase.value = 'centered';
+  introActive.value = true;
+  
+  if (autoSolveTimer) clearInterval(autoSolveTimer);
+  if (introTimeoutId) clearTimeout(introTimeoutId);
+  
+  introTimeoutId = setTimeout(() => {
+    if (introPhase.value !== 'centered') return;
+    introPhase.value = 'reveal';
+    
+    startStatsCountUp();
+    triggerDemoAutoSolve();
+  }, 1500);
+}
+
+function skipIntro() {
+  if (autoSolveTimer) clearInterval(autoSolveTimer);
+  if (introTimeoutId) clearTimeout(introTimeoutId);
+  
+  introPhase.value = 'done';
+  introActive.value = false;
+  sessionStorage.setItem('rogic_intro_played', 'true');
+  
+  if (demoBoard.value) {
+    const sol = demoBoard.value.solutionGrid;
+    for (let r = 0; r < demoBoard.value.rowCount; r++) {
+      for (let c = 0; c < demoBoard.value.colCount; c++) {
+        demoBoard.value.setCell(r, c, sol[r][c]);
+      }
+    }
+    demoSolved.value = true;
+    demoSolveAnimationComplete.value = true;
+    demoRotationSteps.value = 4;
+    demoRenderTrigger.value++;
+  }
+  displayedPuzzleCount.value = totalPuzzlesCount.value;
+}
+
+function replayIntro() {
+  sessionStorage.removeItem('rogic_intro_played');
+  initDemoBoard();
+  startIntroAnimation();
 }
 const solved = ref(false);
 const solveAnimationComplete = ref(false);
@@ -441,12 +605,7 @@ const isSessionLoading = ref(true);
 const loadError = ref<string | null>(null);
 let countdownTimer: any = null;
 
-const isTestEnv = typeof window !== 'undefined' && (
-  (globalThis as any).process?.env?.NODE_ENV === 'test' ||
-  (globalThis as any).vitest !== undefined ||
-  (globalThis as any).__vitest_worker__ !== undefined ||
-  navigator.userAgent.includes('jsdom')
-);
+
 
 
 const rankings = ref<User[]>([]);
@@ -529,6 +688,9 @@ const displayedPuzzleCount = ref(0);
 
 watch(totalPuzzlesCount, (newVal) => {
   if (newVal <= 0) return;
+  if (introActive.value && introPhase.value === 'centered') {
+    return;
+  }
   if (typeof window === 'undefined' || typeof requestAnimationFrame === 'undefined' || typeof performance === 'undefined') {
     displayedPuzzleCount.value = newVal;
     return;
@@ -1252,6 +1414,9 @@ async function onTabChange(tab: 'home' | 'play' | 'mypage' | 'admin') {
   updatePathFromTab(tab);
   if (tab === 'home') {
     initDemoBoard();
+    if (introActive.value) {
+      startIntroAnimation();
+    }
   }
   if (tab === 'mypage') {
     await loadUserHistory();
@@ -1451,6 +1616,10 @@ onMounted(async () => {
   }
 
   updatePathFromTab(currentTab.value);
+
+  if (currentTab.value === 'home' && introActive.value) {
+    startIntroAnimation();
+  }
 
   if (!isTestEnv) {
     window.addEventListener('popstate', handlePopState);
@@ -3454,6 +3623,202 @@ body {
 @keyframes subtle-pulse {
   0%, 100% { opacity: 0.3; transform: scale(0.9); }
   50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* Intro Overlay & Centered Layout */
+.intro-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #0a0f1d;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 1s ease, opacity 0.8s ease;
+  pointer-events: all;
+}
+
+.intro-overlay.reveal {
+  background-color: rgba(10, 15, 29, 0.75);
+}
+
+.intro-overlay.done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro-skip-btn {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 10000;
+}
+
+.intro-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+}
+
+.intro-centered-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  width: 100%;
+}
+
+.intro-logo-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transform: translate(0, 0) scale(1.6);
+  opacity: 1;
+  transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.8s ease;
+}
+
+.intro-logo-wrapper.reveal {
+  transform: translate(0, -90px) scale(1.0);
+  opacity: 0;
+}
+
+.intro-large-logo {
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 6px;
+  filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.55));
+}
+
+.intro-large-logo .logo-cell {
+  border-radius: 6px;
+}
+
+.intro-logo-title {
+  margin: 0;
+  font-size: 4rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.intro-stats-reveal {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  transform: translateY(20px);
+  animation: slideUpFadeIn 0.8s forwards;
+  animation-delay: 0.2s;
+}
+
+.intro-stats-number {
+  font-size: 4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+}
+
+.intro-stats-label {
+  font-size: 0.9rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 600;
+}
+
+.replay-intro-link {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.replay-intro-link:hover {
+  color: #38bdf8;
+}
+
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(20px);
+  }
+}
+
+.fade-slow-enter-active,
+.fade-slow-leave-active {
+  transition: opacity 1s ease;
+}
+
+.fade-slow-enter-from,
+.fade-slow-leave-to {
+  opacity: 0;
+}
+
+/* Landing Page Elements Fade In based on Intro Mode */
+.home-dashboard.intro-animating .hero-section {
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+
+.home-dashboard.intro-revealing .hero-section {
+  opacity: 1;
+  transition: opacity 1.5s ease;
+}
+
+.home-dashboard.intro-animating .hero-text-block .hero-title,
+.home-dashboard.intro-animating .hero-text-block .logo-icon,
+.home-dashboard.intro-animating .hero-text-block .hero-stats {
+  opacity: 0;
+}
+
+.home-dashboard.intro-revealing .hero-text-block .hero-title,
+.home-dashboard.intro-revealing .hero-text-block .logo-icon,
+.home-dashboard.intro-revealing .hero-text-block .hero-stats {
+  opacity: 1;
+  transition: opacity 1s ease;
+  transition-delay: 0.8s;
+}
+
+.home-dashboard.intro-animating .conveyor-belt-container,
+.home-dashboard.intro-animating .hero-actions,
+.home-dashboard.intro-animating .home-footer {
+  opacity: 0;
+}
+
+.home-dashboard.intro-revealing .conveyor-belt-container,
+.home-dashboard.intro-revealing .hero-actions,
+.home-dashboard.intro-revealing .home-footer {
+  opacity: 1;
+  transition: opacity 1.2s ease;
+  transition-delay: 1.2s;
 }
 </style>
 
