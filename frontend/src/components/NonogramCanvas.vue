@@ -39,6 +39,7 @@ const props = defineProps<{
   readOnly?: boolean;
   initialAngle?: number;
   rotationSteps?: number;
+  renderTrigger?: number;
 }>();
 
 const emit = defineEmits<{
@@ -752,6 +753,10 @@ watch(() => props.readOnly, (isReadOnly) => {
   if (isReadOnly) {
     animateRotationToTarget();
   }
+});
+
+watch(() => props.renderTrigger, () => {
+  drawBoard();
 });
 </script>
 
