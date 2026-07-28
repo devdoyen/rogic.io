@@ -36,7 +36,7 @@ Create a feature branch from the `main` branch.
 #### Backend & Database
 1. Launch the local PostgreSQL instance using Docker Compose:
    ```bash
-   docker compose up -d postgres
+   docker compose up -d db
    ```
 2. Navigate to the `backend/` directory.
 3. Boot the Spring Boot application using your IDE or Gradle:
