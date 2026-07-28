@@ -15,7 +15,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    # Do not expose ports to host to isolate db service within the container network
+    ports:
+      - "5432:5432"
+    # Local dev ONLY: Expose port to host so local IDE/gradle can connect
 
   backend:
     build:
