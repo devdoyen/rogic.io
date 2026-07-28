@@ -1,5 +1,6 @@
 package com.devdoyen.nemologic.client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpEntity;
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Component
 @Profile("!test")
 public class GeminiAiClient implements AiClient {
@@ -125,7 +127,7 @@ public class GeminiAiClient implements AiClient {
         }
 
         // Fallback to grid model (gemini-3-flash)
-        System.out.println("[AI] Calling fallback model " + gridModelName + " for theme generation...");
+        log.warn("[AI] Calling fallback model {} for theme generation..."  ,gridModelName);
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 return callGeminiApi(prompt, gridModelName);
@@ -156,7 +158,7 @@ public class GeminiAiClient implements AiClient {
                 return callGeminiApi(prompt, gridModelName);
             } catch (Exception e) {
                 lastException = e;
-                System.err.println("[AI] generatePuzzleJsonForTheme with " + gridModelName + " attempt " + attempt + " failed: " + e.getMessage());
+        log.warn("[AI] generatePuzzleJsonForTheme with {} attempt {} failed: {}", gridModelName, attempt, e.getMessage());
                 if (attempt < maxAttempts) {
                     try { Thread.sleep(2000); } catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
                 }
