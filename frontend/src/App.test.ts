@@ -21,6 +21,7 @@ describe('App.vue Leaderboard Integration TDD', () => {
     vi.clearAllMocks();
     localStorage.clear();
     (window as any).dataLayer = [];
+    vi.spyOn(userApi, 'fetchClearedStageIds').mockResolvedValue([]);
     localStorage.setItem('nemologic_id_token', 'mockHeader.eyzleHAiOjk5OTk5OTk5OTl9.mockSignature');
     vi.mocked(stageApi.fetchNextReleaseDelaySeconds).mockResolvedValue(3600);
     vi.mocked(userApi.fetchMeFromServer).mockResolvedValue({
@@ -129,6 +130,7 @@ describe('App.vue Leaderboard Integration TDD', () => {
     vi.spyOn(stageApi, 'fetchStageById').mockResolvedValue(mockStageDetails);
     vi.spyOn(userApi, 'fetchRanking').mockResolvedValue(mockRankings);
     const historySpy = vi.spyOn(userApi, 'fetchUserHistory').mockResolvedValue(mockHistory);
+    vi.spyOn(userApi, 'fetchClearedStageIds').mockResolvedValue([1, 2]);
 
     const wrapper = mount(App);
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -138,7 +140,7 @@ describe('App.vue Leaderboard Integration TDD', () => {
     expect(myPageTab.exists()).toBe(true);
     await myPageTab.trigger('click');
 
-    expect(historySpy).toHaveBeenCalledWith(1);
+    expect(historySpy).toHaveBeenCalledWith(1, 0, 10);
 
     // Check history item rendering
     const historyItems = wrapper.findAll('.history-item');

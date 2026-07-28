@@ -101,6 +101,11 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    public List<Long> getClearedStageIds(Long userId) {
+        return historyRepository.findClearedStageIdsByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
     public org.springframework.data.domain.Page<HistoryResponse> getUserHistoryPaged(Long userId, int page, int size) {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("clearedAt").descending());
         return historyRepository.findByUserId(userId, pageable)
