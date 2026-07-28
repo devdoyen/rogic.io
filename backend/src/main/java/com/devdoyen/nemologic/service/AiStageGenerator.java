@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class AiStageGenerator {
 
@@ -168,8 +170,8 @@ public class AiStageGenerator {
                 return stageRepository.save(newStage);
             } catch (Exception e) {
                 lastException = e;
-                System.err.println("[AI] Attempt " + attempt + " failed: " + e.getMessage());
-            }
+        log.warn("[AI] Attempt {} failed: {}", attempt, e.getMessage());
+    }
         }
 
         throw new IllegalArgumentException("Failed to generate valid stage after " + maxAttempts + " attempts", lastException);
@@ -188,10 +190,10 @@ public class AiStageGenerator {
                 return new ThemeDto(theme.getName(), theme.getDescription());
             }
         } catch (Exception e) {
-            System.err.println("[AI] Failed to fetch theme from DB: " + e.getMessage());
+            log.warn("[AI] Failed to fetch theme from DB: {}", e.getMessage());
         }
 
-        System.err.println("[AI] DB Theme Pool is exhausted for size " + width + "x" + height + ". Falling back to static themes.");
+        log.warn("[AI] DB Theme Pool is exhausted for size {}x{}. Falling back to static themes.", width, height);
         java.util.List<ThemeDto> staticList = STATIC_FALLBACK_THEMES.get(width);
         if (staticList == null || staticList.isEmpty()) {
             staticList = STATIC_FALLBACK_THEMES.get(10);

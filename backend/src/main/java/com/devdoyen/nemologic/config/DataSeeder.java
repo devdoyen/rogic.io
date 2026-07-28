@@ -9,12 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.core.env.Environment;
 
 import java.io.InputStream;
 import java.util.List;
 
+@Slf4j
 @Component
 public class DataSeeder implements CommandLineRunner {
 
@@ -73,10 +75,10 @@ public class DataSeeder implements CommandLineRunner {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("[Seeder] Failed to seed resource " + resource.getFilename() + ": " + e.getMessage());
+        log.warn("[Seeder] Failed to seed resource {}: {}", resource.getFilename(), e.getMessage());
             }
         } else {
-            System.err.println("[Seeder] Resource puzzles/stages.json does not exist");
+           log.warn("[Seeder] Resource puzzles/stages.json does not exist");
         }
     }
 
