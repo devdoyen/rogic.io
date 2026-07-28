@@ -378,7 +378,7 @@ import { PuzzleBoard } from './engine/puzzleBoard';
 import { rotateGrid } from './engine/gridRotator';
 import { fetchStages, fetchStageById, fetchAiStages, startStage, likeStage, dislikeStage, fetchNextReleaseDelaySeconds, verifyStageSolve } from './api/stageApi';
 import type { StageSummary } from './api/stageApi';
-import { fetchRanking, clearStage, fetchMeFromServer, fetchUserHistory, syncGuestHistory } from './api/userApi';
+import { fetchRanking, clearStage, fetchMeFromServer, fetchUserHistory, fetchClearedStageIds, syncGuestHistory } from './api/userApi';
 import type { User, HistoryResponse } from './api/userApi';
 import { setUserSession, clearUserSession } from './api/auth';
 import type { UserSession } from './api/auth';
@@ -1431,9 +1431,8 @@ async function loadUserHistory(page: number = 0) {
     }
     histories.value = list;
 
-    const fullRes = await fetchUserHistory(userId);
-    const fullList = fullRes && 'content' in fullRes ? fullRes.content : fullRes;
-    clearedStageIds.value = new Set((fullList || []).map((h: any) => h.stageId));
+    const clearedIds = await fetchClearedStageIds(userId);
+    clearedStageIds.value = new Set(clearedIds);
   } catch (error) {
     console.error('Failed to load user history:', error);
   }

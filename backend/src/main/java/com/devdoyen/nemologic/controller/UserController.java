@@ -99,4 +99,19 @@ public class UserController {
 
         return org.springframework.http.ResponseEntity.ok(userService.getUserHistoryPaged(id, pageVal, sizeVal));
     }
+
+    @GetMapping("/{id}/cleared-stages")
+    public org.springframework.http.ResponseEntity<List<Long>> getClearedStageIds(
+            @PathVariable Long id,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.oauth2.jwt.Jwt jwt) {
+        if (jwt == null) {
+            throw new org.springframework.security.access.AccessDeniedException("Unauthorized");
+        }
+        User targetUser = userService.getUserById(id);
+        String sub = jwt.getClaimAsString("sub");
+        if (targetUser.getOauthId() == null || !targetUser.getOauthId().equals(sub)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: User ID does not match token identity");
+        }
+        return org.springframework.http.ResponseEntity.ok(userService.getClearedStageIds(id));
+    }
 }

@@ -59,6 +59,11 @@ export async function fetchUserHistory(userId: number, page?: number, size?: num
   return response.data;
 }
 
+export async function fetchClearedStageIds(userId: number): Promise<number[]> {
+  const response = await apiClient.get<number[]>(`${API_BASE_URL}/${userId}/cleared-stages`);
+  return response.data;
+}
+
 export async function fetchMeFromServer(): Promise<User> {
   const authBaseUrl = import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/api/auth`
