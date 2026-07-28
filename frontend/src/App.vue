@@ -693,7 +693,7 @@ const historyTotalPages = ref(1);
 
 const allUnclearedStages = computed(() => {
   const stageMap = new Map<number, StageSummary>();
-  (stages.value || []).forEach(s => stageMap.set(s.id, s));
+  (allStagesSummary.value || []).forEach(s => stageMap.set(s.id, s));
   (aiStages.value || []).forEach(s => stageMap.set(s.id, s));
   const combined = Array.from(stageMap.values());
   return combined.filter(s => !clearedStageIds.value.has(s.id));
@@ -1096,9 +1096,18 @@ async function loadStagesList(page: number = 0) {
         return;
       }
       
-      let initialStage = list.find(s => !clearedStageIds.value.has(s.id));
+      let initialStage = allStagesSummary.value
+        .filter(s => s.width === targetSize)
+        .find(s => !clearedStageIds.value.has(s.id));
+      
       if (!initialStage) {
-        initialStage = list[0];
+        const remaining = allUnclearedStages.value;
+        if (remaining.length > 0) {
+          initialStage = remaining[0];
+          selectedPlaySizeFilter.value = String(initialStage.width);
+        } else {
+          initialStage = list[0];
+        }
       }
       
       if (selectedPlaySizeFilter.value !== targetSizeStr) {
